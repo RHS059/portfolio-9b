@@ -1,0 +1,2758 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=JetBrains+Mono:wght@400;500;700&family=EB+Garamond:ital@1&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<style>
+  html, body { margin:0; padding:0; background:#171514; }
+  * { box-sizing:border-box; }
+  a { color:#E8A055; text-decoration:none; }
+  a:hover { color:#DCD6CE; }
+  input, select, button, textarea { font-family:'JetBrains Mono',monospace; }
+  ::-webkit-scrollbar { width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb { background:#4C4741; border:2px solid #171514; }
+  ::-webkit-scrollbar-thumb:hover { background:#BF6505; }
+  ::-webkit-scrollbar-track { background:#1A1817; }
+  /* Rail tab icons. Each layer's resting transform is inline; these keyframes
+     add to it via a CSS variable so hover motion never fights the offset. */
+  .tabicon i { --tx:0px; --ty:0px; transform:translate(var(--tx),var(--ty)); }
+  .tab:hover .m1-l2 { animation:pour .7s ease-in-out; transform-origin:60% 70%; }
+  .tab:hover .m1-l3 { animation:drip .7s ease-in both; }
+  .tab:hover .m2-l2 { animation:squash .6s ease-in-out; }
+  .tab:hover .m2-l3 { animation:nudge .6s ease-in-out; }
+  .tab:hover .m3-l2 { animation:zoomout .65s ease-in-out; }
+  .tab:hover .m3-l3 { animation:pinch .65s ease-in-out; }
+  .tab:hover .m4-l2 { animation:tilecycle .8s ease-in-out; }
+  .tab:hover .m4-l3 { animation:slidein .8s ease-in-out; }
+  @keyframes pour { 40% { transform:translate(var(--tx),var(--ty)) rotate(-26deg); } 70% { transform:translate(var(--tx),var(--ty)) rotate(-14deg); } }
+  @keyframes drip { 0% { transform:translate(var(--tx),var(--ty)) scale(.4); opacity:0; } 45% { opacity:.9; } 100% { transform:translate(var(--tx),calc(var(--ty) + 5px)) scale(1); opacity:0; } }
+  @keyframes squash { 45% { transform:translate(var(--tx),calc(var(--ty) - 2px)) scaleY(.72); } }
+  @keyframes nudge { 50% { transform:translate(var(--tx),calc(var(--ty) + 3px)); opacity:1; } }
+  @keyframes zoomout { 50% { transform:translate(var(--tx),var(--ty)) scale(1.22); } }
+  @keyframes pinch { 50% { transform:translate(calc(var(--tx) - 2px),calc(var(--ty) - 2px)) scale(.78); } }
+  @keyframes tilecycle { 30% { transform:translate(var(--tx),var(--ty)) rotate(90deg); } 60% { transform:translate(var(--tx),var(--ty)) rotate(90deg); } 100% { transform:translate(var(--tx),var(--ty)) rotate(180deg); } }
+  @keyframes slidein { 0% { transform:translate(calc(var(--tx) + 4px),calc(var(--ty) + 4px)); opacity:0; } 55% { transform:translate(var(--tx),var(--ty)); opacity:1; } }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @keyframes ring { 0% { transform:scale(.7); opacity:.6; } 75% { transform:scale(1.55); opacity:0; } 100% { transform:scale(1.55); opacity:0; } }
+  @keyframes pop { 0% { transform:scale(.5); opacity:0; } 60% { transform:scale(1.06); opacity:1; } 100% { transform:scale(1); opacity:1; } }
+  @keyframes draw { to { stroke-dashoffset:0; } }
+  @keyframes rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes sweep { 0% { transform:translateX(-110%); } 100% { transform:translateX(340%); } }
+  @keyframes tick { 0%,100% { opacity:.25; } 50% { opacity:1; } }
+  @keyframes scanline { 0% { transform:translateY(0); } 100% { transform:translateY(120px); } }
+  @keyframes hover { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+  @keyframes slot1 { 0%,4% { border-color:#4C4741; background:transparent; transform:scale(1); } 8%,46% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 52% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1.16); } 58% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 64%,90% { border-color:#BF6505; background:rgba(191,101,5,.35); transform:scale(1); } 96%,100% { border-color:#4C4741; background:transparent; transform:scale(1); } }
+  @keyframes slot2 { 0%,10% { border-color:#4C4741; background:transparent; transform:scale(1); } 14%,46% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 52% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1.16); } 58% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 64%,90% { border-color:#BF6505; background:rgba(191,101,5,.35); transform:scale(1); } 96%,100% { border-color:#4C4741; background:transparent; transform:scale(1); } }
+  @keyframes slot3 { 0%,16% { border-color:#4C4741; background:transparent; transform:scale(1); } 20%,46% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 52% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1.16); } 58% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 64%,90% { border-color:#BF6505; background:rgba(191,101,5,.35); transform:scale(1); } 96%,100% { border-color:#4C4741; background:transparent; transform:scale(1); } }
+  @keyframes slot4 { 0%,22% { border-color:#4C4741; background:transparent; transform:scale(1); } 26%,46% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 52% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1.16); } 58% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 64%,90% { border-color:#BF6505; background:rgba(191,101,5,.35); transform:scale(1); } 96%,100% { border-color:#4C4741; background:transparent; transform:scale(1); } }
+  @keyframes slot5 { 0%,28% { border-color:#4C4741; background:transparent; transform:scale(1); } 32%,46% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 52% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1.16); } 58% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 64%,90% { border-color:#BF6505; background:rgba(191,101,5,.35); transform:scale(1); } 96%,100% { border-color:#4C4741; background:transparent; transform:scale(1); } }
+  @keyframes blueFill { 0%,58% { opacity:0; } 64%,90% { opacity:1; } 96%,100% { opacity:0; } }
+  @keyframes shineWipe { 0%,72% { transform:translateX(-120%); opacity:0; } 75% { opacity:1; } 88% { transform:translateX(330%); opacity:1; } 90%,100% { transform:translateX(330%); opacity:0; } }
+  @keyframes redwash { from { background:rgba(21,19,15,0); backdrop-filter:blur(0px); } to { background:rgba(120,20,6,.94); backdrop-filter:blur(3px); } }
+  @keyframes warnIn { 0% { opacity:0; transform:translateY(14px); } 100% { opacity:1; transform:translateY(0); } }
+  @keyframes hazard { 0% { background-position:0 0; } 100% { background-position:56px 0; } }
+</style>
+</helmet>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="#171514"/><g transform="translate(60 60)"><rect width="80" height="80" fill="none" stroke="#C8A24A" stroke-width="4"/><rect x="0" y="0" width="40" height="40" fill="#C8A24A"/><rect x="40" y="40" width="40" height="40" fill="#6E655C"/></g></svg></template>
+<div style="min-height:100vh;background:#171514;color:#DCD6CE;font-family:Archivo,'Helvetica Neue',sans-serif;position:relative;padding-top:32px">
+  <div style="position:absolute;inset:0;pointer-events:none;opacity:.1;background-image:linear-gradient(#6E655C 1px,transparent 1px),linear-gradient(90deg,#6E655C 1px,transparent 1px);background-size:118px 118px;background-position:calc(max(0px,(100% - 1240px) / 2) + 30px) 58px"></div>
+
+
+  <div style="position:relative;max-width:1240px;margin:0 auto;padding:26px 30px 90px;background:rgba(178,168,156,.10);background-blend-mode:multiply">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.22em;color:#827A72;text-transform:uppercase;padding-bottom:10px">
+      <div>V{{ version }}</div>
+      <div></div>
+      <div>© 2026</div>
+    </div>
+
+    <div style="border:1px solid #38342F;position:relative">
+      <div style="position:absolute;top:-1px;left:-1px;width:9px;height:9px;border-top:1px solid #BF6505;border-left:1px solid #BF6505"></div>
+      <div style="position:absolute;top:-1px;right:-1px;width:9px;height:9px;border-top:1px solid #BF6505;border-right:1px solid #BF6505"></div>
+      <div style="position:absolute;bottom:-1px;left:-1px;width:9px;height:9px;border-bottom:1px solid #BF6505;border-left:1px solid #BF6505"></div>
+      <div style="position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-bottom:1px solid #BF6505;border-right:1px solid #BF6505"></div>
+
+      <div style="display:grid;grid-template-columns:1fr;gap:24px;padding:26px 28px 22px;border-bottom:1px solid #38342F;align-items:end">
+        <div style="display:flex;flex-direction:column;gap:9px;min-width:0">
+          <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+            <h1 style="margin:0;font-size:46px;font-weight:900;letter-spacing:-0.035em;line-height:.92;color:#F3F0EC;text-transform:none">Enfusion Field Kit</h1>
+            <div style="font-family:Archivo,sans-serif;font-variation-settings:'wdth' 125,'wght' 900;font-size:23px;letter-spacing:.02em;color:#BF6505">{{ version }}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <div style="position:relative;display:flex;border:1px solid #4C4741;width:max-content;overflow:hidden">
+              <div style="{{ modePillStyle }}"></div>
+              <button onClick="{{ onProductionMode }}" style="{{ prodBtnStyle }}">Production</button>
+              <button onClick="{{ onDemoMode }}" style="{{ demoBtnStyle }}">Demo</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="{{ activityWrapStyle }}">
+        <div style="{{ activityDotStyle }}"></div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#DCD6CE;white-space:nowrap">{{ activityLabel }}</div>
+        <div style="flex:1;min-width:120px;height:4px;background:#2D2926;overflow:hidden">
+          <div style="{{ activityBarStyle }}"></div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;color:#ABA49B;white-space:nowrap">{{ activityCount }}</div>
+        <div style="font-family:Archivo,sans-serif;font-variation-settings:'wdth' 125,'wght' 800;font-size:14px;color:#E8A055;min-width:52px;text-align:right">{{ activityPercent }}</div>
+      </div>
+
+      <div style="display:flex;align-items:stretch">
+
+      <div style="{{ railStyle }}">
+        <sc-for list="{{ modules }}" as="m" hint-placeholder-count="4">
+          <button class="tab" onClick="{{ m.onSelect }}" style="{{ m.tabStyle }}" style-hover="color:#F3F0EC">
+            <span class="tabicon" style="{{ m.codeStyle }}">
+              <i class="{{ m.icon1 }}" style="{{ m.icon1Style }}"></i>
+              <i class="{{ m.icon2 }}" style="{{ m.icon2Style }}"></i>
+              <i class="{{ m.icon3 }}" style="{{ m.icon3Style }}"></i>
+            </span>
+            <sc-if value="{{ railOpen }}" hint-placeholder-val="{{ true }}">
+              <span style="display:flex;flex-direction:column;gap:3px;min-width:0;text-align:left">
+                <span style="font-size:14.5px;font-weight:800;letter-spacing:-0.01em;white-space:nowrap">{{ m.title }}</span>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.1em;opacity:.6;text-transform:uppercase">{{ m.sub }}</span>
+              </span>
+            </sc-if>
+          </button>
+        </sc-for>
+        <div style="flex:1;min-height:24px"></div>
+        <button onClick="{{ onToggleRail }}" style="{{ railToggleStyle }}" style-hover="color:#E8A055;border-color:#4C4741">{{ railToggleLabel }}</button>
+      </div>
+
+      <div style="flex:1;min-width:0;border-left:1px solid #38342F;padding:24px 28px 30px;position:relative;min-height:420px">
+
+        <sc-if value="{{ isMod1 }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:18px;animation:rise .3s ease both">
+            <div style="display:flex;justify-content:flex-end;align-items:center;gap:20px;flex-wrap:wrap;min-height:37px">
+              <div style="display:flex;gap:8px">
+                <sc-if value="{{ hasFolder }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ onPick }}" style="appearance:none;border:1px solid #4C4741;background:transparent;color:#DCD6CE;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;padding:9px 14px;cursor:pointer;transition:all .15s" style-hover="border-color:#E8A055;color:#E8A055">Change folder</button>
+                </sc-if>
+                <sc-if value="{{ canRescan }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ onRescan }}" style="appearance:none;border:1px solid #4C4741;background:transparent;color:#DCD6CE;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;padding:9px 14px;cursor:pointer;transition:all .15s" style-hover="border-color:#E8A055;color:#E8A055">Re-scan</button>
+                </sc-if>
+              </div>
+            </div>
+
+            <sc-if value="{{ isIdle }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div onClick="{{ onPick }}" onDragOver="{{ onDragOver }}" onDragLeave="{{ onDragLeave }}" onDrop="{{ onDrop }}" style="{{ dropStyle }}">
+                                    <div style="position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,#BF6505,transparent);animation:scanline 3.2s linear infinite;opacity:.5;pointer-events:none"></div>
+                  <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:16px;pointer-events:none">
+                    <div style="position:relative;width:64px;height:52px;animation:hover 3.4s ease-in-out infinite">
+                      <div style="position:absolute;inset:0;border:1.5px solid #BF6505;border-top-width:9px"></div>
+                      <div style="position:absolute;left:14px;top:20px;width:36px;height:1px;background:#BF6505;animation:tick 1.8s ease-in-out infinite"></div>
+                      <div style="position:absolute;left:14px;top:28px;width:22px;height:1px;background:#BF6505;animation:tick 1.8s ease-in-out .4s infinite"></div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center">
+                      <div style="font-size:16px;font-weight:800;letter-spacing:-0.01em;color:#F3F0EC">Drop Folder</div>
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.24em;color:#ABA49B;text-transform:uppercase">or</div>
+                      <div style="font-size:16px;font-weight:800;letter-spacing:-0.01em;color:#E8A055">Choose a Folder</div>
+                    </div>
+                  </div>
+                </div>
+                <sc-if value="{{ errorMsg }}" hint-placeholder-val="{{ false }}">
+                  <div style="border:1px solid #BF0625;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#BF0625">{{ errorMsg }}</div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isScanning }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px solid #38342F;padding:56px 28px;display:flex;flex-direction:column;align-items:center;gap:20px;animation:rise .3s ease both">
+                <div style="width:46px;height:46px;border:1.5px solid #38342F;border-top-color:#E8A055;animation:spin .8s linear infinite"></div>
+                <div style="font-size:18px;font-weight:800;letter-spacing:-0.01em;color:#F3F0EC">{{ scanPhaseLabel }}</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;color:#ABA49B;text-transform:uppercase">{{ scanDetail }}</div>
+                <div style="width:min(420px,100%);height:2px;background:#2D2926;overflow:hidden"><div style="width:30%;height:100%;background:#BF6505;animation:sweep 1.1s ease-in-out infinite"></div></div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px solid #BF6505;position:relative;padding:66px 28px;display:flex;flex-direction:column;align-items:center;gap:22px;animation:rise .35s ease both;overflow:hidden">
+                <div style="position:absolute;top:16px;left:16px;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">TASK · 04</div>
+                <div style="position:relative;width:132px;height:132px;display:grid;place-items:center">
+                  <div style="position:absolute;width:130px;height:130px;border:1px solid #0644BF;opacity:.5;animation:ring 2.6s ease-out infinite"></div>
+                  <div style="position:absolute;width:130px;height:130px;border:1px solid #0644BF;opacity:.35;animation:ring 2.6s ease-out .85s infinite"></div>
+                  <div style="position:absolute;width:130px;height:130px;border:1px solid #0644BF;opacity:.2;animation:ring 2.6s ease-out 1.7s infinite"></div>
+                  <div style="width:78px;height:78px;background:#0644BF;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;display:grid;place-items:center;animation:pop .5s cubic-bezier(.2,1.3,.4,1) both">
+                    <svg width="40" height="40" viewBox="0 0 42 42" fill="none"><path d="M11 21.6 L18 28.4 L31 14.2" stroke="#E6EDFF" stroke-width="3.6" stroke-linecap="square" stroke-dasharray="46" stroke-dashoffset="46" style="animation:draw .5s cubic-bezier(.65,0,.35,1) .3s both"></path></svg>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
+                  <div style="background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.24em;padding:5px 11px;text-transform:uppercase">CLEAR</div>
+                  <div style="font-size:30px;font-weight:900;letter-spacing:-0.03em;color:#F3F0EC">Nothing left to patch</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;line-height:1.8;color:#ABA49B;max-width:470px;text-transform:uppercase">{{ emptyDetail }}</div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+                  <button onClick="{{ onRescan }}" style-hover="filter:brightness(1.14)" style="appearance:none;border:none;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:11px 18px;cursor:pointer;transition:filter .15s" style-hover="filter:brightness(1.15)">Scan again</button>
+                  <button onClick="{{ onPick }}" style="appearance:none;border:1px solid #4C4741;background:transparent;color:#DCD6CE;font-size:11px;letter-spacing:.16em;text-transform:uppercase;padding:11px 18px;cursor:pointer;transition:all .15s" style-hover="border-color:#DCD6CE">Pick another folder</button>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ showResults }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:14px;animation:rise .3s ease both">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));border:1px solid #38342F">
+                  <div style="padding:14px 16px;border-right:1px solid #38342F;display:flex;flex-direction:column;gap:6px;min-width:0">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">FOLDER</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#F3F0EC;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ dirName }}</div>
+                  </div>
+                  <div style="padding:14px 16px;border-right:1px solid #38342F;display:flex;flex-direction:column;gap:6px">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">EMAT SCANNED</div>
+                    <div style="font-family:Archivo,sans-serif;font-variation-settings:'wdth' 125,'wght' 800;font-size:22px;color:#F3F0EC">{{ ematCount }}</div>
+                  </div>
+                  <div style="padding:14px 16px;border-right:1px solid #38342F;display:flex;flex-direction:column;gap:6px;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#E6EDFF;opacity:.7">{{ readyLabel }}</div>
+                    <div style="font-family:Archivo,sans-serif;font-variation-settings:'wdth' 125,'wght' 800;font-size:22px;color:#E6EDFF">{{ readyCount }}</div>
+                  </div>
+                  <div style="padding:14px 16px;display:flex;flex-direction:column;gap:6px">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">SKIPPED · ALREADY OK</div>
+                    <div style="font-family:Archivo,sans-serif;font-variation-settings:'wdth' 125,'wght' 800;font-size:22px;color:#ABA49B">{{ skipSummary }}</div>
+                  </div>
+                </div>
+
+                <div style="border:1px solid #38342F">
+                  <div style="display:flex;align-items:center;gap:14px;padding:11px 14px;border-bottom:1px solid #38342F;flex-wrap:wrap">
+                    <div onClick="{{ onToggleAll }}" style="{{ allBoxStyle }}">{{ allBoxMark }}</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;color:#ABA49B;text-transform:uppercase">{{ selectionLabel }}</div>
+                    <div style="flex:1"></div>
+                    <div onClick="{{ onToggleBackup }}" style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none">
+                      <div style="{{ backupBoxStyle }}">{{ backupBoxMark }}</div>
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;color:#ABA49B;text-transform:uppercase">Write .bak</div>
+                    </div>
+                    <button onClick="{{ onApply }}" disabled="{{ applyDisabled }}" style="{{ applyStyle }}">{{ applyLabel }}</button>
+                  </div>
+                  <div style="max-height:min(50vh,540px);overflow-y:auto">
+                    <sc-for list="{{ rows }}" as="row" hint-placeholder-count="5">
+                      <div style="border-bottom:1px solid #2D2926">
+                        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;transition:background .15s" style-hover="background:#211E1C">
+                          <div onClick="{{ row.onToggle }}" style="{{ row.boxStyle }}">{{ row.boxMark }}</div>
+                          <div onClick="{{ row.onExpand }}" style="flex:1;min-width:0;cursor:pointer;display:flex;flex-direction:column;gap:3px">
+                            <div style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#F3F0EC;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ row.name }}</div>
+                            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:#ABA49B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ row.dir }}</div>
+                          </div>
+                          <div style="{{ row.badgeStyle }}">{{ row.badge }}</div>
+                        </div>
+                        <sc-if value="{{ row.expanded }}" hint-placeholder-val="{{ false }}">
+                          <div style="padding:0 14px 14px 48px;display:flex;flex-direction:column;gap:9px;animation:rise .2s ease both">
+                            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:#ABA49B;text-transform:uppercase">{{ row.note }}</div>
+                            <pre style="margin:0;padding:13px 15px;background:#141312;border:1px solid #2D2926;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:#E8A055;overflow-x:auto">{{ row.preview }}</pre>
+                          </div>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <sc-if value="{{ doneMsg }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding:12px 14px;background:#0644BF;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#E6EDFF;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase">{{ doneMsg }}</div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isMod2 }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:18px;animation:rise .3s ease both">
+            <div style="display:flex;justify-content:flex-end;align-items:flex-start;gap:20px;flex-wrap:wrap">
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button onClick="{{ onToggleSettings }}" style="{{ settingsBtnStyle }}" style-hover="border-color:#E8A055;color:#E8A055">Settings</button>
+                <button onClick="{{ onDownloadAll }}" disabled="{{ dlAllDisabled }}" style="{{ dlAllStyle }}" style-hover="filter:brightness(1.14)">Download all · ZIP</button>
+                <button onClick="{{ onAddSet }}" style-hover="filter:brightness(1.14)" style="appearance:none;border:none;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:10px 16px;cursor:pointer;transition:filter .15s" style-hover="filter:brightness(1.15)">+ Add set</button>
+              </div>
+            </div>
+
+            <sc-if value="{{ settingsOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px solid #38342F;padding:20px;display:flex;flex-direction:column;gap:22px;animation:rise .22s ease both">
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.24em;color:#E8A055;text-transform:uppercase">DEFAULT EXPORT SETTINGS</div>
+                  <div style="display:flex;gap:26px;flex-wrap:wrap">
+                    <label style="display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;color:#ABA49B;text-transform:uppercase">Resolution
+                      <select value="{{ defaultRes }}" onChange="{{ onDefaultRes }}" style="background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px">
+                        <option value="512">512 × 512</option><option value="1024">1024 × 1024</option><option value="2048">2048 × 2048</option><option value="4096">4096 × 4096</option>
+                      </select>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;color:#ABA49B;text-transform:uppercase">Format
+                      <select value="{{ defaultFmt }}" onChange="{{ onDefaultFmt }}" style="background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px">
+                        <option value="tga">TGA</option><option value="png">PNG</option>
+                      </select>
+                    </label>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.24em;color:#E8A055;text-transform:uppercase">FILENAME ALIASES</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#ABA49B;text-transform:uppercase;line-height:1.7">FILENAMES CONTAINING AN ALIAS ARE SORTED INTO THAT SLOT; THE ALIAS IS STRIPPED TO NAME THE SET. LONGEST MATCH WINS. SEPARATE MULTIPLE ALIASES WITH COMMAS.</div>
+                  <div style="display:flex;flex-direction:column;gap:6px;max-width:560px">
+                    <sc-for list="{{ aliases }}" as="a" hint-placeholder-count="5">
+                      <div style="display:flex;gap:6px;align-items:center">
+                        <select value="{{ a.type }}" onChange="{{ a.onType }}" style="background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px;width:170px">
+                          <option value="normal">Normal map</option><option value="ao">Ambient occlusion</option><option value="metallic">Metallic</option><option value="basecolor">Base color</option><option value="roughness">Roughness</option>
+                        </select>
+                        <input value="{{ a.alias }}" onChange="{{ a.onAlias }}" style="flex:1;background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px" />
+                        <button onClick="{{ a.onDelete }}" style="appearance:none;border:1px solid #4C4741;background:transparent;color:#ABA49B;font-size:11px;padding:6px 10px;cursor:pointer;transition:all .15s" style-hover="border-color:#BF0625;color:#BF0625">✕</button>
+                      </div>
+                    </sc-for>
+                    <div style="display:flex;gap:6px;align-items:center;padding-top:10px;border-top:1px solid #38342F">
+                      <select value="{{ newAliasType }}" onChange="{{ onNewAliasType }}" style="background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px;width:170px">
+                        <option value="normal">Normal map</option><option value="ao">Ambient occlusion</option><option value="metallic">Metallic</option><option value="basecolor">Base color</option><option value="roughness">Roughness</option>
+                      </select>
+                      <input value="{{ newAliasPattern }}" onChange="{{ onNewAliasPattern }}" placeholder="_nrm, _rough, _albedo" style="flex:1;background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px" />
+                      <button onClick="{{ onAddAlias }}" style="appearance:none;border:1px solid #BF6505;background:transparent;color:#E8A055;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 12px;cursor:pointer">Add</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ noSets }}" hint-placeholder-val="{{ true }}">
+              <div onDragOver="{{ onSetsDragOver }}" onDragLeave="{{ onSetsDragLeave }}" onDrop="{{ onSetsDrop }}" onClick="{{ onPickTextures }}" style="{{ emptyDropStyle }}">
+                                <div style="position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,#BF6505,transparent);animation:scanline 3.2s linear infinite;opacity:.5;pointer-events:none"></div>
+                <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:20px;text-align:center;pointer-events:none">
+                  <div style="position:relative;display:flex;gap:8px;overflow:visible">
+                    <div style="width:52px;height:68px;border:1px solid #4C4741;position:relative;overflow:hidden;animation:slot1 5.6s cubic-bezier(.4,0,.2,1) infinite"><div style="position:absolute;inset:0;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;animation:blueFill 5.6s cubic-bezier(.4,0,.2,1) infinite"></div><div style="position:absolute;top:0;bottom:0;left:0px;width:292px;pointer-events:none"><div style="position:absolute;top:0;bottom:0;left:0;width:100px;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 10%,rgba(255,255,255,.95) 50%,transparent 90%);animation:shineWipe 5.6s cubic-bezier(.35,0,.25,1) infinite"></div></div></div>
+                    <div style="width:52px;height:68px;border:1px solid #4C4741;position:relative;overflow:hidden;animation:slot2 5.6s cubic-bezier(.4,0,.2,1) infinite"><div style="position:absolute;inset:0;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;animation:blueFill 5.6s cubic-bezier(.4,0,.2,1) infinite"></div><div style="position:absolute;top:0;bottom:0;left:-60px;width:292px;pointer-events:none"><div style="position:absolute;top:0;bottom:0;left:0;width:100px;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 10%,rgba(255,255,255,.95) 50%,transparent 90%);animation:shineWipe 5.6s cubic-bezier(.35,0,.25,1) infinite"></div></div></div>
+                    <div style="width:52px;height:68px;border:1px solid #4C4741;position:relative;overflow:hidden;animation:slot3 5.6s cubic-bezier(.4,0,.2,1) infinite"><div style="position:absolute;inset:0;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;animation:blueFill 5.6s cubic-bezier(.4,0,.2,1) infinite"></div><div style="position:absolute;top:0;bottom:0;left:-120px;width:292px;pointer-events:none"><div style="position:absolute;top:0;bottom:0;left:0;width:100px;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 10%,rgba(255,255,255,.95) 50%,transparent 90%);animation:shineWipe 5.6s cubic-bezier(.35,0,.25,1) infinite"></div></div></div>
+                    <div style="width:52px;height:68px;border:1px solid #4C4741;position:relative;overflow:hidden;animation:slot4 5.6s cubic-bezier(.4,0,.2,1) infinite"><div style="position:absolute;inset:0;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;animation:blueFill 5.6s cubic-bezier(.4,0,.2,1) infinite"></div><div style="position:absolute;top:0;bottom:0;left:-180px;width:292px;pointer-events:none"><div style="position:absolute;top:0;bottom:0;left:0;width:100px;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 10%,rgba(255,255,255,.95) 50%,transparent 90%);animation:shineWipe 5.6s cubic-bezier(.35,0,.25,1) infinite"></div></div></div>
+                    <div style="width:52px;height:68px;border:1px solid #4C4741;position:relative;overflow:hidden;animation:slot5 5.6s cubic-bezier(.4,0,.2,1) infinite"><div style="position:absolute;inset:0;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;animation:blueFill 5.6s cubic-bezier(.4,0,.2,1) infinite"></div><div style="position:absolute;top:0;bottom:0;left:-240px;width:292px;pointer-events:none"><div style="position:absolute;top:0;bottom:0;left:0;width:100px;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 10%,rgba(255,255,255,.95) 50%,transparent 90%);animation:shineWipe 5.6s cubic-bezier(.35,0,.25,1) infinite"></div></div></div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+                    <div style="font-size:16px;font-weight:800;letter-spacing:-0.01em;color:#E8A055">Drop texture files here</div>
+                  </div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:#ABA49B;text-transform:uppercase">TGA · PNG · JPG · WEBP · AUTO SORTED</div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ hasSets }}" hint-placeholder-val="{{ false }}">
+              <div onDragOver="{{ onSetsDragOver }}" onDragLeave="{{ onSetsDragLeave }}" onDrop="{{ onSetsDrop }}" style="{{ setsAreaStyle }}">
+                <sc-if value="{{ texDragOver }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;inset:0;z-index:2;display:grid;place-items:center;background:rgba(21,19,15,.72);pointer-events:none">
+                    <div style="font-size:17px;font-weight:800;color:#F3F0EC">Drop texture files here</div>
+                  </div>
+                </sc-if>
+                <sc-for list="{{ sets }}" as="set" hint-placeholder-count="1">
+              <div style="border:1px solid #38342F;display:flex;flex-direction:column;animation:rise .3s ease both">
+                <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #38342F;flex-wrap:wrap">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">{{ set.serial }}</div>
+                  <input value="{{ set.name }}" onChange="{{ set.onName }}" style="flex:1;min-width:150px;background:transparent;border:1px solid transparent;color:#F3F0EC;font-family:Archivo,sans-serif;font-size:17px;font-weight:800;letter-spacing:-0.015em;padding:4px 6px" style-hover="border-color:#4C4741" style-focus="border-color:#E8A055;outline:none" />
+                  <select value="{{ set.res }}" onChange="{{ set.onRes }}" style="background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px">
+                    <option value="512">512 × 512</option><option value="1024">1024 × 1024</option><option value="2048">2048 × 2048</option><option value="4096">4096 × 4096</option>
+                  </select>
+                  <select value="{{ set.fmt }}" onChange="{{ set.onFmt }}" style="background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px">
+                    <option value="tga">TGA</option><option value="png">PNG</option>
+                  </select>
+                  <button onClick="{{ set.onRemove }}" style="appearance:none;border:1px solid #4C4741;background:transparent;color:#ABA49B;font-size:11px;padding:6px 10px;cursor:pointer;transition:all .15s" style-hover="border-color:#BF0625;color:#BF0625">✕</button>
+                </div>
+
+                <div style="display:flex;gap:8px;padding:12px 14px;border-bottom:1px solid #2D2926;flex-wrap:wrap;align-items:center">
+                  <button onClick="{{ set.onExportAll }}" disabled="{{ set.exportDisabled }}" style="{{ set.exportStyle }}" style-hover="filter:brightness(1.14)">Export BCR + NMO</button>
+                  <button onClick="{{ set.onExportCrm }}" disabled="{{ set.crmDisabled }}" style="{{ set.crmStyle }}" style-hover="filter:brightness(1.14)">Camo CRM map</button>
+                  <div style="flex:1"></div>
+                  <div style="{{ set.statusStyle }}">{{ set.statusText }}</div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding:14px">
+                  <sc-for list="{{ set.slots }}" as="slot" hint-placeholder-count="5">
+                    <div style="display:flex;flex-direction:column;gap:5px">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:20px">
+                        <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.16em;color:#DCD6CE;text-transform:uppercase">{{ slot.label }}</div>
+                        <sc-if value="{{ slot.filled }}" hint-placeholder-val="{{ false }}">
+                          <button onClick="{{ slot.onRemove }}" style="appearance:none;border:none;background:transparent;color:#ABA49B;font-size:11px;cursor:pointer;padding:0 2px;transition:color .15s" style-hover="color:#BF0625">✕</button>
+                        </sc-if>
+                      </div>
+                      <div onClick="{{ slot.onPick }}" onDragOver="{{ slot.onDragOver }}" onDragLeave="{{ slot.onDragLeave }}" onDrop="{{ slot.onDrop }}" style="{{ slot.zoneStyle }}">
+                        <sc-if value="{{ slot.emptyState }}" hint-placeholder-val="{{ true }}">
+                          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none">
+                            <div style="width:18px;height:18px;border:1px solid #4C4741"></div>
+                            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;color:#ABA49B;text-transform:uppercase">Drop / click</div>
+                          </div>
+                        </sc-if>
+                        <sc-if value="{{ slot.filled }}" hint-placeholder-val="{{ false }}">
+                          {{ slot.thumb }}
+                        </sc-if>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));border-top:1px solid #2D2926">
+                  <div style="padding:14px;border-right:1px solid #2D2926;display:flex;flex-direction:column;gap:10px">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">CAMO CRM PREVIEW</div>
+                    <sc-if value="{{ set.crmPreview }}" hint-placeholder-val="{{ false }}">
+                      <div style="{{ set.crmPreviewStyle }}">{{ set.crmThumb }}</div>
+                    </sc-if>
+                    <sc-if value="{{ set.crmMissing }}" hint-placeholder-val="{{ true }}">
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:#ABA49B;text-transform:uppercase;line-height:1.7">LOAD AO · ROUGHNESS · METALLIC TO GENERATE A LIVE PREVIEW.</div>
+                    </sc-if>
+                  </div>
+                  <div style="padding:14px;display:flex;flex-direction:column;gap:9px">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">OUTPUT FILES</div>
+                    <div style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#ABA49B;letter-spacing:.04em">
+                      <div style="display:flex;gap:6px"><span>BCRMAP</span><span style="flex:1;border-bottom:1px dotted #4C4741;transform:translateY(-4px)"></span><span style="color:#DCD6CE">{{ set.bcrName }}</span></div>
+                      <div style="display:flex;gap:6px"><span>NMOMAP</span><span style="flex:1;border-bottom:1px dotted #4C4741;transform:translateY(-4px)"></span><span style="color:#DCD6CE">{{ set.nmoName }}</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isMod3 }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:18px;animation:rise .3s ease both">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">SET ALL →</div>
+                <sc-for list="{{ bulkSizes }}" as="b" hint-placeholder-count="4">
+                  <button onClick="{{ b.onClick }}" disabled="{{ b.disabled }}" style="{{ b.style }}">{{ b.label }}</button>
+                </sc-for>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button onClick="{{ onResizeClear }}" disabled="{{ noResizeFiles }}" style="{{ clearStyle }}">Clear all</button>
+                <button onClick="{{ onUndoAll }}" disabled="{{ undoAllDisabled }}" style="{{ undoAllStyle }}">↩ Undo all</button>
+                <button onClick="{{ onReduceAll }}" disabled="{{ noResizeFiles }}" style="{{ reduceAllStyle }}">{{ reduceAllLabel }}</button>
+              </div>
+            </div>
+
+            <sc-if value="{{ hasResizeFiles }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ onPickTgas }}" onDragOver="{{ onTgaDragOver }}" onDragLeave="{{ onTgaDragLeave }}" onDrop="{{ onTgaDrop }}" style="{{ tgaDropStyle }}">
+                <div style="display:flex;align-items:center;gap:16px;pointer-events:none;flex-wrap:wrap;justify-content:center">
+                  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:3px;width:26px;height:26px">
+                    <div style="border:1px solid #BF6505"></div><div style="border:1px solid #BF6505;opacity:.6"></div>
+                    <div style="border:1px solid #BF6505;opacity:.6"></div><div style="border:1px solid #BF6505;opacity:.3"></div>
+                  </div>
+                  <div style="font-size:17px;font-weight:800;color:#F3F0EC">Drop .tga or .png files</div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ resizeStatus }}" hint-placeholder-val="{{ false }}">
+              <div style="{{ resizeStatusStyle }}">{{ resizeStatus }}</div>
+            </sc-if>
+
+            <sc-if value="{{ noResizeFiles }}" hint-placeholder-val="{{ true }}">
+              <div onClick="{{ onPickTgas }}" onDragOver="{{ onTgaDragOver }}" onDragLeave="{{ onTgaDragLeave }}" onDrop="{{ onTgaDrop }}" style="{{ tgaEmptyDropStyle }}">
+                                <div style="position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,#BF6505,transparent);animation:scanline 3.2s linear infinite;opacity:.5;pointer-events:none"></div>
+                <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:20px;text-align:center;pointer-events:none">
+                  <div style="position:relative;width:96px;height:96px;display:grid;place-items:center">
+                    <div style="position:absolute;width:94px;height:94px;border:1px solid #0644BF;opacity:.4;animation:ring 2.8s ease-out infinite"></div>
+                    <div style="width:52px;height:52px;border:1.5px solid #0644BF;display:grid;place-items:center;animation:hover 3.4s ease-in-out infinite">
+                      <div style="width:22px;height:22px;border:1.5px solid #BF6505;animation:tick 1.8s ease-in-out infinite"></div>
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+                    <div style="font-size:16px;font-weight:800;letter-spacing:-0.01em;color:#F3F0EC">Queue is empty</div>
+                    <div style="font-size:16px;font-weight:800;letter-spacing:-0.01em;color:#E8A055">Drop .tga or .png files</div>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ hasResizeFiles }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px solid #38342F">
+                <sc-for list="{{ resizeRows }}" as="row" hint-placeholder-count="3">
+                  <div style="{{ row.rowStyle }}">
+                    <div style="flex:1;min-width:170px;display:flex;flex-direction:column;gap:3px">
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#F3F0EC;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ row.name }}</div>
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:#ABA49B">{{ row.dims }}</div>
+                    </div>
+                    <div style="display:flex;gap:4px">
+                      <sc-for list="{{ row.sizes }}" as="s" hint-placeholder-count="4">
+                        <button onClick="{{ s.onClick }}" style="{{ s.style }}">{{ s.label }}</button>
+                      </sc-for>
+                    </div>
+                    <button onClick="{{ row.onReduce }}" disabled="{{ row.reduceDisabled }}" style="{{ row.reduceStyle }}" style-hover="filter:brightness(1.14)">{{ row.reduceLabel }}</button>
+                    <button onClick="{{ row.onUndo }}" disabled="{{ row.undoDisabled }}" style="{{ row.undoStyle }}" style-hover="filter:brightness(1.14)">↩ Undo</button>
+                    <button onClick="{{ row.onRemove }}" style="appearance:none;border:none;background:transparent;color:#ABA49B;font-size:12px;cursor:pointer;padding:0 2px;transition:color .15s" style-hover="color:#BF0625">✕</button>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isMod4 }}" hint-placeholder-val="{{ false }}">
+          <div onDragOver="{{ onAtlasAreaDragOver }}" onDragLeave="{{ onAtlasAreaDragLeave }}" onDrop="{{ onAtlasAreaDrop }}" style="{{ atlasAreaStyle }}">
+            <sc-if value="{{ atlasAreaDrag }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;inset:0;z-index:6;display:grid;place-items:center;background:rgba(23,21,20,.82);pointer-events:none">
+                <div style="font-size:19px;font-weight:800;color:#F3F0EC">Drop texture files here</div>
+              </div>
+            </sc-if>
+
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:37px">
+              <button onClick="{{ onPickFbx }}" style="{{ fbxLoadStyle }}" style-hover="filter:brightness(1.14)">{{ fbxLoadLabel }}</button>
+              <sc-if value="{{ hasFbx }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ onUnloadMesh }}" style="{{ utilBtn }}" style-hover="border-color:#BF0625;color:#BF0625">✕ Unload mesh</button>
+                <button onClick="{{ onAutoPack }}" style="{{ utilBtn }}" style-hover="border-color:#E8A055;color:#E8A055">⟲ Auto-pack</button>
+                <button onClick="{{ onSmallestFit }}" style="{{ utilBtn }}" style-hover="border-color:#E8A055;color:#E8A055">⤡ Smallest fit</button>
+                <div style="flex:1;min-width:8px"></div>
+                <button onClick="{{ onExportAtlas }}" disabled="{{ atlasExportDisabled }}" style="{{ atlasExportStyle }}" style-hover="filter:brightness(1.14)">{{ atlasExportLabel }}</button>
+              </sc-if>
+            </div>
+
+            <sc-if value="{{ noFbx }}" hint-placeholder-val="{{ true }}">
+              <div onClick="{{ onPickFbx }}" style="{{ fbxDropStyle }}">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:54px 30px">
+                  <div style="width:54px;height:54px;border:1px solid #4C4741;display:grid;place-items:center;font-size:19px;color:#E8A055;animation:hover 3s ease-in-out infinite">◫</div>
+                  <div style="font-size:23px;font-weight:800;letter-spacing:-0.02em;color:#F3F0EC">Drop a binary .fbx here</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;color:#827A72;text-transform:uppercase;max-width:520px;line-height:1.7">Materials are read from the mesh, then you assign each one a texture set. Output is a combined BCR / NMO pair plus the mesh with rewritten UVs.</div>
+                  <sc-if value="{{ hasHeld }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid #38342F;background:#1A1817">
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.14em;color:#E8A055;text-transform:uppercase">{{ heldLabel }}</div>
+                      <button onClick="{{ onDiscardHeld }}" style="{{ utilBtn }}" style-hover="border-color:#BF0625;color:#BF0625">Discard</button>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ hasFbx }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:22px">
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:22px;align-items:start">
+
+                  <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.26em;color:#827A72;text-transform:uppercase">Atlas layout</div>
+                      <div style="display:flex;gap:5px;align-items:center">
+                        <select value="{{ atlasW }}" onChange="{{ onAtlasW }}" style="{{ atlasSelStyle }}">
+                          <sc-for list="{{ atlasSizeOpts }}" as="o" hint-placeholder-count="4">
+                            <option value="{{ o.value }}">{{ o.label }}</option>
+                          </sc-for>
+                        </select>
+                        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#827A72">×</span>
+                        <select value="{{ atlasH }}" onChange="{{ onAtlasH }}" style="{{ atlasSelStyle }}">
+                          <sc-for list="{{ atlasSizeOpts }}" as="o" hint-placeholder-count="4">
+                            <option value="{{ o.value }}">{{ o.label }}</option>
+                          </sc-for>
+                        </select>
+                      </div>
+                    </div>
+                    <div ref="{{ atlasRef }}" onPointerMove="{{ onTileMove }}" onPointerUp="{{ onTileUp }}" onPointerLeave="{{ onTileUp }}" style="{{ atlasBoxStyle }}">
+                      <div style="{{ atlasGridStyle }}"></div>
+                      <sc-for list="{{ atlasTiles }}" as="t" hint-placeholder-count="0">
+                        <div onPointerDown="{{ t.onDown }}" style="{{ t.style }}">
+                          {{ t.thumb }}
+                          <span style="{{ t.labelStyle }}">{{ t.label }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;color:#827A72;text-transform:uppercase">
+                      <span>{{ atlasDims }}</span>
+                      <span>{{ atlasFill }}</span>
+                    </div>
+                  </div>
+
+                  <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.26em;color:#827A72;text-transform:uppercase">Mesh check</div>
+                      <div style="display:flex;gap:4px">
+                        <sc-for list="{{ previewModes }}" as="p" hint-placeholder-count="2">
+                          <button onClick="{{ p.onClick }}" style="{{ p.style }}">{{ p.label }}</button>
+                        </sc-for>
+                      </div>
+                    </div>
+                    <div ref="{{ viewportRef }}" style="width:100%;height:280px;border:1px solid #38342F;background:radial-gradient(120% 100% at 50% 118%,#3D9B05 0%,#16330A 38%,#1B1917 76%,#141312 100%);position:relative;overflow:hidden;cursor:grab;touch-action:none"></div>
+                    <div style="display:flex;align-items:center;gap:12px">
+                      <div ref="{{ lightRef }}" onPointerDown="{{ onLightDown }}" onPointerMove="{{ onLightMove }}" onPointerUp="{{ onLightUp }}" style="width:44px;height:44px;flex:none;border:1px solid #4C4741;border-radius:50%;position:relative;cursor:grab;touch-action:none;background:radial-gradient(circle at 50% 50%,#211E1C,#141312)">
+                        <div style="{{ lightDotStyle }}"></div>
+                      </div>
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;color:#827A72;text-transform:uppercase;line-height:1.7">Drag the disc to move the light<br />Drag the viewport to orbit</div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.26em;color:#827A72;text-transform:uppercase">Detected materials</div>
+                    <div style="display:flex;gap:6px">
+                      <button onClick="{{ onClearAllTextures }}" style="{{ utilBtn }}" style-hover="border-color:#E8A055;color:#E8A055">Clear textures</button>
+                      <button onClick="{{ onResetAtlas }}" style="{{ utilBtn }}" style-hover="border-color:#BF0625;color:#BF0625">Reset</button>
+                    </div>
+                  </div>
+                  <div style="{{ matListStyle }}">
+                  <sc-for list="{{ atlasMats }}" as="m" hint-placeholder-count="2">
+                    <div style="{{ m.cardStyle }}">
+                      <div style="display:flex;align-items:center;gap:11px;flex-wrap:wrap">
+                        <div style="{{ m.chipStyle }}"></div>
+                        <div style="flex:1;min-width:120px;display:flex;flex-direction:column;gap:2px">
+                          <input value="{{ m.name }}" onChange="{{ m.onRename }}" style="appearance:none;background:transparent;border:none;border-bottom:1px solid transparent;color:#F3F0EC;font-family:Archivo,sans-serif;font-size:15px;font-weight:800;letter-spacing:-0.01em;padding:1px 0;outline:none;min-width:0;width:100%" style-focus="border-bottom-color:#BF6505" />
+                          <div style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;color:#827A72;text-transform:uppercase">{{ m.meta }}</div>
+                        </div>
+                        <div style="display:flex;gap:4px">
+                          <sc-for list="{{ m.sizes }}" as="z" hint-placeholder-count="4">
+                            <button onClick="{{ z.onClick }}" style="{{ z.style }}">{{ z.label }}</button>
+                          </sc-for>
+                        </div>
+                        <button onClick="{{ m.onRotate }}" style="{{ m.rotStyle }}" style-hover="border-color:#E8A055;color:#E8A055">{{ m.rotLabel }}</button>
+                        <button onClick="{{ m.onClear }}" style="{{ m.clearStyle }}" style-hover="border-color:#BF0625;color:#BF0625">✕</button>
+                      </div>
+                      <div style="display:grid;grid-template-columns:repeat(5,minmax(0,96px));gap:6px">
+                        <sc-for list="{{ m.slots }}" as="slot" hint-placeholder-count="5">
+                          <div onClick="{{ slot.onPick }}" style="{{ slot.zoneStyle }}">
+                            <sc-if value="{{ slot.filled }}" hint-placeholder-val="{{ false }}">
+                              {{ slot.thumb }}
+                            </sc-if>
+                            <sc-if value="{{ slot.emptyState }}" hint-placeholder-val="{{ true }}">
+                              <span style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.14em;color:#827A72;text-align:center;padding:3px;pointer-events:none">{{ slot.short }}</span>
+                            </sc-if>
+                            <sc-if value="{{ slot.filled }}" hint-placeholder-val="{{ false }}">
+                              <button onClick="{{ slot.onRemove }}" style="position:absolute;top:0;right:0;z-index:3;appearance:none;border:none;background:rgba(20,19,18,.82);color:#ABA49B;font-size:9px;line-height:1;padding:3px 4px;cursor:pointer;transition:color .15s" style-hover="color:#BF0625">✕</button>
+                            </sc-if>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </sc-for>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+          </div>
+        </sc-if>
+
+      </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-start;gap:20px;padding:12px 28px;border-top:1px solid #38342F;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;color:#ABA49B;text-transform:uppercase;flex-wrap:wrap">
+        <div>{{ footerStatus }}</div>
+      </div>
+    </div>
+  </div>
+
+
+  <div style="position:fixed;right:20px;bottom:20px;z-index:80;display:flex;flex-direction:column;gap:8px;max-width:360px">
+    <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="0">
+      <div style="{{ t.style }}">{{ t.message }}</div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1300,&quot;height&quot;:900}}">
+const EMPTY_EMAT = /^\ufeff?\s*MatPBRBasic\s*\{\s*\}\s*$/i;
+const META_NAME = /\bName\s+"([^"]+\.edds)"/i;
+const SUFFIXES = ["bcr", "crm", "nmo"];
+const TYPES = ["normal", "ao", "metallic", "basecolor", "roughness"];
+const TYPE_LABELS = { normal: "Normal", ao: "Ambient occl.", metallic: "Metallic", basecolor: "Base color", roughness: "Roughness" };
+const CHANNEL_HINTS = { normal: "RG → NMO", ao: "A → NMO · R → CRM", metallic: "B → NMO · B → CRM", basecolor: "RGB → BCR", roughness: "A → BCR · G → CRM" };
+const DEFAULT_ALIASES = TYPES.map(t => ({ id: "default-" + t, textureType: t, alias: "_" + t }));
+const SETTINGS_KEY = "texture-wizard-settings";
+const APP_VERSION = "1.59";
+const DEMO_BASE = "https://raw.githubusercontent.com/RHS059/bravofiveniner_content/main/img/";
+const DEMO_MESHES = ["M203.fbx", "M16_M203_Handguard.fbx"];
+
+function materialText(bcr, crm, nmo) {
+  return "MatPBRCamo {\n" +
+    ' BCRMap "' + bcr + '"\n' +
+    ' NMOMap "' + nmo + '"\n' +
+    ' CamoAlbedoMap "' + bcr + '"\n' +
+    ' CamoCRMMap "' + crm + '"\n' +
+    " CamoColor 0.1 0.1 0.1 1\n CamoNormalOpacity 0\n CamoRoughnessOpacity 0\n}\n";
+}
+
+function decode(buf) {
+  for (const enc of ["utf-8", "windows-1252"]) {
+    try {
+      const t = new TextDecoder(enc, { fatal: enc === "utf-8" }).decode(buf);
+      return t.charCodeAt(0) === 0xfeff ? t.slice(1) : t;
+    } catch (e) {}
+  }
+  throw new Error("could not decode text");
+}
+
+function rank(dirParts, candParts) {
+  let i = 0;
+  while (i < dirParts.length && i < candParts.length && dirParts[i].toLowerCase() === candParts[i].toLowerCase()) i++;
+  const up = dirParts.length - i;
+  return [up, up + (candParts.length - i)];
+}
+
+/* ---- TGA ---- */
+function parseTGA(buffer) {
+  const view = new DataView(buffer), bytes = new Uint8Array(buffer);
+  const idLength = view.getUint8(0), colorMapType = view.getUint8(1), imageType = view.getUint8(2);
+  const colorMapLength = view.getUint16(5, true), colorMapDepth = view.getUint8(7);
+  const width = view.getUint16(12, true), height = view.getUint16(14, true);
+  const pixelDepth = view.getUint8(16), descriptor = view.getUint8(17);
+  if (![2, 3, 10, 11].includes(imageType)) throw new Error("unsupported TGA type " + imageType);
+  if (![8, 24, 32].includes(pixelDepth)) throw new Error("unsupported pixel depth " + pixelDepth);
+  if (!width || !height) throw new Error("TGA has zero dimensions");
+  const bpp = pixelDepth / 8, count = width * height;
+  let offset = 18 + idLength + (colorMapType === 1 ? colorMapLength * Math.ceil(colorMapDepth / 8) : 0);
+  const raw = new Uint8Array(count * bpp);
+  if (imageType === 2 || imageType === 3) {
+    if (offset + raw.length > bytes.length) throw new Error("TGA file truncated");
+    raw.set(bytes.subarray(offset, offset + raw.length));
+  } else {
+    let src = offset, dst = 0;
+    while (dst < raw.length && src < bytes.length) {
+      const packet = bytes[src++], n = (packet & 0x7f) + 1;
+      if (packet & 0x80) { for (let i = 0; i < n && dst < raw.length; i++) for (let b = 0; b < bpp; b++) raw[dst++] = bytes[src + b]; src += bpp; }
+      else { const len = n * bpp; for (let i = 0; i < len && dst < raw.length; i++) raw[dst++] = bytes[src++]; }
+    }
+  }
+  const pixels = new Uint8Array(count * 4);
+  for (let i = 0; i < count; i++) {
+    let r, g, b, a = 255;
+    if (bpp === 1) { r = g = b = raw[i]; } else { const o = i * bpp; b = raw[o]; g = raw[o + 1]; r = raw[o + 2]; if (bpp === 4) a = raw[o + 3]; }
+    const p = i * 4; pixels[p] = r; pixels[p + 1] = g; pixels[p + 2] = b; pixels[p + 3] = a;
+  }
+  if (!(descriptor & 0x20)) {
+    const row = new Uint8Array(width * 4);
+    for (let y = 0; y < Math.floor(height / 2); y++) {
+      const a = y * width * 4, b = (height - 1 - y) * width * 4;
+      row.set(pixels.slice(a, a + width * 4));
+      pixels.copyWithin(a, b, b + width * 4);
+      pixels.set(row, b);
+    }
+  }
+  return { width, height, pixels, bytesPerPixel: bpp, imageType };
+}
+
+function resizePixels(src, sw, sh, dw, dh) {
+  const dst = new Uint8Array(dw * dh * 4), xR = sw / dw, yR = sh / dh;
+  for (let y = 0; y < dh; y++) for (let x = 0; x < dw; x++) {
+    const gx = x * xR, gy = y * yR;
+    const x0 = Math.floor(gx), y0 = Math.floor(gy);
+    const x1 = Math.min(x0 + 1, sw - 1), y1 = Math.min(y0 + 1, sh - 1);
+    const xf = gx - x0, yf = gy - y0;
+    const i00 = (y0 * sw + x0) * 4, i10 = (y0 * sw + x1) * 4, i01 = (y1 * sw + x0) * 4, i11 = (y1 * sw + x1) * 4, di = (y * dw + x) * 4;
+    for (let c = 0; c < 4; c++) dst[di + c] = Math.round(
+      src[i00 + c] * (1 - xf) * (1 - yf) + src[i10 + c] * xf * (1 - yf) + src[i01 + c] * (1 - xf) * yf + src[i11 + c] * xf * yf);
+  }
+  return dst;
+}
+
+/* ---- PNG (raw, canvas-free) ----
+   Chrome stores canvas surfaces premultiplied, so ANY trip through a 2D context
+   — drawImage or putImageData — crushes RGB wherever alpha is low and zeroes it
+   at alpha 0. Channel-packed maps (roughness/AO in A) must never touch a canvas,
+   so PNG is decoded and encoded here by hand on top of pako. */
+const PNG_SIG = [137, 80, 78, 71, 13, 10, 26, 10];
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+  return t;
+})();
+function crc32(bytes) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+const PNG_CHANNELS = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 };
+
+function webpHeader(buffer) {
+  const b = new Uint8Array(buffer), dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  const tag = o => String.fromCharCode(b[o], b[o + 1], b[o + 2], b[o + 3]);
+  if (tag(0) !== "RIFF" || tag(8) !== "WEBP") throw new Error("not a WebP file");
+  const kind = tag(12);
+  let width = 0, height = 0;
+  if (kind === "VP8X") { width = (b[24] | (b[25] << 8) | (b[26] << 16)) + 1; height = (b[27] | (b[28] << 8) | (b[29] << 16)) + 1; }
+  else if (kind === "VP8L") { const n = dv.getUint32(21, true); width = (n & 0x3FFF) + 1; height = ((n >> 14) & 0x3FFF) + 1; }
+  else if (kind === "VP8 ") { width = dv.getUint16(26, true) & 0x3FFF; height = dv.getUint16(28, true) & 0x3FFF; }
+  else throw new Error("unsupported WebP chunk " + kind);
+  return { width, height, bitDepth: 8, colorType: 6, bytesPerPixel: 4 };
+}
+
+function pngHeader(buffer) {
+  const b = new Uint8Array(buffer), dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  for (let i = 0; i < 8; i++) if (b[i] !== PNG_SIG[i]) throw new Error("not a PNG file");
+  const colorType = b[25];
+  return { width: dv.getUint32(16), height: dv.getUint32(20), bitDepth: b[24], colorType,
+    bytesPerPixel: colorType === 4 || colorType === 6 ? 4 : 3 };
+}
+
+function parsePNG(buffer) {  if (typeof pako === "undefined") throw new Error("pako unavailable - cannot decode PNG");
+  const bytes = new Uint8Array(buffer);
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  for (let i = 0; i < 8; i++) if (bytes[i] !== PNG_SIG[i]) throw new Error("not a PNG file");
+  let width = 0, height = 0, bitDepth = 8, colorType = 6, interlace = 0, palette = null, trns = null;
+  const idat = [];
+  let off = 8;
+  while (off + 8 <= bytes.length) {
+    const len = view.getUint32(off);
+    const type = String.fromCharCode(bytes[off + 4], bytes[off + 5], bytes[off + 6], bytes[off + 7]);
+    const start = off + 8;
+    if (type === "IHDR") {
+      width = view.getUint32(start); height = view.getUint32(start + 4);
+      bitDepth = bytes[start + 8]; colorType = bytes[start + 9]; interlace = bytes[start + 12];
+    } else if (type === "PLTE") palette = bytes.subarray(start, start + len);
+    else if (type === "tRNS") trns = bytes.subarray(start, start + len);
+    else if (type === "IDAT") idat.push(bytes.subarray(start, start + len));
+    else if (type === "IEND") break;
+    off = start + len + 4;
+  }
+  if (!width || !height) throw new Error("PNG missing IHDR");
+  if (interlace) throw new Error("interlaced PNG not supported - re-save without Adam7");
+  const channels = PNG_CHANNELS[colorType];
+  if (!channels) throw new Error("unsupported PNG color type " + colorType);
+  if (colorType === 3 ? bitDepth !== 8 : (bitDepth !== 8 && bitDepth !== 16))
+    throw new Error("unsupported PNG bit depth " + bitDepth);
+  if (!idat.length) throw new Error("PNG has no image data");
+
+  let z;
+  if (idat.length === 1) z = idat[0];
+  else { let n = 0; for (const c of idat) n += c.length; z = new Uint8Array(n); let p = 0; for (const c of idat) { z.set(c, p); p += c.length; } }
+  const raw = pako.inflate(z);
+
+  const bpp = channels * (bitDepth / 8), stride = width * bpp;
+  const flat = new Uint8Array(height * stride);
+  let pos = 0;
+  for (let y = 0; y < height; y++) {
+    const ft = raw[pos++];
+    const row = flat.subarray(y * stride, (y + 1) * stride);
+    const prev = y ? flat.subarray((y - 1) * stride, y * stride) : null;
+    for (let x = 0; x < stride; x++) {
+      const rv = raw[pos + x];
+      const a = x >= bpp ? row[x - bpp] : 0;
+      const b = prev ? prev[x] : 0;
+      const c = prev && x >= bpp ? prev[x - bpp] : 0;
+      let v;
+      if (ft === 0) v = rv;
+      else if (ft === 1) v = rv + a;
+      else if (ft === 2) v = rv + b;
+      else if (ft === 3) v = rv + ((a + b) >> 1);
+      else if (ft === 4) {
+        const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+        v = rv + (pa <= pb && pa <= pc ? a : pb <= pc ? b : c);
+      } else throw new Error("bad PNG filter type " + ft);
+      row[x] = v & 0xFF;
+    }
+    pos += stride;
+  }
+
+  const px = new Uint8Array(width * height * 4), step = bitDepth === 16 ? 2 : 1;
+  /* 16-bit samples are scaled down with rounding (65535/255 = 257), matching the
+     browser's own downconvert; plain MSB truncation drifts a level low. */
+  const smp = bitDepth === 16 ? (o => Math.round(((flat[o] << 8) | flat[o + 1]) / 257)) : (o => flat[o]);
+  for (let i = 0; i < width * height; i++) {
+    const s = i * bpp, o = i * 4;
+    if (colorType === 0) { px[o] = px[o + 1] = px[o + 2] = smp(s); px[o + 3] = 255; }
+    else if (colorType === 2) { px[o] = smp(s); px[o + 1] = smp(s + step); px[o + 2] = smp(s + 2 * step); px[o + 3] = 255; }
+    else if (colorType === 3) {
+      const idx = flat[s];
+      px[o] = palette ? palette[idx * 3] : 0; px[o + 1] = palette ? palette[idx * 3 + 1] : 0; px[o + 2] = palette ? palette[idx * 3 + 2] : 0;
+      px[o + 3] = trns && idx < trns.length ? trns[idx] : 255;
+    }
+    else if (colorType === 4) { px[o] = px[o + 1] = px[o + 2] = smp(s); px[o + 3] = smp(s + step); }
+    else { px[o] = smp(s); px[o + 1] = smp(s + step); px[o + 2] = smp(s + 2 * step); px[o + 3] = smp(s + 3 * step); }
+  }
+  return { width, height, pixels: px, colorType, bitDepth, hasAlpha: colorType === 4 || colorType === 6 || (colorType === 3 && !!trns), bytesPerPixel: colorType === 4 || colorType === 6 ? 4 : 3 };
+}
+
+/* colorType mirrors PNG's own: 0 grey, 2 RGB, 4 grey+alpha, 6 RGBA. Writing back
+   the layout that was read keeps a greyscale AO map greyscale instead of
+   inflating it to RGBA. Always emits 8-bit. */
+const PNG_WRITE_CHANNELS = { 0: 1, 2: 3, 4: 2, 6: 4 };
+function encodePNG(pixels, width, height, colorType) {
+  if (typeof pako === "undefined") throw new Error("pako unavailable - cannot encode PNG");
+  const ct = PNG_WRITE_CHANNELS[colorType] ? colorType : 6;
+  const ch = PNG_WRITE_CHANNELS[ct], stride = width * ch;
+  const raw = new Uint8Array((stride + 1) * height);
+  for (let y = 0; y < height; y++) {
+    const o = y * (stride + 1) + 1, s = y * width * 4;
+    for (let x = 0; x < width; x++) {
+      const d = o + x * ch, p = s + x * 4;
+      if (ct === 0) raw[d] = pixels[p];
+      else if (ct === 4) { raw[d] = pixels[p]; raw[d + 1] = pixels[p + 3]; }
+      else {
+        raw[d] = pixels[p]; raw[d + 1] = pixels[p + 1]; raw[d + 2] = pixels[p + 2];
+        if (ct === 6) raw[d + 3] = pixels[p + 3];
+      }
+    }
+  }
+  const deflated = pako.deflate(raw, { level: 9 });
+  const chunk = (type, data) => {
+    const out = new Uint8Array(12 + data.length), dv = new DataView(out.buffer);
+    dv.setUint32(0, data.length);
+    for (let i = 0; i < 4; i++) out[4 + i] = type.charCodeAt(i);
+    out.set(data, 8);
+    dv.setUint32(8 + data.length, crc32(out.subarray(4, 8 + data.length)));
+    return out;
+  };
+  const ihdr = new Uint8Array(13), idv = new DataView(ihdr.buffer);
+  idv.setUint32(0, width); idv.setUint32(4, height);
+  ihdr[8] = 8; ihdr[9] = ct;
+  const parts = [new Uint8Array(PNG_SIG), chunk("IHDR", ihdr), chunk("IDAT", deflated), chunk("IEND", new Uint8Array(0))];
+  let n = 0; for (const p of parts) n += p.length;
+  const out = new Uint8Array(n);
+  let p = 0; for (const q of parts) { out.set(q, p); p += q.length; }
+  return out;
+}
+
+function encodeTGA(pixels, width, height, hasAlpha) {
+  const bpp = hasAlpha ? 4 : 3, header = new Uint8Array(18);
+  header[2] = 2;
+  header[12] = width & 0xff; header[13] = (width >> 8) & 0xff;
+  header[14] = height & 0xff; header[15] = (height >> 8) & 0xff;
+  header[16] = bpp * 8; header[17] = hasAlpha ? 0x28 : 0x20;
+  const body = new Uint8Array(width * height * bpp);
+  for (let i = 0; i < width * height; i++) {
+    body[i * bpp] = pixels[i * 4 + 2]; body[i * bpp + 1] = pixels[i * 4 + 1]; body[i * bpp + 2] = pixels[i * 4];
+    if (hasAlpha) body[i * bpp + 3] = pixels[i * 4 + 3];
+  }
+  const out = new Uint8Array(18 + body.length);
+  out.set(header); out.set(body, 18);
+  return out;
+}
+
+function tgaToDataURL(buffer) {
+  const info = parseTGA(buffer);
+  const canvas = document.createElement("canvas");
+  canvas.width = info.width; canvas.height = info.height;
+  canvas.getContext("2d").putImageData(new ImageData(new Uint8ClampedArray(info.pixels), info.width, info.height), 0, 0);
+  return canvas.toDataURL("image/png");
+}
+
+function loadImage(src) {
+  return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error("failed to load image")); i.src = src; });
+}
+async function loadAndResize(src, resolution) {
+  const img = await loadImage(src);
+  const c = document.createElement("canvas");
+  c.width = resolution; c.height = resolution;
+  const ctx = c.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, resolution, resolution);
+  return ctx.getImageData(0, 0, resolution, resolution);
+}
+async function generateNMO(n0, m0, a0, r) {
+  const [n, m, a] = await Promise.all([loadAndResize(n0, r), loadAndResize(m0, r), loadAndResize(a0, r)]);
+  const d = n.data, md = m.data, ad = a.data;
+  for (let i = 0; i < d.length; i += 4) { d[i + 2] = md[i]; d[i + 3] = ad[i]; }
+  return n;
+}
+async function generateBCR(b0, r0, r) {
+  const [b, rough] = await Promise.all([loadAndResize(b0, r), loadAndResize(r0, r)]);
+  const bd = b.data, rd = rough.data;
+  for (let i = 0; i < bd.length; i += 4) bd[i + 3] = rd[i];
+  return b;
+}
+async function generateCamoCRM(a0, r0, m0, r) {
+  const [ao, rough, metal] = await Promise.all([loadAndResize(a0, r), loadAndResize(r0, r), loadAndResize(m0, r)]);
+  const out = new ImageData(r, r), o = out.data, a = ao.data, rr = rough.data, m = metal.data;
+  for (let i = 0; i < o.length; i += 4) {
+    o[i] = Math.floor((a[i] / 255) * (rr[i] / 255) * 255);
+    o[i + 1] = rr[i]; o[i + 2] = m[i]; o[i + 3] = 255;
+  }
+  const c = document.createElement("canvas");
+  c.width = r; c.height = r; c.getContext("2d").putImageData(out, 0, 0);
+  return { data: out, dataUrl: c.toDataURL("image/png") };
+}
+/* Encode straight from ImageData - no canvas, no <img> re-decode. Canvas 2D is
+   premultiplied, so RGB under a low alpha (roughness/AO) gets crushed toward
+   black and is unrecoverable. */
+function encodeMap(imgData, format) {
+  const { data, width, height } = imgData;
+  const bytes = format === "tga" ? encodeTGA(data, width, height, true) : encodePNG(data, width, height, 6);
+  return Promise.resolve(new Blob([bytes], { type: format === "tga" ? "image/x-tga" : "image/png" }));
+}
+
+function sanitize(name) {
+  const c = String(name || "").trim().replace(/[^a-zA-Z0-9._-]+/g, "_").replace(/^_+|_+$/g, "");
+  return c || "material";
+}
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* ---- atlas ---- */
+const GRID = 512;
+const ATLAS_SIZES = [512, 1024, 2048, 4096];
+const ZONE_HUES = [28, 220, 350, 46, 196, 316, 8, 262, 96, 178];
+function zoneColor(i) { return "hsl(" + ZONE_HUES[i % ZONE_HUES.length] + ", 78%, " + (54 + (i % 3) * 6) + "%)"; }
+const CHANNEL_FILL = { basecolor: "#000000", roughness: "#808080", normal: "#8080ff", metallic: "#000000", ao: "#ffffff" };
+
+async function atlasCanvas(mats, W, H, type) {
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(W)); c.height = Math.max(1, Math.round(H));
+  const ctx = c.getContext("2d");
+  ctx.imageSmoothingQuality = "high";
+  ctx.fillStyle = CHANNEL_FILL[type] || "#000000";
+  ctx.fillRect(0, 0, c.width, c.height);
+  for (const m of mats) {
+    const src = m.textures && m.textures[type];
+    if (!src) continue;
+    const img = await loadImage(src);
+    ctx.save();
+    if (m.rot) { ctx.translate(m.x + m.tile, m.y); ctx.rotate(Math.PI / 2); ctx.drawImage(img, 0, 0, m.tile, m.tile); }
+    else ctx.drawImage(img, m.x, m.y, m.tile, m.tile);
+    ctx.restore();
+  }
+  return c;
+}
+async function atlasChannel(mats, W, H, type) {
+  const c = await atlasCanvas(mats, W, H, type);
+  return c.getContext("2d").getImageData(0, 0, c.width, c.height);
+}
+function mergeBCR(base, rough) { const d = base.data, r = rough.data; for (let i = 0; i < d.length; i += 4) d[i + 3] = r[i]; return base; }
+function mergeNMO(norm, metal, ao) {
+  const d = norm.data, m = metal.data, a = ao.data;
+  for (let i = 0; i < d.length; i += 4) { d[i + 2] = m[i]; d[i + 3] = a[i]; }
+  return norm;
+}
+
+function thumbEl(src, extra) {
+  if (!src) return null;
+  return React.createElement("img", { src: src, alt: "", style: Object.assign({ width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" }, extra || {}) });
+}
+
+function isTGAFile(f) { return /\.(tga|targa)$/i.test(f.name); }
+function isImageFile(f) { return isTGAFile(f) || (f.type || "").startsWith("image/") || /\.(png|jpe?g|webp|bmp|gif|avif)$/i.test(f.name); }
+function readDataURL(file) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("failed to read " + file.name)); r.readAsDataURL(file); });
+}
+async function fileToDataURL(file) { return isTGAFile(file) ? tgaToDataURL(await file.arrayBuffer()) : readDataURL(file); }
+
+class Component extends DCLogic {
+  state = {
+    module: 4,
+    // module 1
+    phase: "idle", dirName: "", unsupported: false, errorMsg: "",
+    scanPhase: "", scanned: 0, metas: 0, ematCount: 0,
+    rows: [], skipped: 0, ignored: 0, expanded: null, backup: true,
+    dragOver: false, doneMsg: "", applying: false,
+    // module 2
+    sets: [], nextSetId: 1, settingsOpen: false, texDragOver: false,
+    settings: { defaultResolution: 2048, defaultExportFormat: "tga", textureAliases: DEFAULT_ALIASES.map(a => Object.assign({}, a)) },
+    newAliasType: "normal", newAliasPattern: "", previews: {}, busy: {},
+    activity: null,
+    // module 3
+    tgaFiles: [], nextTgaId: 1, tgaDragOver: false, resizeStatus: "", resizeError: false, reducingAll: false,
+    // module 4
+    railOpen: true, fbxName: "", fbxInfo: null, atlasMats: [], atlasW: 2048, atlasH: 2048,
+    fbxDragOver: false, atlasSlotDrag: null, matDragOver: null, tileDrag: null, atlasAreaDrag: false,
+    previewMode: "zones", atlasBusy: false, lightX: 0.72, lightY: 0.28,
+    demo: false, demoLoading: false, demoMesh: "",
+    toasts: []
+  };
+
+  atlasRef = React.createRef();
+  viewportRef = React.createRef();
+  lightRef = React.createRef();
+
+  componentDidMount() {
+    // TEST MODE: unsupported-browser overlay disabled - re-enable by restoring the check below.
+    // if (typeof window !== "undefined" && !("showDirectoryPicker" in window)) this.setState({ unsupported: true });
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(SETTINGS_KEY) || "null");
+      if (saved && typeof saved === "object") this.setState(s => ({ settings: Object.assign({}, s.settings, saved) }));
+    } catch (e) {}
+    /* ?demo=1 (or #demo) opens straight into demo mode - works on file:// too. */
+    try {
+      const q = new URLSearchParams(window.location.search).get("demo");
+      const on = true;
+      if (on) this.enterDemo();
+    } catch (e) {}
+  }
+
+  syncModeUrl(demo) {
+    try {
+      const url = new URL(window.location.href);
+      if (demo) url.searchParams.set("demo", "1"); else url.searchParams.delete("demo");
+      if (/(^|[#&])demo\b/.test(url.hash)) url.hash = "";
+      window.history.replaceState(null, "", url.toString());
+    } catch (e) {}
+  }
+
+  saveSettings(next) {
+    this.setState({ settings: next });
+    try { window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(next)); } catch (e) {}
+  }
+
+  /* Demo mode. Sample maps are fetched from the content repo and pushed into the
+     modules as if they had been dropped in; nothing may be written to disk or
+     downloaded while it is on, and leaving it discards everything it created. */
+  demoBlocked(what) {
+    if (!this.state.demo) return false;
+    this.toast("Demo mode - " + (what || "output") + " is disabled. Switch to Production to write files.", "error");
+    return true;
+  }
+
+  async enterDemo() {
+    if (this.state.demo || this.state.demoLoading) return;
+    const base = DEMO_BASE;
+    const names = ["M203_BaseColor.webp", "M203_Normal.webp", "M203_AO.webp", "M203_Metallic.webp", "M203_Roughness.webp"];
+    this.setState({ demoLoading: true, demo: true, module: 4 });
+    this.syncModeUrl(true);
+    try {
+      /* Fetched in parallel - 10 MB of PNG over four sequential round trips was
+         the whole delay. */
+      let got = 0;
+      this.act("Fetching sample textures", 0, names.length);
+      const files = await Promise.all(names.map(async name => {
+        const res = await fetch(base + name, { cache: "force-cache" });
+        if (!res.ok) throw new Error(name + " - HTTP " + res.status);
+        const blob = await res.blob();
+        this.act("Fetching sample textures", ++got, names.length);
+        return new File([blob], name, { type: "image/webp" });
+      }));
+      this._demoFiles = files;
+      await this.ingestTextureFiles(files);
+      await this.loadDemoResizeFiles(files);
+      await this.loadDemoMeshes();
+      this.actClear();
+      this.setState({ demoLoading: false });
+      this.toast("Demo loaded - M203 sample set", "success");
+    } catch (err) {
+      this.actClear();
+      this.setState({ demoLoading: false });
+      this.toast("Demo fetch failed: " + ((err && err.message) || "network error"), "error");
+    }
+  }
+
+  /* Reads IHDR only - dimensions and layout without touching the pixel data. */
+  /* Both sample meshes load together as one combined scene - that is the point
+     of atlas combine. Preview geometry is concatenated and each document's
+     material slots are offset so triangle indices stay pointed at the right
+     zone; material ids are namespaced by file in case the two collide. */
+  async loadDemoMeshes() {
+    const lib = await this.fbxLib();
+    const parts = [];
+    let n = 0;
+    for (const name of DEMO_MESHES) {
+      this.act("Reading " + name, ++n, DEMO_MESHES.length);
+      const res = await fetch(DEMO_BASE + name, { cache: "force-cache" });
+      if (!res.ok) throw new Error(name + " - HTTP " + res.status);
+      const buf = await res.arrayBuffer();
+      const doc = lib.parse(buf);
+      parts.push({ name, doc, info: lib.inspect(doc), mesh: lib.previewMesh(doc) });
+    }
+
+    const mats = [], posChunks = [], uvChunks = [], tri = [];
+    let slotBase = 0, verts = 0, uvLen = 0, outOfRange = 0, meshes = [];
+    for (const p of parts) {
+      const stem = p.name.replace(/\.fbx$/i, "");
+      p.info.materials.forEach((m, i) => mats.push({
+        id: stem + ":" + m.id, fbxId: m.id, source: p.name,
+        name: m.name || (stem + "_material_" + (i + 1)),
+        color: zoneColor(mats.length), tile: 1024, rot: 0, x: 0, y: 0, sized: false, textures: {},
+        polys: p.info.meshes.reduce((t, me) => t + (me.materialIds.indexOf(m.id) >= 0 ? me.polyCount : 0), 0)
+      }));
+      posChunks.push(p.mesh.positions); uvChunks.push(p.mesh.uvs);
+      verts += p.mesh.positions.length; uvLen += p.mesh.uvs.length;
+      for (const mi of p.mesh.triMaterial) tri.push(mi + slotBase);
+      slotBase += p.info.materials.length;
+      outOfRange += p.info.outOfRange || 0;
+      meshes = meshes.concat(p.info.meshes || []);
+    }
+    if (!mats.length) throw new Error("No materials found on the sample meshes");
+
+    const positions = new Float32Array(verts), uvs = new Float32Array(uvLen);
+    let po = 0, uo = 0;
+    for (const c of posChunks) { positions.set(c, po); po += c.length; }
+    for (const c of uvChunks) { uvs.set(c, uo); uo += c.length; }
+
+    this._demoDocs = parts;
+    this.fbxBuffer = null;
+    this.meshData = { positions, uvs, triMaterial: tri };
+    const fit = this.bestFit(mats);
+    this.disposeViewer();
+    this.setState({
+      fbxName: parts.map(p => p.name).join(" + "),
+      fbxInfo: { version: parts[0].info.version, materials: mats, meshes, outOfRange },
+      atlasMats: fit.mats, atlasW: fit.w, atlasH: fit.h, fbxDragOver: false, demoMesh: "both"
+    }, () => this.applyDemoToAtlas());
+  }
+
+  async loadDemoResizeFiles(files) {
+    const rows = [];
+    let id = this.state.nextTgaId;
+    for (const file of files) {
+      try {
+        const buf = await file.arrayBuffer();
+        /* Header only - no decode just to learn the dimensions. */
+        const isWebp = /\.webp$/i.test(file.name);
+        const info = isWebp ? webpHeader(buf) : pngHeader(buf);
+        rows.push({ id: id++, name: file.name, handle: null, original: new Uint8Array(buf.slice(0)), modified: false,
+          width: info.width, height: info.height, bytesPerPixel: info.bytesPerPixel, targetSize: info.width,
+          nativeWidth: info.width, buffer: buf, isPng: !isWebp, status: "idle",
+          srcColorType: info.colorType, srcBitDepth: info.bitDepth, demo: true });
+      } catch (e) {}
+    }
+    this.setState(s => ({ tgaFiles: s.tgaFiles.concat(rows), nextTgaId: id }));
+  }
+
+  /* Every material gets the same sample maps, so a multi-material mesh shows a
+     real multi-zone atlas without the user supplying textures. */
+  applyDemoToAtlas() {
+    const sets = this.state.sets;
+    const src = sets.length ? sets[sets.length - 1].textures : null;
+    if (!src) return;
+    const mats = this.state.atlasMats;
+    if (!mats.length) return;
+    const next = mats.map(m => Object.assign({}, m, {
+      srcName: "M203", sized: true,
+      tile: m.sized ? m.tile : 2048,
+      textures: Object.assign({}, m.textures, src)
+    }));
+    if (!this.repack(next, this.state.atlasW, this.state.atlasH)) {
+      const fit = this.bestFit(next);
+      this.setState({ atlasMats: fit.mats, atlasW: fit.w, atlasH: fit.h });
+      this.queuePreview();
+    }
+  }
+
+  /* Leaving demo drops everything it created, mesh included - the sample FBX
+     came from the network, not from the user. */
+  exitDemo() {
+    if (!this.state.demo) return;
+    this._demoFiles = null;
+    this._demoDocs = null;
+    this._texPool = null;
+    this.syncModeUrl(false);
+    this.meshData = null;
+    this.fbxBuffer = null;
+    this.disposeViewer();
+    this.setState(s => ({
+      demo: false, demoLoading: false, demoMesh: "", fbxInfo: null, fbxName: "", atlasMats: [],
+      sets: [], previews: {}, busy: {},
+      tgaFiles: [], resizeStatus: "", resizeError: false,
+      atlasW: 2048, atlasH: 2048, previewMode: "zones", tileDrag: null
+    }));
+    this.actClear();
+    this.toast("Demo data cleared");
+  }
+
+  act(label, done, total) { this.setState({ activity: { label, done, total } }); }
+  actClear() { this.setState({ activity: null }); }
+
+  toast(message, kind) {
+    const id = "t" + Date.now() + Math.random().toString(36).slice(2, 6);
+    this.setState(s => ({ toasts: s.toasts.concat([{ id, message, kind }]).slice(-4) }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(t => t.id !== id) })), 4200);
+  }
+
+  /* ================= MODULE 1 - material patch ================= */
+
+  async pick() {
+    this.setState({ errorMsg: "" });
+    if (!("showDirectoryPicker" in window)) { this.setState({ errorMsg: "Folder picking needs Chrome or Edge on desktop." }); return; }
+    let handle;
+    try { handle = await window.showDirectoryPicker({ mode: "readwrite", id: "camo-patcher" }); } catch (e) { return; }
+    this.dir = handle;
+    this.scan();
+  }
+
+  async onFolderDrop(e) {
+    e.preventDefault();
+    this.setState({ dragOver: false, errorMsg: "" });
+    const item = e.dataTransfer && e.dataTransfer.items && e.dataTransfer.items[0];
+    if (!item || !item.getAsFileSystemHandle) { this.setState({ errorMsg: "This browser can't read dropped folders - use Chrome or Edge on desktop." }); return; }
+    try {
+      const h = await item.getAsFileSystemHandle();
+      if (!h || h.kind !== "directory") { this.setState({ errorMsg: "That's a file - drop the folder that contains your materials." }); return; }
+      if (h.requestPermission && (await h.requestPermission({ mode: "readwrite" })) !== "granted") {
+        this.setState({ errorMsg: "Write permission denied for that folder." }); return;
+      }
+      this.dir = h;
+      this.scan();
+    } catch (err) { this.setState({ errorMsg: String((err && err.message) || err) }); }
+  }
+
+  async scan() {
+    const dir = this.dir;
+    if (!dir) return;
+    this.setState({ phase: "scanning", dirName: dir.name, scanPhase: "Walking the folder", scanned: 0, metas: 0, rows: [], skipped: 0, ignored: 0, doneMsg: "", expanded: null });
+
+    const emats = [], metaIndex = new Map();
+    let count = 0, tick = 0;
+    const walk = async (handle, parts) => {
+      for await (const entry of handle.values()) {
+        if (entry.kind === "directory") { await walk(entry, parts.concat(entry.name)); continue; }
+        count++;
+        const lower = entry.name.toLowerCase();
+        if (lower.endsWith(".edds.meta")) {
+          const list = metaIndex.get(lower) || [];
+          list.push({ handle: entry, parts, path: parts.concat(entry.name).join("/") });
+          metaIndex.set(lower, list);
+        } else if (lower.endsWith(".emat")) {
+          emats.push({ handle: entry, parts, parent: handle });
+        }
+        if (++tick % 60 === 0) {
+          this.setState({ scanned: count, metas: metaIndex.size });
+          this.act("Walking folder, " + count + " files seen", 0, 0);
+          await new Promise(r => setTimeout(r, 0));
+        }
+      }
+    };
+    try { await walk(dir, []); } catch (err) { this.setState({ phase: "idle", errorMsg: "Scan failed: " + ((err && err.message) || err) }); return; }
+
+    this.setState({ scanned: count, metas: metaIndex.size, scanPhase: "Reading materials", ematCount: emats.length });
+    await new Promise(r => setTimeout(r, 100));
+
+    const nameCache = new Map();
+    const readName = async (meta) => {
+      if (nameCache.has(meta.path)) return nameCache.get(meta.path);
+      const text = decode(await (await meta.handle.getFile()).arrayBuffer());
+      const m = META_NAME.exec(text);
+      if (!m) throw new Error('no Name "….edds" in ' + meta.handle.name);
+      nameCache.set(meta.path, m[1]);
+      return m[1];
+    };
+
+    const rows = [];
+    let skipped = 0, ignored = 0, i = 0;
+    for (const emat of emats) {
+      i++;
+      if (i % 10 === 0) { this.setState({ scanned: i }); this.act("Reading material " + emat.handle.name, i, emats.length); await new Promise(r => setTimeout(r, 0)); }
+      let text;
+      try { text = decode(await (await emat.handle.getFile()).arrayBuffer()); }
+      catch (err) {
+        rows.push({ id: "r" + rows.length, handle: emat.handle, parent: emat.parent, name: emat.handle.name, dir: emat.parts.join("/") || ".", status: "error", note: "Could not read: " + ((err && err.message) || err), selected: false });
+        continue;
+      }
+      if (!EMPTY_EMAT.test(text)) { ignored++; continue; }
+
+      const stem = emat.handle.name.replace(/\.emat$/i, "");
+      const found = {}, missing = [];
+      for (const sfx of SUFFIXES) {
+        const cands = metaIndex.get((stem + "_" + sfx + ".edds.meta").toLowerCase()) || [];
+        if (!cands.length) { missing.push("_" + sfx); continue; }
+        found[sfx] = cands.slice().sort((a, b) => {
+          const ra = rank(emat.parts, a.parts), rb = rank(emat.parts, b.parts);
+          return ra[0] - rb[0] || ra[1] - rb[1] || a.path.toLowerCase().localeCompare(b.path.toLowerCase());
+        })[0];
+      }
+      const base = { id: "r" + rows.length, handle: emat.handle, parent: emat.parent, name: emat.handle.name, dir: emat.parts.join("/") || "." };
+      if (missing.length) {
+        skipped++;
+        rows.push(Object.assign(base, { status: "missing", selected: false, note: "Missing " + missing.join(", ") + ".edds.meta - left untouched." }));
+        continue;
+      }
+      try {
+        const names = {};
+        for (const sfx of SUFFIXES) names[sfx] = await readName(found[sfx]);
+        rows.push(Object.assign(base, { status: "ready", selected: true, text: materialText(names.bcr, names.crm, names.nmo),
+          note: "Resolved from " + found.bcr.handle.name + ", " + found.crm.handle.name + ", " + found.nmo.handle.name }));
+      } catch (err) {
+        skipped++;
+        rows.push(Object.assign(base, { status: "missing", selected: false, note: "Invalid metadata: " + ((err && err.message) || err) }));
+      }
+    }
+
+    rows.sort((a, b) => (a.status === "ready" ? 0 : 1) - (b.status === "ready" ? 0 : 1) ||
+      (a.dir + "/" + a.name).toLowerCase().localeCompare((b.dir + "/" + b.name).toLowerCase()));
+    this.setState({ rows, skipped, ignored, ematCount: emats.length, phase: rows.length ? "results" : "empty" });
+    this.actClear();
+  }
+
+  async apply() {
+    if (this.demoBlocked("patching .emat files")) return;
+    const targets = this.state.rows.filter(r => r.status === "ready" && r.selected);
+    if (!targets.length) return;
+    this.setState({ applying: true, doneMsg: "" });
+    const set = (id, patch) => this.setState(s => ({ rows: s.rows.map(r => r.id === id ? Object.assign({}, r, patch) : r) }));
+    let ok = 0, failed = 0, n = 0;
+    for (const row of targets) {
+      this.act("Patching material " + row.name, ++n, targets.length);
+      set(row.id, { status: "working" });
+      await new Promise(r => setTimeout(r, 80));
+      try {
+        if (this.state.backup) {
+          const bak = row.name + ".bak";
+          let exists = true;
+          try { await row.parent.getFileHandle(bak); } catch (e) { exists = false; }
+          if (!exists) {
+            const orig = await (await row.handle.getFile()).arrayBuffer();
+            const bh = await row.parent.getFileHandle(bak, { create: true });
+            const bw = await bh.createWritable();
+            await bw.write(orig); await bw.close();
+          }
+        }
+        const w = await row.handle.createWritable();
+        await w.write(new Blob([row.text], { type: "text/plain" }));
+        await w.close();
+        ok++;
+        set(row.id, { status: "updated", selected: false });
+      } catch (err) {
+        failed++;
+        set(row.id, { status: "error", selected: false, note: "Write failed: " + ((err && err.message) || err) });
+      }
+    }
+    this.actClear();
+    this.setState({ applying: false, doneMsg: ok + (ok === 1 ? " material" : " materials") + " rewritten as MatPBRCamo" +
+      (this.state.backup ? " · backups written" : "") + (failed ? " · " + failed + " failed" : "") });
+  }
+
+  /* ================= MODULE 2 - texture packing ================= */
+
+  aliasTokens(entry) { return String((entry && entry.alias) || "").split(",").map(t => t.trim().toLowerCase()).filter(Boolean); }
+
+  aliasesLongestFirst() {
+    const out = [];
+    for (const e of this.state.settings.textureAliases)
+      for (const a of this.aliasTokens(e)) out.push({ id: e.id, textureType: e.textureType, alias: a });
+    return out.sort((a, b) => b.alias.length - a.alias.length);
+  }
+
+  detectType(filename) {
+    const lower = filename.toLowerCase();
+    for (const e of this.aliasesLongestFirst()) {
+      const a = e.alias.trim().toLowerCase();
+      if (a && lower.includes(a)) return e.textureType;
+    }
+    return null;
+  }
+
+  baseName(filename) {
+    const noExt = filename.replace(/\.[^.]+$/, ""), lower = noExt.toLowerCase();
+    for (const e of this.aliasesLongestFirst()) {
+      const a = e.alias.trim().toLowerCase();
+      if (!a) continue;
+      if (lower.endsWith(a)) {
+        const b = noExt.slice(0, noExt.length - a.length).replace(/[_\-. ]+$/, "");
+        if (b) return b;
+      }
+      const bare = a.replace(/^_+/, ""), und = "_" + bare, idx = lower.indexOf(und);
+      if (bare && idx > 0) {
+        const b = (noExt.slice(0, idx) + noExt.slice(idx + und.length)).replace(/[_\-. ]+$/, "").replace(/^[_\-. ]+/, "");
+        if (b) return b;
+      }
+      const segs = noExt.split(/[_-]/), mi = segs.findIndex(s => s.toLowerCase() === bare);
+      if (mi > -1 && segs.length > 1) {
+        const b = segs.filter((_, i) => i !== mi).join("_").replace(/[_\-. ]+$/, "");
+        if (b) return b;
+      }
+    }
+    return noExt;
+  }
+
+  newSet(name) {
+    const id = this.state.nextSetId;
+    this.setState(s => ({ nextSetId: s.nextSetId + 1 }));
+    return { id, name: name || ("Texture set " + id), resolution: this.state.settings.defaultResolution,
+      exportFormat: this.state.settings.defaultExportFormat,
+      textures: { normal: null, ao: null, metallic: null, basecolor: null, roughness: null } };
+  }
+
+  patchSet(id, patch) {
+    this.setState(s => ({ sets: s.sets.map(x => x.id === id ? Object.assign({}, x, patch) : x) }));
+  }
+
+  setTexture(id, type, dataUrl) {
+    this.setState(s => ({
+      sets: s.sets.map(x => x.id === id ? Object.assign({}, x, { textures: Object.assign({}, x.textures, { [type]: dataUrl }) }) : x)
+    }), () => this.refreshPreview(id));
+  }
+
+  refreshPreview(id) {
+    const set = this.state.sets.find(s => s.id === id);
+    if (!set) return;
+    const t = set.textures;
+    if (!(t.ao && t.roughness && t.metallic)) {
+      this.setState(s => { const p = Object.assign({}, s.previews); delete p[id]; return { previews: p }; });
+      return;
+    }
+    generateCamoCRM(t.ao, t.roughness, t.metallic, 512)
+      .then(({ dataUrl }) => this.setState(s => ({ previews: Object.assign({}, s.previews, { [id]: dataUrl }) })))
+      .catch(() => {});
+  }
+
+  openTexturePicker(setId, type) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*,.tga,.targa";
+    input.multiple = setId == null;
+    input.addEventListener("change", async () => {
+      const files = Array.from(input.files || []);
+      if (!files.length) return;
+      if (setId == null) { this.ingestTextureFiles(files); return; }
+      await this.loadIntoSlot(setId, type, files[0]);
+    });
+    input.click();
+  }
+
+  async loadIntoSlot(setId, type, file) {
+    if (!isImageFile(file)) { this.toast(file.name + " is not a supported image", "error"); return; }
+    try {
+      const dataUrl = await fileToDataURL(file);
+      const detected = this.detectType(file.name);
+      const set = this.state.sets.find(s => s.id === setId);
+      if (detected && detected !== type && set && !set.textures[detected]) {
+        this.setTexture(setId, detected, dataUrl);
+        this.toast(file.name + " looks like a " + detected + " map - routed there", "success");
+        return;
+      }
+      this.setTexture(setId, type, dataUrl);
+      this.toast(TYPE_LABELS[type] + " loaded", "success");
+    } catch (err) { this.toast((err && err.message) || "load failed", "error"); }
+  }
+
+  async ingestTextureFiles(fileList) {
+    const files = Array.from(fileList).filter(isImageFile);
+    if (!files.length) { this.toast("No supported image files in that drop", "error"); return; }
+    const groups = new Map();
+    let skipped = 0;
+    for (const file of files) {
+      const type = this.detectType(file.name);
+      if (!type) { skipped++; continue; }
+      const base = this.setKeyFor(file.name, type);
+      if (!groups.has(base)) groups.set(base, []);
+      groups.get(base).push({ file, type });
+    }
+    if (skipped) this.toast("Skipped " + skipped + " file" + (skipped === 1 ? "" : "s") + " with no matching alias - check Settings");
+    if (!groups.size) return;
+
+    for (const [base, entries] of groups) {
+      const loaded = {};
+      for (const { file, type } of entries) {
+        try { loaded[type] = await fileToDataURL(file); }
+        catch (err) { this.toast((err && err.message) || ("failed to load " + file.name), "error"); }
+      }
+      const existing = this.state.sets.find(s => s.name === base);
+      if (existing) {
+        this.patchSet(existing.id, { textures: Object.assign({}, existing.textures, loaded) });
+        this.refreshPreview(existing.id);
+      } else {
+        const created = this.newSet(base);
+        Object.assign(created.textures, loaded);
+        this.setState(s => ({ sets: s.sets.concat([created]) }), () => this.refreshPreview(created.id));
+      }
+      const n = Object.keys(loaded).length;
+      this.toast(base + ": " + n + " texture" + (n === 1 ? "" : "s") + " sorted", "success");
+    }
+  }
+
+  setBusy(key, on) { this.setState(s => ({ busy: Object.assign({}, s.busy, { [key]: on }) })); }
+
+  async exportSet(set) {
+    if (this.demoBlocked("export")) return;
+    const t = set.textures;
+    if (!(t.basecolor && t.roughness && t.normal && t.metallic && t.ao)) {
+      this.toast("Needs base color + roughness (BCR) and normal + metallic + AO (NMO)", "error"); return;
+    }
+    this.setBusy("all" + set.id, true);
+    try {
+      const stem = sanitize(set.name), ext = set.exportFormat;
+      this.act("Packing BCR map for " + stem, 1, 2);
+      downloadBlob(await encodeMap(await generateBCR(t.basecolor, t.roughness, set.resolution), ext), stem + "_bcr." + ext);
+      this.act("Packing NMO map for " + stem, 2, 2);
+      downloadBlob(await encodeMap(await generateNMO(t.normal, t.metallic, t.ao, set.resolution), ext), stem + "_nmo." + ext);
+      this.toast("Exported " + stem + "_bcr and _nmo", "success");
+    } catch (err) { this.toast((err && err.message) || "export failed", "error"); }
+    finally { this.setBusy("all" + set.id, false); this.actClear(); }
+  }
+
+  async exportCrm(set) {
+    if (this.demoBlocked("export")) return;
+    const t = set.textures;
+    if (!(t.ao && t.roughness && t.metallic)) { this.toast("Camo CRM needs AO, roughness and metallic", "error"); return; }
+    this.setBusy("crm" + set.id, true);
+    try {
+      const stem = sanitize(set.name), ext = set.exportFormat;
+      this.act("Packing camo CRM map for " + stem, 1, 1);
+      const { data } = await generateCamoCRM(t.ao, t.roughness, t.metallic, set.resolution);
+      downloadBlob(await encodeMap(data, ext), stem + "_crm." + ext);
+      this.toast("Exported " + stem + "_crm." + ext, "success");
+    } catch (err) { this.toast((err && err.message) || "export failed", "error"); }
+    finally { this.setBusy("crm" + set.id, false); this.actClear(); }
+  }
+
+  async downloadAll() {
+    if (this.demoBlocked("download")) return;
+    const complete = this.state.sets.filter(s => TYPES.every(t => s.textures[t]));
+    if (!complete.length) { this.toast("No complete sets - each needs all five maps", "error"); return; }
+    this.setBusy("zip", true);
+    try {
+      let zipped = 0;
+      const build = async (set) => {
+        const t = set.textures, stem = sanitize(set.name), ext = set.exportFormat;
+        this.act("Compressing texture set " + stem + " to ZIP", ++zipped, complete.length);
+        return {
+          stem, ext,
+          bcr: await encodeMap(await generateBCR(t.basecolor, t.roughness, set.resolution), ext),
+          nmo: await encodeMap(await generateNMO(t.normal, t.metallic, t.ao, set.resolution), ext),
+          crm: await encodeMap((await generateCamoCRM(t.ao, t.roughness, t.metallic, set.resolution)).data, ext)
+        };
+      };
+      if (typeof JSZip === "undefined") {
+        this.toast("ZIP library unavailable - downloading files individually");
+        for (const set of complete) {
+          const b = await build(set);
+          downloadBlob(b.bcr, b.stem + "_bcr." + b.ext);
+          downloadBlob(b.nmo, b.stem + "_nmo." + b.ext);
+          downloadBlob(b.crm, b.stem + "_crm." + b.ext);
+        }
+      } else {
+        const zip = new JSZip();
+        for (const set of complete) {
+          const b = await build(set);
+          const folder = zip.folder(b.stem);
+          folder.file(b.stem + "_bcr." + b.ext, b.bcr);
+          folder.file(b.stem + "_nmo." + b.ext, b.nmo);
+          folder.file(b.stem + "_crm." + b.ext, b.crm);
+        }
+        downloadBlob(await zip.generateAsync({ type: "blob" }), "texture-wizard-export.zip");
+      }
+      const skipped = this.state.sets.length - complete.length;
+      this.toast("Exported " + complete.length + " set" + (complete.length === 1 ? "" : "s") + (skipped ? " - skipped " + skipped + " incomplete" : ""), "success");
+    } catch (err) { this.toast((err && err.message) || "batch export failed", "error"); }
+    finally { this.setBusy("zip", false); this.actClear(); }
+  }
+
+  /* ================= MODULE 3 - in-place resize ================= */
+
+  async openTgaPicker() {
+    if ("showOpenFilePicker" in window) {
+      try {
+        const handles = await window.showOpenFilePicker({ multiple: true,
+          types: [{ description: "Textures", accept: { "image/x-tga": [".tga"], "image/png": [".png"] } }] });
+        const picked = [];
+        for (const handle of handles) picked.push({ file: await handle.getFile(), handle });
+        this.ingestTgas(picked);
+      } catch (e) {}
+      return;
+    }
+    const input = document.createElement("input");
+    input.type = "file"; input.multiple = true; input.accept = ".tga,.png";
+    input.addEventListener("change", () => this.ingestTgas(Array.from(input.files || []).map(file => ({ file, handle: null }))));
+    input.click();
+  }
+
+  async onTgaDrop(e) {
+    e.preventDefault();
+    this.setState({ tgaDragOver: false });
+    const collected = [];
+    for (const item of Array.from((e.dataTransfer && e.dataTransfer.items) || [])) {
+      if (item.kind !== "file") continue;
+      collected.push({ file: item.getAsFile(), handlePromise: item.getAsFileSystemHandle ? item.getAsFileSystemHandle() : Promise.resolve(null) });
+    }
+    const picked = [];
+    for (const { file, handlePromise } of collected) {
+      let handle = null;
+      try { const h = await handlePromise; if (h && h.kind === "file") handle = h; } catch (err) {}
+      if (file) picked.push({ file, handle });
+    }
+    this.ingestTgas(picked);
+  }
+
+  async ingestTgas(list) {
+    const picked = list.filter(p => p.file && /\.(tga|png)$/i.test(p.file.name));
+    if (!picked.length) { this.setState({ resizeStatus: "No .tga or .png files detected", resizeError: true }); return; }
+    for (const { file, handle } of picked) {
+      const isPng = /\.png$/i.test(file.name);
+      try {
+        const id = this.state.nextTgaId;
+        this.setState(s => ({ nextTgaId: s.nextTgaId + 1 }));
+        let entry;
+        if (isPng) {
+          const buf = await file.arrayBuffer();
+          const info = pngHeader(buf);
+          entry = { id, name: file.name, handle, original: new Uint8Array(buf.slice(0)), modified: false, width: info.width, height: info.height,
+            bytesPerPixel: info.bytesPerPixel, targetSize: info.width, nativeWidth: info.width, buffer: buf, isPng: true, status: "idle",
+            srcColorType: info.colorType, srcBitDepth: info.bitDepth };
+        } else {
+          const buf = await file.arrayBuffer();
+          const info = parseTGA(buf);
+          entry = { id, name: file.name, handle, original: new Uint8Array(buf.slice(0)), modified: false, width: info.width, height: info.height,
+            bytesPerPixel: info.bytesPerPixel, targetSize: info.width, nativeWidth: info.width, buffer: buf, isPng: false, status: "idle" };
+        }
+        this.setState(s => ({ tgaFiles: s.tgaFiles.concat([entry]) }));
+      } catch (err) {
+        this.setState({ resizeStatus: file.name + ": " + ((err && err.message) || err), resizeError: true });
+      }
+    }
+  }
+
+  patchTga(id, patch) { this.setState(s => ({ tgaFiles: s.tgaFiles.map(f => f.id === id ? Object.assign({}, f, patch) : f) })); }
+
+  async processEntry(entry) {
+    const ts = entry.targetSize;
+    /* Guard BEFORE decoding: targetSize starts at nativeWidth, so "reduce all" on
+       an untouched queue hits this for every file. entry.width/height are kept
+       current by ingest and refreshFromHandle. Passing the source bytes through
+       also keeps 16-bit depth and ancillary chunks a re-encode would drop. */
+    if (ts === entry.width && ts === entry.height) return new Uint8Array(entry.buffer);
+    const info = entry.isPng ? parsePNG(entry.buffer) : parseTGA(entry.buffer);
+    const pixels = resizePixels(info.pixels, info.width, info.height, ts, ts);
+    return entry.isPng
+      ? encodePNG(pixels, ts, ts, entry.srcColorType != null ? entry.srcColorType : info.colorType)
+      : encodeTGA(pixels, ts, ts, entry.bytesPerPixel === 4);
+  }
+
+  async ensureWrite(handle) {
+    const opts = { mode: "readwrite" };
+    if ((await handle.queryPermission(opts)) === "granted") return true;
+    return (await handle.requestPermission(opts)) === "granted";
+  }
+
+  async refreshFromHandle(entry) {
+    const file = await entry.handle.getFile();
+    const buf = await file.arrayBuffer();
+    const info = entry.isPng ? pngHeader(buf) : parseTGA(buf);
+    const fresh = { buffer: buf, width: info.width, height: info.height, bytesPerPixel: info.bytesPerPixel, nativeWidth: info.width, targetSize: info.width };
+    if (entry.isPng) { fresh.srcColorType = info.colorType; fresh.srcBitDepth = info.bitDepth; }
+    return fresh;
+  }
+
+  async writeEntry(entry, bytesOverride) {
+    if (this.state.demo) throw new Error("demo mode - files are not written to disk");
+    if (!entry.handle) throw new Error("no write access - click the drop zone to open files in Chrome/Edge");
+    if (!await this.ensureWrite(entry.handle)) throw new Error("write permission denied");
+    const data = bytesOverride || await this.processEntry(entry);
+    const w = await entry.handle.createWritable();
+    await w.write(data);
+    await w.close();
+    return this.refreshFromHandle(entry);
+  }
+
+  async reduceEntry(id) {
+    const entry = this.state.tgaFiles.find(f => f.id === id);
+    if (!entry) return;
+    this.patchTga(id, { status: "working" });
+    if (!this.state.reducingAll) this.act("Resizing texture " + entry.name, 1, 1);
+    await new Promise(r => setTimeout(r, 30));
+    try {
+      const depthDrop = entry.isPng && entry.srcBitDepth === 16 && entry.targetSize !== entry.nativeWidth;
+      const fresh = await this.writeEntry(entry);
+      this.patchTga(id, Object.assign({ status: "done", modified: true }, fresh));
+      this.setState({ resizeStatus: entry.name + " overwritten in place" + (depthDrop ? " · 16-bit written back as 8-bit" : ""), resizeError: false });
+    } catch (err) {
+      this.patchTga(id, { status: "error" });
+      this.setState({ resizeStatus: entry.name + ": " + ((err && err.message) || err), resizeError: true });
+    }
+    if (!this.state.reducingAll) this.actClear();
+  }
+
+  async undoEntry(id) {
+    const entry = this.state.tgaFiles.find(f => f.id === id);
+    if (!entry) return;
+    this.patchTga(id, { status: "working" });
+    await new Promise(r => setTimeout(r, 30));
+    try {
+      const fresh = await this.writeEntry(entry, entry.original);
+      this.patchTga(id, Object.assign({ status: "idle", modified: false }, fresh));
+      this.setState({ resizeStatus: entry.name + " restored to original", resizeError: false });
+    } catch (err) {
+      this.patchTga(id, { status: "error" });
+      this.setState({ resizeStatus: entry.name + ": " + ((err && err.message) || err), resizeError: true });
+    }
+  }
+
+  async reduceAll() {
+    if (this.demoBlocked("resampling to disk")) return;
+    this.setState({ reducingAll: true, resizeStatus: "Reducing " + this.state.tgaFiles.length + " file(s)…", resizeError: false });
+    const queue = this.state.tgaFiles.slice();
+    let n = 0;
+    for (const f of queue) { this.act("Resizing texture " + f.name, ++n, queue.length); await this.reduceEntry(f.id); }
+    this.actClear();
+    const failed = this.state.tgaFiles.filter(f => f.status === "error").length;
+    const ok = this.state.tgaFiles.filter(f => f.status === "done").length;
+    this.setState({ reducingAll: false, resizeStatus: ok + " file(s) overwritten in place" + (failed ? " · " + failed + " failed" : ""), resizeError: failed > 0 && ok === 0 });
+  }
+
+  async undoAll() {
+    const modified = this.state.tgaFiles.filter(f => f.modified);
+    if (!modified.length) { this.setState({ resizeStatus: "Nothing to undo", resizeError: false }); return; }
+    let n = 0;
+    for (const f of modified) { this.act("Restoring texture " + f.name, ++n, modified.length); await this.undoEntry(f.id); }
+    this.actClear();
+    this.setState({ resizeStatus: "Restored " + modified.length + " file(s) to original", resizeError: false });
+  }
+
+  /* ================= MODULE 4 - atlas combine ================= */
+
+  fbxLib() {
+    if (!this._fbxLib) {
+      this._fbxLib = new Promise((res, rej) => {
+        if (window.__FBXLIB) return res(window.__FBXLIB);
+        const s = document.createElement("script");
+        s.type = "module";
+        s.textContent = 'import * as m from "./fbx.js"; window.__FBXLIB = m; window.dispatchEvent(new Event("fbxlib"));';
+        window.addEventListener("fbxlib", () => res(window.__FBXLIB), { once: true });
+        s.onerror = () => rej(new Error("Could not load the FBX engine"));
+        document.head.appendChild(s);
+        setTimeout(() => { if (!window.__FBXLIB) rej(new Error("Could not load the FBX engine")); }, 8000);
+      });
+    }
+    return this._fbxLib;
+  }
+
+  pickFbx() {
+    const input = document.createElement("input");
+    input.type = "file"; input.accept = ".fbx";
+    input.onchange = () => { const f = input.files && input.files[0]; if (f) this.loadFbx(f); };
+    input.click();
+  }
+
+  async loadFbx(file) {
+    this.act("Reading " + file.name, 0, 0);
+    try {
+      const buf = await file.arrayBuffer();
+      const lib = await this.fbxLib();
+      const doc = lib.parse(buf);
+      const info = lib.inspect(doc);
+      if (!info.materials.length) throw new Error("No materials found on that mesh");
+      this.fbxBuffer = buf;
+      this.meshData = lib.previewMesh(doc);
+      const mats = info.materials.map((m, i) => ({
+        id: m.id, name: m.name || "material_" + (i + 1), color: zoneColor(i),
+        tile: 1024, rot: 0, x: 0, y: 0, sized: false, textures: {},
+        polys: info.meshes.reduce((n, me) => n + (me.materialIds.indexOf(m.id) >= 0 ? me.polyCount : 0), 0)
+      }));
+      const fit = this.bestFit(this.restoreTextures(mats));
+      this.disposeViewer();
+      this.setState({ fbxName: file.name, fbxInfo: info, atlasMats: fit.mats, atlasW: fit.w, atlasH: fit.h, fbxDragOver: false },
+        () => { if (this.state.demo) this.applyDemoToAtlas(); });
+      this.actClear();
+      this.toast(info.materials.length + (info.materials.length === 1 ? " material" : " materials") + " read from " + file.name, "success");
+      if (info.outOfRange) this.toast("Some UVs sit outside 0-1 and will be clamped into their tile", "error");
+    } catch (e) {
+      this.actClear();
+      this.setState({ fbxDragOver: false });
+      this.toast(e.message || "Could not read that FBX", "error");
+    }
+  }
+
+  packInto(mats, W, H) {
+    const cw = Math.floor(W / GRID), ch = Math.floor(H / GRID);
+    const grid = new Array(cw * ch).fill(false);
+    const order = mats.slice().sort((a, b) => b.tile - a.tile);
+    const pos = {};
+    for (const m of order) {
+      const n = Math.max(1, Math.round(m.tile / GRID));
+      let done = false;
+      for (let y = 0; y + n <= ch && !done; y += n) {
+        for (let x = 0; x + n <= cw && !done; x += n) {
+          let free = true;
+          for (let j = 0; j < n && free; j++) for (let i = 0; i < n; i++) if (grid[(y + j) * cw + x + i]) { free = false; break; }
+          if (!free) continue;
+          for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) grid[(y + j) * cw + x + i] = true;
+          pos[m.id] = { x: x * GRID, y: y * GRID };
+          done = true;
+        }
+      }
+      if (!done) return null;
+    }
+    return mats.map(m => Object.assign({}, m, pos[m.id]));
+  }
+
+  bestFit(mats) {
+    const cands = [];
+    for (const w of ATLAS_SIZES) for (const h of ATLAS_SIZES) cands.push({ w, h });
+    cands.sort((a, b) => (a.w * a.h - b.w * b.h) || (Math.abs(a.w - a.h) - Math.abs(b.w - b.h)) || (b.w - a.w));
+    for (const c of cands) { const p = this.packInto(mats, c.w, c.h); if (p) return { mats: p, w: c.w, h: c.h }; }
+    return { mats: mats.map(m => Object.assign({}, m, { x: 0, y: 0 })), w: 4096, h: 4096 };
+  }
+
+  repack(mats, W, H) {
+    const source = mats || this.state.atlasMats;
+    const w = W || this.state.atlasW, h = H || this.state.atlasH;
+    const p = this.packInto(source, w, h);
+    if (!p) { this.toast("Those tiles will not fit in " + w + " × " + h, "error"); return false; }
+    this.setState({ atlasMats: p, atlasW: w, atlasH: h });
+    this.queuePreview();
+    return true;
+  }
+
+  smallestFit() {
+    const fit = this.bestFit(this.state.atlasMats);
+    this.setState({ atlasMats: fit.mats, atlasW: fit.w, atlasH: fit.h });
+    this.queuePreview();
+    this.toast("Fitted to " + fit.w + " × " + fit.h);
+  }
+
+  patchMat(id, patch) {
+    this.setState(s => ({ atlasMats: s.atlasMats.map(m => m.id === id ? Object.assign({}, m, patch) : m) }));
+  }
+
+  setTile(id, size) {
+    const next = this.state.atlasMats.map(m => m.id === id ? Object.assign({}, m, { tile: size, sized: true }) : m);
+    if (!this.repack(next, this.state.atlasW, this.state.atlasH)) {
+      const fit = this.bestFit(next);
+      this.setState({ atlasMats: fit.mats, atlasW: fit.w, atlasH: fit.h });
+      this.queuePreview();
+    }
+  }
+
+  openAtlasPicker(id, type) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*,.tga";
+    input.onchange = () => { const f = input.files && input.files[0]; if (f) this.loadAtlasTexture(id, type, f); };
+    input.click();
+  }
+
+  async loadAtlasTexture(id, type, file) {
+    try {
+      const url = await fileToDataURL(file);
+      const img = await loadImage(url);
+      const native = Math.min(4096, Math.max(512, Math.pow(2, Math.round(Math.log2(img.width || 1024)))));
+      const next = this.state.atlasMats.map(m => m.id === id
+        ? Object.assign({}, m, {
+            textures: Object.assign({}, m.textures, { [type]: url }),
+            tile: m.sized ? m.tile : native, sized: true
+          })
+        : m);
+      if (!this.repack(next, this.state.atlasW, this.state.atlasH)) {
+        const fit = this.bestFit(next);
+        this.setState({ atlasMats: fit.mats, atlasW: fit.w, atlasH: fit.h });
+        this.queuePreview();
+      }
+    } catch (e) { this.toast(e.message || "Could not read that image", "error"); }
+  }
+
+  /* "kac_rail_riser_basecolor.png" -> "kac_rail_riser": strip the type token so a
+     whole folder groups by the name that precedes it. */
+  setKeyFor(fileName, type) {
+    let base = this.baseName(fileName);
+    const aliases = (this.state.settings.textureAliases || [])
+      .filter(a => a.textureType === type)
+      .reduce((acc, a) => acc.concat(this.aliasTokens(a)), [])
+      .concat(["_" + type, type])
+      .sort((a, b) => b.length - a.length);
+    const low = base.toLowerCase();
+    for (const alias of aliases) {
+      const al = String(alias).toLowerCase();
+      const i = low.lastIndexOf(al);
+      if (i >= 0) { base = base.slice(0, i) + base.slice(i + al.length); break; }
+    }
+    return base.replace(/[\s._-]+$/g, "").replace(/^[\s._-]+/g, "") || this.baseName(fileName);
+  }
+
+  atlasDropFiles(id, files) {
+    const list = Array.from(files || []);
+    const fbx = list.find(f => /\.fbx$/i.test(f.name));
+    if (fbx) return this.loadFbx(fbx);
+    const images = list.filter(isImageFile);
+    let unknown = 0;
+    images.forEach(f => { const t = this.detectType(f.name); if (t) this.loadAtlasTexture(id, t, f); else unknown++; });
+    if (unknown) this.toast(unknown + (unknown === 1 ? " file" : " files") + " did not match a texture alias", "error");
+  }
+
+  /* Same behaviour as Texture pack: group a multi-file drop by base name, then
+     hand each group to the material it belongs to. */
+  async ingestAtlasFiles(fileList) {
+    const all = Array.from(fileList || []);
+    const fbx = all.find(x => /\.fbx$/i.test(x.name));
+    if (fbx) await this.loadFbx(fbx);
+    const files = all.filter(isImageFile);
+    if (!files.length) { if (!fbx) this.toast("No supported image files in that drop", "error"); return; }
+    const groups = new Map();
+    let skipped = 0;
+    for (const file of files) {
+      const type = this.detectType(file.name);
+      if (!type) { skipped++; continue; }
+      const base = this.setKeyFor(file.name, type);
+      if (!groups.has(base)) groups.set(base, []);
+      groups.get(base).push({ file, type });
+    }
+    if (skipped) this.toast("Skipped " + skipped + (skipped === 1 ? " file" : " files") + " with no matching alias - check Settings");
+    if (!groups.size) return;
+
+    let mats = this.state.atlasMats.slice();
+    if (!mats.length) { this.toast("Load a mesh first", "error"); return; }
+    const norm = (x) => String(x || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+    const taken = [];
+    for (const [base, entries] of groups) {
+      const nb = norm(base);
+      const open = (m) => taken.indexOf(m.id) < 0;
+      let target = mats.find(m => open(m) && (norm(m.srcName) === nb || norm(m.name) === nb))
+        || mats.find(m => open(m) && nb && (norm(m.name).indexOf(nb) === 0 || nb.indexOf(norm(m.name)) === 0))
+        || mats.find(m => open(m) && !Object.keys(m.textures).length)
+        || mats.find(m => open(m));
+      if (!target) { this.toast(base + ": no free material slot left", "error"); continue; }
+      taken.push(target.id);
+      const loaded = {};
+      let native = 0;
+      for (const entry of entries) {
+        try {
+          const url = await fileToDataURL(entry.file);
+          loaded[entry.type] = url;
+          if (!native) { const img = await loadImage(url); native = img.width || 0; }
+        } catch (err) { this.toast((err && err.message) || ("failed to load " + entry.file.name), "error"); }
+      }
+      const tile = target.sized ? target.tile : Math.min(4096, Math.max(512, Math.pow(2, Math.round(Math.log2(native || 1024)))));
+      mats = mats.map(m => m.id === target.id
+        ? Object.assign({}, m, { srcName: base, textures: Object.assign({}, m.textures, loaded), tile, sized: true })
+        : m);
+      const n = Object.keys(loaded).length;
+      this.toast(base + " → " + target.name + ": " + n + (n === 1 ? " texture" : " textures") + " sorted", "success");
+    }
+    if (!this.repack(mats, this.state.atlasW, this.state.atlasH)) {
+      const fit = this.bestFit(mats);
+      this.setState({ atlasMats: fit.mats, atlasW: fit.w, atlasH: fit.h });
+      this.queuePreview();
+    }
+  }
+
+  texturePool() {
+    return this.state.atlasMats
+      .filter(m => Object.keys(m.textures).length)
+      .map(m => ({ key: m.srcName || m.name, textures: m.textures, tile: m.tile, rot: m.rot, sized: m.sized }));
+  }
+
+  unloadMesh() {
+    this._texPool = this.texturePool();
+    this.disposeViewer();
+    this.meshData = null;
+    this.fbxBuffer = null;
+    this.setState({ fbxInfo: null, fbxName: "", atlasMats: [], tileDrag: null });
+    this.actClear();
+    this.toast(this._texPool.length
+      ? "Mesh unloaded · " + this._texPool.length + (this._texPool.length === 1 ? " texture set held" : " texture sets held")
+      : "Mesh unloaded");
+  }
+
+  restoreTextures(mats) {
+    const pool = (this._texPool || []).slice();
+    if (!pool.length) return mats;
+    const norm = (x) => String(x || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+    const out = mats.map(m => {
+      let i = pool.findIndex(p => norm(p.key) === norm(m.name));
+      if (i < 0) i = pool.findIndex(p => norm(p.key) && (norm(p.key).indexOf(norm(m.name)) >= 0 || norm(m.name).indexOf(norm(p.key)) >= 0));
+      if (i < 0) return m;
+      const p = pool.splice(i, 1)[0];
+      return Object.assign({}, m, { srcName: p.key, textures: p.textures, tile: p.tile, rot: p.rot, sized: p.sized });
+    });
+    const final = out.map(m => {
+      if (Object.keys(m.textures).length || !pool.length) return m;
+      const p = pool.shift();
+      return Object.assign({}, m, { srcName: p.key, textures: p.textures, tile: p.tile, rot: p.rot, sized: p.sized });
+    });
+    this._texPool = null;
+    return final;
+  }
+
+  clearMatTextures(id) {
+    this.patchMat(id, { textures: {}, srcName: "" });
+    this.queuePreview();
+  }
+
+  clearAllTextures() {
+    this._texPool = null;
+    this.setState(s => ({ atlasMats: s.atlasMats.map(m => Object.assign({}, m, { textures: {}, srcName: "" })) }));
+    this.queuePreview();
+    this.toast("All texture sets cleared");
+  }
+
+  resetAtlas() {
+    this._texPool = null;
+    this.disposeViewer();
+    this.meshData = null;
+    this.fbxBuffer = null;
+    this.setState({ fbxInfo: null, fbxName: "", atlasMats: [], atlasW: 2048, atlasH: 2048, tileDrag: null, previewMode: "zones", atlasBusy: false });
+    this.actClear();
+    this.toast("Atlas combine reset");
+  }
+
+  tileDown(id, e) {
+    e.preventDefault();
+    const m = this.state.atlasMats.find(x => x.id === id);
+    if (!m) return;
+    this.dragOrigin = { id, x: m.x, y: m.y };
+    this.setState({ tileDrag: id });
+  }
+
+  tileMove(e) {
+    const id = this.state.tileDrag;
+    if (!id || !this.atlasRef.current) return;
+    const m = this.state.atlasMats.find(x => x.id === id);
+    if (!m) return;
+    const r = this.atlasRef.current.getBoundingClientRect();
+    const px = ((e.clientX - r.left) / r.width) * this.state.atlasW - m.tile / 2;
+    const py = ((e.clientY - r.top) / r.height) * this.state.atlasH - m.tile / 2;
+    const snap = (v, max) => Math.max(0, Math.min(max - m.tile, Math.round(v / m.tile) * m.tile));
+    this.patchMat(id, { x: snap(px, this.state.atlasW), y: snap(py, this.state.atlasH) });
+  }
+
+  tileUp() {
+    const id = this.state.tileDrag;
+    if (!id) return;
+    const mats = this.state.atlasMats, me = mats.find(x => x.id === id);
+    const hit = me && mats.some(o => o.id !== id &&
+      !(o.x + o.tile <= me.x || me.x + me.tile <= o.x || o.y + o.tile <= me.y || me.y + me.tile <= o.y));
+    const outside = me && (me.x + me.tile > this.state.atlasW || me.y + me.tile > this.state.atlasH);
+    if ((hit || outside) && this.dragOrigin && this.dragOrigin.id === id) this.patchMat(id, { x: this.dragOrigin.x, y: this.dragOrigin.y });
+    this.setState({ tileDrag: null });
+    this.queuePreview();
+  }
+
+  atlasRects() {
+    const W = this.state.atlasW, H = this.state.atlasH, map = new Map();
+    this.state.atlasMats.forEach(m => map.set(m.id, {
+      u0: m.x / W, v0: 1 - (m.y + m.tile) / H, du: m.tile / W, dv: m.tile / H, rot: m.rot ? 1 : 0
+    }));
+    return map;
+  }
+
+  atlasBaseName() { return sanitize((this.state.fbxName || "mesh").replace(/\.fbx$/i, "") + "_atlas"); }
+
+  atlasReady() {
+    const mats = this.state.atlasMats;
+    if (!mats.length) return false;
+    return mats.every(m => m.textures.basecolor && m.textures.roughness && m.textures.normal && m.textures.metallic && m.textures.ao);
+  }
+
+  async exportAtlas() {
+    if (this.demoBlocked("export")) return;
+    const s = this.state, W = s.atlasW, H = s.atlasH, mats = s.atlasMats;
+    const name = this.atlasBaseName();
+    this.setState({ atlasBusy: true });
+    try {
+      this.act("Compositing atlas", 0, 5);
+      const base = await atlasChannel(mats, W, H, "basecolor"); this.act("Compositing atlas", 1, 5);
+      const rough = await atlasChannel(mats, W, H, "roughness"); this.act("Compositing atlas", 2, 5);
+      const norm = await atlasChannel(mats, W, H, "normal"); this.act("Compositing atlas", 3, 5);
+      const metal = await atlasChannel(mats, W, H, "metallic"); this.act("Compositing atlas", 4, 5);
+      const ao = await atlasChannel(mats, W, H, "ao"); this.act("Compositing atlas", 5, 5);
+      const fmt = s.settings.defaultExportFormat;
+      this.act("Encoding maps", 0, 2);
+      const bcrBlob = await encodeMap(mergeBCR(base, rough), fmt);
+      this.act("Encoding maps", 1, 2);
+      const nmoBlob = await encodeMap(mergeNMO(norm, metal, ao), fmt);
+      this.act("Encoding maps", 2, 2);
+      this.act("Rewriting UVs", 0, 0);
+      const lib = await this.fbxLib();
+      const doc = lib.parse(this.fbxBuffer.slice(0));
+      const res = lib.applyAtlas(doc, this.atlasRects(), name);
+      const fbxBlob = new Blob([lib.serialize(doc)], { type: "application/octet-stream" });
+      this.act("Packing archive", 0, 0);
+      const zip = new JSZip();
+      zip.file(name + "_bcr." + fmt, bcrBlob);
+      zip.file(name + "_nmo." + fmt, nmoBlob);
+      zip.file(name + ".fbx", fbxBlob);
+      const blob = await zip.generateAsync({ type: "blob" });
+      downloadBlob(blob, name + ".zip");
+      this.actClear();
+      this.toast("Exported " + name + ".zip · " + res.remapped + " polygons remapped", "success");
+    } catch (e) {
+      this.actClear();
+      this.toast(e.message || "Atlas export failed", "error");
+    }
+    this.setState({ atlasBusy: false });
+  }
+
+  /* ---- mesh viewer ---- */
+
+  componentDidUpdate() {
+    if (this.state.module === 4 && this.state.fbxInfo && this.viewportRef.current && !this.viewer) this.buildViewer();
+  }
+
+  disposeViewer() {
+    if (!this.viewer) return;
+    try {
+      this.viewer.alive = false;
+      this.viewer.renderer.dispose();
+      if (this.viewer.el) this.viewer.el.innerHTML = "";
+    } catch (e) {}
+    this.viewer = null;
+  }
+
+  zoneColorArray() {
+    const THREE = window.THREE;
+    const n = this.meshData.positions.length;
+    const out = new Float32Array(n);
+    const cols = this.state.atlasMats.map(m => new THREE.Color().setStyle(m.color));
+    const fallback = new THREE.Color(0xcccccc);
+    this.meshData.triMaterial.forEach((mi, t) => {
+      const c = cols[mi] || fallback;
+      for (let k = 0; k < 3; k++) { const o = (t * 3 + k) * 3; out[o] = c.r; out[o + 1] = c.g; out[o + 2] = c.b; }
+    });
+    return out;
+  }
+
+  buildViewer() {
+    const THREE = window.THREE, el = this.viewportRef.current;
+    if (!THREE || !el || !this.meshData || !this.meshData.positions.length) return;
+    const w = el.clientWidth || 380, h = el.clientHeight || 280;
+    const scene = new THREE.Scene();
+    const cam = new THREE.PerspectiveCamera(38, w / h, 0.01, 1000000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setClearAlpha(0);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(w, h);
+    renderer.domElement.style.display = "block";
+    el.appendChild(renderer.domElement);
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(this.meshData.positions.slice(), 3));
+    geo.setAttribute("uv", new THREE.BufferAttribute(this.meshData.uvs.slice(), 2));
+    geo.setAttribute("color", new THREE.BufferAttribute(this.zoneColorArray(), 3));
+    geo.computeVertexNormals();
+    geo.computeBoundingSphere();
+    const zoneMat = new THREE.MeshLambertMaterial({ vertexColors: true });
+    const texMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 1, metalness: 1 });
+    const mesh = new THREE.Mesh(geo, this.state.previewMode === "zones" ? zoneMat : texMat);
+    const c = geo.boundingSphere.center, r = geo.boundingSphere.radius || 1;
+    mesh.position.set(-c.x, -c.y, -c.z);
+    const outline = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x2c5c07, side: THREE.BackSide }));
+    outline.position.copy(mesh.position).multiplyScalar(1.022);
+    outline.scale.setScalar(1.022);
+    const axisFix = new THREE.Group();
+    axisFix.rotation.x = -Math.PI / 2;
+    axisFix.add(outline);
+    axisFix.add(mesh);
+    const group = new THREE.Group();
+    group.add(axisFix);
+    scene.add(group);
+    const key = new THREE.DirectionalLight(0xfff0dc, 2.4);
+    scene.add(key);
+    scene.add(new THREE.AmbientLight(0x6b4a26, 1.1));
+    scene.add(new THREE.HemisphereLight(0xffe9cf, 0x16330a, .6));
+
+    const st = { rx: -0.3, ry: 0.65, dist: r * 3.1, radius: r, idleAt: performance.now() };
+    const v = { renderer, scene, cam, group, mesh, zoneMat, texMat, st, el, alive: true };
+    this.viewer = v;
+
+    const dom = renderer.domElement;
+    let drag = null;
+    dom.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY }; st.idleAt = performance.now(); dom.setPointerCapture(e.pointerId); });
+    dom.addEventListener("pointermove", e => {
+      if (!drag) return;
+      st.ry += (e.clientX - drag.x) * 0.008;
+      st.rx += (e.clientY - drag.y) * 0.008;
+      st.rx = Math.max(-1.5, Math.min(1.5, st.rx));
+      st.idleAt = performance.now();
+      drag = { x: e.clientX, y: e.clientY };
+    });
+    dom.addEventListener("pointerup", () => { drag = null; });
+    dom.addEventListener("wheel", e => { e.preventDefault(); st.idleAt = performance.now(); st.dist = Math.max(r * 0.6, Math.min(r * 12, st.dist * (1 + Math.sign(e.deltaY) * 0.12))); }, { passive: false });
+
+    let last = performance.now();
+    const tick = () => {
+      if (!v.alive) return;
+      const now = performance.now(), dt = Math.min(64, now - last);
+      last = now;
+      if (now - st.idleAt > 2600 && !drag) st.ry += dt * 0.00022;
+      const az = (this.state.lightX - 0.5) * Math.PI * 2, elv = (0.5 - this.state.lightY) * Math.PI;
+      key.position.set(Math.sin(az) * Math.cos(elv), Math.sin(elv), Math.cos(az) * Math.cos(elv)).multiplyScalar(r * 5);
+      group.rotation.set(st.rx, st.ry, 0);
+      cam.position.set(0, 0, st.dist);
+      cam.lookAt(0, 0, 0);
+      const cw = el.clientWidth, chh = el.clientHeight;
+      if (cw && chh && (cw !== v.w || chh !== v.h)) { v.w = cw; v.h = chh; renderer.setSize(cw, chh); cam.aspect = cw / chh; cam.updateProjectionMatrix(); }
+      renderer.render(scene, cam);
+      requestAnimationFrame(tick);
+    };
+    tick();
+    this.updatePreviewUVs();
+    if (this.state.previewMode !== "zones") this.refreshAtlasTexture();
+  }
+
+  queuePreview() {
+    clearTimeout(this._pvT);
+    this._pvT = setTimeout(() => {
+      this.updatePreviewUVs();
+      if (this.state.previewMode !== "zones") this.refreshAtlasTexture();
+    }, 200);
+  }
+
+  /* Re-project the preview mesh UVs through the current atlas layout so the
+     viewport shows exactly what the exported FBX will carry. */
+  updatePreviewUVs() {
+    if (!this.viewer || !this.meshData) return;
+    const src = this.meshData.uvs;
+    const mats = this.state.atlasMats;
+    const W = this.state.atlasW, H = this.state.atlasH;
+    const rects = mats.map(m => ({ u0: m.x / W, v0: 1 - (m.y + m.tile) / H, du: m.tile / W, dv: m.tile / H, rot: !!m.rot }));
+    const attr = this.viewer.mesh.geometry.getAttribute("uv");
+    const out = attr.array;
+    const tri = this.meshData.triMaterial;
+    for (let t = 0; t < tri.length; t++) {
+      const r = rects[tri[t]] || rects[0];
+      for (let k = 0; k < 3; k++) {
+        const i = (t * 3 + k) * 2;
+        let u = src[i], v = src[i + 1];
+        if (!isFinite(u)) u = 0;
+        if (!isFinite(v)) v = 0;
+        u = u < 0 ? 0 : u > 1 ? 1 : u;
+        v = v < 0 ? 0 : v > 1 ? 1 : v;
+        if (!r) { out[i] = u; out[i + 1] = v; continue; }
+        out[i] = r.rot ? r.u0 + v * r.du : r.u0 + u * r.du;
+        out[i + 1] = r.rot ? r.v0 + (1 - u) * r.dv : r.v0 + v * r.dv;
+      }
+    }
+    attr.needsUpdate = true;
+  }
+
+  async refreshAtlasTexture() {
+    if (!this.viewer || !window.THREE) return;
+    const THREE = window.THREE, s = this.state;
+    const scale = Math.min(1, 1024 / Math.max(s.atlasW, s.atlasH));
+    const mats = s.atlasMats.map(m => Object.assign({}, m, { x: m.x * scale, y: m.y * scale, tile: m.tile * scale }));
+    const W = s.atlasW * scale, H = s.atlasH * scale;
+    const slots = [["basecolor", "map", true], ["normal", "normalMap", false], ["roughness", "roughnessMap", false], ["metallic", "metalnessMap", false]];
+    for (const slot of slots) {
+      try {
+        const canvas = await atlasCanvas(mats, W, H, slot[0]);
+        const tex = new THREE.CanvasTexture(canvas);
+        if (slot[2] && THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+        if (this.viewer.texMat[slot[1]]) this.viewer.texMat[slot[1]].dispose();
+        this.viewer.texMat[slot[1]] = tex;
+      } catch (e) {}
+    }
+    this.viewer.texMat.needsUpdate = true;
+  }
+
+  setPreviewMode(mode) {
+    this.setState({ previewMode: mode });
+    if (this.viewer) this.viewer.mesh.material = mode === "zones" ? this.viewer.zoneMat : this.viewer.texMat;
+    this.updatePreviewUVs();
+    if (mode !== "zones") this.refreshAtlasTexture();
+  }
+
+  lightDrag(e) {
+    if (!this.lightRef.current) return;
+    const r = this.lightRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    const y = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+    this.setState({ lightX: x, lightY: y });
+  }
+
+  mod4View() {
+    const s = this.state;
+    const W = s.atlasW, H = s.atlasH;
+    const ready = this.atlasReady();
+    const used = s.atlasMats.reduce((n, m) => n + m.tile * m.tile, 0);
+    const shortLabel = { basecolor: "BASE", roughness: "ROUGH", normal: "NRM", metallic: "MTL", ao: "AO" };
+    return {
+      noFbx: !s.fbxInfo, hasFbx: !!s.fbxInfo,
+      fbxSummary: s.fbxInfo
+        ? s.fbxName + " · " + s.atlasMats.length + (s.atlasMats.length === 1 ? " material" : " materials") + " · " + s.fbxInfo.meshes.length + (s.fbxInfo.meshes.length === 1 ? " mesh" : " meshes")
+        : "No mesh loaded",
+      fbxLoadStyle: this.btn("primary", false),
+      fbxLoadLabel: s.fbxInfo ? "↥ Swap .FBX" : "↥ Load .FBX",
+      ghostBtn: this.btn("ghost", false),
+      matListStyle: "display:flex;flex-direction:column;gap:12px;max-height:462px;overflow-y:auto;overflow-x:hidden;padding-right:8px",
+      utilBtn: "appearance:none;border:1px solid #4C4741;background:transparent;color:#ABA49B;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;padding:6px 9px;cursor:pointer;transition:all .15s",
+      onUnloadMesh: () => this.unloadMesh(),
+      hasHeld: !s.fbxInfo && !!(this._texPool && this._texPool.length),
+      heldLabel: (this._texPool ? this._texPool.length : 0) + ((this._texPool && this._texPool.length === 1) ? " texture set held for the next mesh" : " texture sets held for the next mesh"),
+      onDiscardHeld: (e) => { e.stopPropagation(); this._texPool = null; this.forceUpdate(); this.toast("Held textures discarded"); },
+      onClearAllTextures: () => this.clearAllTextures(),
+      onResetAtlas: () => this.resetAtlas(),
+      atlasAreaDrag: s.atlasAreaDrag,
+      atlasAreaStyle: "position:relative;display:flex;flex-direction:column;gap:18px;animation:rise .3s ease both;padding:2px;transition:all .18s;" +
+        (s.atlasAreaDrag ? "outline:1px dashed #BF6505;outline-offset:8px;background:rgba(191,101,5,.07)" : ""),
+      onAtlasAreaDragOver: (e) => { e.preventDefault(); if (!s.atlasAreaDrag) this.setState({ atlasAreaDrag: true }); },
+      onAtlasAreaDragLeave: (e) => { if (e.currentTarget.contains(e.relatedTarget)) return; this.setState({ atlasAreaDrag: false }); },
+      onAtlasAreaDrop: (e) => {
+        e.preventDefault();
+        this.setState({ atlasAreaDrag: false, matDragOver: null, atlasSlotDrag: null });
+        if (e.dataTransfer.files && e.dataTransfer.files.length) this.ingestAtlasFiles(e.dataTransfer.files);
+      },
+      atlasExportDisabled: !ready || s.atlasBusy,
+      atlasExportStyle: this.btn("primary", !ready || s.atlasBusy),
+      atlasExportLabel: s.atlasBusy ? "⟳ Working" : ready ? "⬇ Export BCR · NMO · FBX" : "⬇ Fill every slot to export",
+      fbxDropStyle: "cursor:pointer;transition:all .16s;background-blend-mode:multiply;" +
+        (s.fbxDragOver ? "border:1px solid #BF6505;background:rgba(191,101,5,.28)" : "border:1px dashed #4C4741;background:rgba(178,168,156,.10)"),
+      onPickFbx: () => this.pickFbx(),
+      onFbxDragOver: (e) => { e.preventDefault(); if (!s.fbxDragOver) this.setState({ fbxDragOver: true }); },
+      onFbxDragLeave: () => this.setState({ fbxDragOver: false }),
+      onFbxDrop: (e) => {
+        e.preventDefault();
+        this.setState({ fbxDragOver: false });
+        const f = Array.from(e.dataTransfer.files || []).find(x => /\.fbx$/i.test(x.name));
+        if (f) this.loadFbx(f); else this.toast("Drop a binary .fbx file", "error");
+      },
+      onAutoPack: () => { const fit = this.packInto(s.atlasMats, W, H); if (fit) { this.setState({ atlasMats: fit }); this.queuePreview(); this.toast("Tiles re-packed"); } else this.smallestFit(); },
+      onSmallestFit: () => this.smallestFit(),
+      onExportAtlas: () => this.exportAtlas(),
+      atlasSizeOpts: ATLAS_SIZES.map(v => ({ value: v, label: String(v) })),
+      atlasSelStyle: "appearance:none;background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;padding:5px 7px;cursor:pointer",
+      atlasW: W, atlasH: H,
+      onAtlasW: (e) => this.repack(null, Number(e.target.value), H),
+      onAtlasH: (e) => this.repack(null, W, Number(e.target.value)),
+      atlasRef: this.atlasRef,
+      atlasBoxStyle: "position:relative;width:100%;aspect-ratio:" + W + " / " + H + ";border:1px solid #4C4741;background:#141312;overflow:hidden;touch-action:none",
+      atlasGridStyle: "position:absolute;inset:0;pointer-events:none;opacity:.5;background-image:linear-gradient(#38342F 1px,transparent 1px),linear-gradient(90deg,#38342F 1px,transparent 1px);background-size:" + (GRID / W * 100) + "% " + (GRID / H * 100) + "%",
+      atlasDims: W + " × " + H + " · " + GRID + " grid",
+      atlasFill: Math.round(used / (W * H) * 100) + "% used",
+      atlasTiles: s.atlasMats.map(m => ({
+        label: m.tile + (m.rot ? " ↻" : ""),
+        thumb: thumbEl(m.textures.basecolor, { position: "absolute", inset: 0, opacity: .72 }),
+        style: "position:absolute;left:" + (m.x / W * 100) + "%;top:" + (m.y / H * 100) + "%;width:" + (m.tile / W * 100) + "%;height:" + (m.tile / H * 100) + "%;" +
+          "border:2px solid " + m.color + ";box-sizing:border-box;overflow:hidden;cursor:grab;touch-action:none;display:grid;place-items:center;" +
+          "background-color:rgba(18,13,7,.6);transition:opacity .12s;" + (s.tileDrag === m.id ? "z-index:5;opacity:.85" : "z-index:2"),
+        labelStyle: "position:relative;z-index:2;font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.12em;color:" + m.color + ";background:rgba(20,19,18,.82);padding:2px 5px;pointer-events:none;text-align:center;max-width:96%;overflow:hidden;white-space:nowrap",
+        onDown: (e) => this.tileDown(m.id, e)
+      })),
+      onTileMove: (e) => this.tileMove(e),
+      onTileUp: () => this.tileUp(),
+      previewModes: [["zones", "Zones"], ["textured", "Textured"]].map(([v, label]) => ({
+        label,
+        style: "appearance:none;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;padding:5px 9px;cursor:pointer;transition:all .15s;" +
+          (s.previewMode === v ? "border:1px solid #BF6505;background:#BF6505;color:#2A1601" : "border:1px solid #4C4741;background:transparent;color:#ABA49B"),
+        onClick: () => this.setPreviewMode(v)
+      })),
+      viewportRef: this.viewportRef,
+      lightRef: this.lightRef,
+      lightDotStyle: "position:absolute;width:9px;height:9px;background:#E8A055;border-radius:50%;pointer-events:none;box-shadow:0 0 9px #BF6505;left:" + (s.lightX * 100) + "%;top:" + (s.lightY * 100) + "%;transform:translate(-50%,-50%)",
+      onLightDown: (e) => { this._lightDown = true; if (e.currentTarget.setPointerCapture) e.currentTarget.setPointerCapture(e.pointerId); this.lightDrag(e); },
+      onLightMove: (e) => { if (this._lightDown) this.lightDrag(e); },
+      onLightUp: () => { this._lightDown = false; },
+      atlasMats: s.atlasMats.map(m => ({
+        name: m.name,
+        meta: m.polys + (m.polys === 1 ? " polygon" : " polygons") + " · " + m.tile + " px tile · " + Object.keys(m.textures).length + "/5 maps",
+        cardStyle: "display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid #38342F;background:#1A1817",
+        chipStyle: "width:12px;height:34px;flex:none;background:" + m.color,
+        onRename: (e) => this.patchMat(m.id, { name: e.target.value }),
+        onRotate: () => { this.patchMat(m.id, { rot: m.rot ? 0 : 90 }); this.queuePreview(); },
+        rotLabel: m.rot ? "↻ 90°" : "↻ 0°",
+        onClear: () => this.clearMatTextures(m.id),
+        clearStyle: "appearance:none;font-family:'JetBrains Mono',monospace;font-size:9px;padding:5px 7px;cursor:pointer;transition:all .15s;border:1px solid #4C4741;background:transparent;color:#ABA49B",
+        rotStyle: "appearance:none;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;padding:5px 8px;cursor:pointer;transition:all .15s;" +
+          (m.rot ? "border:1px solid #BF6505;background:transparent;color:#E8A055" : "border:1px solid #4C4741;background:transparent;color:#ABA49B"),
+        sizes: ATLAS_SIZES.map(v => ({
+          label: v === 4096 ? "4K" : v === 2048 ? "2K" : v === 1024 ? "1K" : "512",
+          style: "appearance:none;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;padding:5px 7px;cursor:pointer;transition:all .15s;" +
+            (m.tile === v ? "border:1px solid #BF6505;background:#BF6505;color:#2A1601" : "border:1px solid #4C4741;background:transparent;color:#ABA49B"),
+          onClick: () => this.setTile(m.id, v)
+        })),
+        slots: TYPES.map(type => {
+          const img = m.textures[type];
+          return {
+            short: shortLabel[type], thumb: thumbEl(img), filled: !!img, emptyState: !img,
+            zoneStyle: "position:relative;aspect-ratio:1;display:grid;place-items:center;cursor:pointer;overflow:hidden;transition:all .16s;" +
+              (img ? "border:1px solid " + m.color + ";background-color:#141312" : "border:1px dashed #4C4741;background-color:#211E1C"),
+            onPick: () => this.openAtlasPicker(m.id, type),
+            onRemove: (e) => {
+              e.stopPropagation();
+              const rest = Object.assign({}, m.textures);
+              delete rest[type];
+              this.patchMat(m.id, { textures: rest });
+              this.queuePreview();
+            }
+          };
+        })
+      }))
+    };
+  }
+
+  /* ================= view helpers ================= */
+
+  box(checked, disabled) {
+    return "width:16px;height:16px;flex:none;display:grid;place-items:center;font-size:10px;line-height:1;font-family:'JetBrains Mono',monospace;transition:all .15s;" +
+      (disabled ? "cursor:default;opacity:.3;border:1px solid #4C4741;background:transparent;color:transparent"
+        : checked ? "cursor:pointer;border:1px solid #BF6505;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601"
+                  : "cursor:pointer;border:1px solid #4C4741;background:transparent;color:transparent");
+  }
+
+  btn(kind, disabled) {
+    const base = "appearance:none;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:9px 14px;transition:all .15s;white-space:nowrap;";
+    if (disabled) return base + "border:1px solid #38342F;background:transparent;color:#4C4741;cursor:not-allowed";
+    if (kind === "primary") return base + "border:none;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601;font-weight:700;cursor:pointer";
+    if (kind === "hazard") return base + "border:1px solid #BF0625;background:transparent;color:#BF0625;cursor:pointer";
+    return base + "border:1px solid #4C4741;background:transparent;color:#DCD6CE;cursor:pointer";
+  }
+
+  badge(status) {
+    const map = {
+      ready: ["needs patch", "#2A1601", "#BF6505", "#BF6505"],
+      working: ["writing…", "#DCD6CE", "transparent", "#ABA49B"],
+      updated: ["patched", "#E8A055", "transparent", "#BF6505"],
+      missing: ["maps missing", "#ABA49B", "transparent", "#4C4741"],
+      error: ["error", "#BF0625", "transparent", "#BF0625"]
+    };
+    const b = map[status] || map.error;
+    return "font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;padding:5px 9px;white-space:nowrap;color:" +
+      b[1] + ";background:" + b[2] + ";border:1px solid " + b[3];
+  }
+
+  renderVals() {
+    const s = this.state;
+    const ready = s.rows.filter(r => r.status === "ready");
+    const selected = ready.filter(r => r.selected).length;
+    const patched = s.rows.filter(r => r.status === "updated").length;
+    const allOn = ready.length > 0 && selected === ready.length;
+    const applyDisabled = s.applying || selected === 0;
+
+    const open = s.railOpen;
+    const modules = [
+      /* Each tab icon is up to three stacked Font Awesome layers: a faint plate,
+         the subject glyph, and an optional accent. Layers are absolutely centered
+         in a fixed 34px box so the rail keeps its rhythm open or collapsed. */
+      { id: 4, code: "01", title: "Atlas combine", sub: "merge · rewrite UVs",
+        l: [["fa-solid fa-square", 34, .16, "0,0"], ["fa-solid fa-table-cells-large", 17, 1, "-3,-3"], ["fa-solid fa-object-group", 13, .95, "9,9"]] },
+      { id: 2, code: "02", title: "Texture pack", sub: "PBR → BCR · NMO · CRM",
+        l: [["fa-solid fa-square", 34, .16, "0,0"], ["fa-solid fa-layer-group", 18, 1, "0,-2"], ["fa-solid fa-arrow-down-long", 9, .85, "11,8"]] },
+      { id: 3, code: "03", title: "Resize", sub: "in-place resample",
+        l: [["fa-solid fa-square", 34, .16, "0,0"], ["fa-solid fa-image", 17, 1, "-3,-3"], ["fa-solid fa-down-left-and-up-right-to-center", 12, .95, "9,9"]] },
+      { id: 1, code: "04", title: "Material patch", sub: "empty .emat → camo",
+        l: [["fa-solid fa-square", 34, .16, "0,0"], ["fa-solid fa-fill-drip", 18, 1, "-2,-1"], ["fa-solid fa-droplet", 8, .85, "9,8"]] }
+    ].map(m => {
+      const layer = i => {
+        const spec = m.l[i];
+        if (!spec) return { cls: "", style: "display:none" };
+        const [x, y] = spec[3].split(",");
+        return { cls: spec[0] + " m" + m.id + "-l" + (i + 1), style: "position:absolute;font-size:" + spec[1] + "px;opacity:" + spec[2] +
+          ";--tx:" + x + "px;--ty:" + y + "px;pointer-events:none" };
+      };
+      const [a, b, c] = [layer(0), layer(1), layer(2)];
+      return {
+      code: m.code, title: m.title, sub: m.sub,
+      icon1: a.cls, icon1Style: a.style,
+      icon2: b.cls, icon2Style: b.style,
+      icon3: c.cls, icon3Style: c.style,
+      onSelect: () => this.setState({ module: m.id }),
+      codeStyle: "position:relative;flex:none;width:40px;height:38px;display:grid;place-items:center;opacity:.95",
+      tabStyle: "appearance:none;width:100%;display:flex;flex-direction:row;gap:11px;align-items:center;text-align:left;padding:" + (open ? "16px 18px" : "16px 8px") +
+        ";min-height:64px;cursor:pointer;transition:all .18s;border:none;border-bottom:1px solid #38342F;font-family:Archivo,sans-serif;" +
+        (s.module === m.id ? "background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601" : "background:transparent;color:#ABA49B")
+      };
+    });
+
+    const setViews = s.sets.map(set => {
+      const t = set.textures;
+      const canBCR = !!(t.basecolor && t.roughness), canNMO = !!(t.normal && t.metallic && t.ao), canCRM = !!(t.ao && t.roughness && t.metallic);
+      const filled = TYPES.filter(x => t[x]).length;
+      const exportDisabled = !(canBCR && canNMO) || !!s.busy["all" + set.id];
+      const crmDisabled = !canCRM || !!s.busy["crm" + set.id];
+      const complete = filled === 5;
+      return {
+        name: set.name, res: String(set.resolution), fmt: set.exportFormat,
+        serial: "SET-" + String(set.id).padStart(3, "0"),
+        bcrName: sanitize(set.name) + "_bcr." + set.exportFormat,
+        nmoName: sanitize(set.name) + "_nmo." + set.exportFormat,
+        crmThumb: thumbEl(s.previews[set.id] || ""),
+        crmPreviewStyle: "width:100%;max-width:170px;aspect-ratio:1;border:1px solid #38342F;object-fit:cover;display:block;background-color:#141312",
+        crmMissing: !canCRM,
+        statusText: complete ? "STATUS: COMPLETE" : filled + " / 5 MAPS LOADED",
+        statusStyle: "font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;padding:5px 9px;text-transform:uppercase;" +
+          (complete ? "background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601" : "border:1px solid #4C4741;color:#ABA49B"),
+        exportDisabled, crmDisabled,
+        exportStyle: this.btn("primary", exportDisabled),
+        crmStyle: this.btn("ghost", crmDisabled),
+        onName: (e) => this.patchSet(set.id, { name: e.target.value }),
+        onRes: (e) => this.patchSet(set.id, { resolution: Number(e.target.value) }),
+        onFmt: (e) => this.patchSet(set.id, { exportFormat: e.target.value }),
+        onRemove: () => { this.setState(st => ({ sets: st.sets.filter(x => x.id !== set.id) })); this.toast("Texture set removed"); },
+        onExportAll: () => this.exportSet(set),
+        onExportCrm: () => this.exportCrm(set),
+        slots: TYPES.map(type => {
+          const img = t[type];
+          const over = s.slotDrag === set.id + ":" + type;
+          return {
+            label: TYPE_LABELS[type], hint: CHANNEL_HINTS[type], thumb: thumbEl(img), filled: !!img, emptyState: !img,
+            zoneStyle: "aspect-ratio:1;display:grid;place-items:center;cursor:pointer;overflow:hidden;transition:all .16s;" +
+              (over ? "border:1px solid #BF6505;background-color:rgba(191,101,5,.12)"
+                : img ? "border:1px solid #4C4741;background-color:#141312" : "border:1px dashed #4C4741;background-color:#211E1C"),
+            onPick: () => this.openTexturePicker(set.id, type),
+            onDragOver: (e) => { e.preventDefault(); e.stopPropagation(); if (!over) this.setState({ slotDrag: set.id + ":" + type }); },
+            onDragLeave: () => this.setState({ slotDrag: null }),
+            onDrop: (e) => {
+              e.preventDefault(); e.stopPropagation();
+              this.setState({ slotDrag: null });
+              const f = e.dataTransfer.files && e.dataTransfer.files[0];
+              if (f) this.loadIntoSlot(set.id, type, f);
+            },
+            onRemove: (e) => { e.stopPropagation(); this.setTexture(set.id, type, null); }
+          };
+        })
+      };
+    });
+
+    const tgaRows = s.tgaFiles.map(f => ({
+      name: f.name,
+      dims: f.width + "×" + f.height + " · " + (f.bytesPerPixel === 4 ? "RGBA" : "RGB") + (f.targetSize !== f.width ? " → " + f.targetSize + "×" + f.targetSize : ""),
+      rowStyle: "display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid #2D2926;flex-wrap:wrap;transition:background .15s;" +
+        (f.status === "error" ? "background:rgba(250,61,30,.07)" : f.status === "done" ? "background:rgba(178,168,156,.05)" : ""),
+      sizes: [["4K", 4096], ["2K", 2048], ["1K", 1024], ["NATIVE", f.nativeWidth]].map(([label, size]) => ({
+        label,
+        style: "appearance:none;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.1em;padding:5px 9px;cursor:pointer;transition:all .15s;" +
+          (f.targetSize === size ? "border:1px solid #BF6505;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601" : "border:1px solid #4C4741;background:transparent;color:#ABA49B"),
+        onClick: () => this.patchTga(f.id, { targetSize: size })
+      })),
+      reduceLabel: f.status === "working" ? "⟳ Working" : f.status === "done" ? "✓ Reduced" : f.status === "error" ? "✗ Error" : "⚡ Reduce",
+      reduceDisabled: f.status === "working" || s.reducingAll,
+      reduceStyle: this.btn(f.status === "done" ? "ghost" : "primary", f.status === "working" || s.reducingAll),
+      undoDisabled: !f.modified || f.status === "working",
+      undoStyle: this.btn("hazard", !f.modified || f.status === "working"),
+      onReduce: () => this.reduceEntry(f.id),
+      onUndo: () => this.undoEntry(f.id),
+      onRemove: () => this.setState(st => ({ tgaFiles: st.tgaFiles.filter(x => x.id !== f.id) }))
+    }));
+
+    const noResizeFiles = s.tgaFiles.length === 0;
+    const anyModified = s.tgaFiles.some(f => f.modified);
+
+    return {
+      version: APP_VERSION,
+      /* Stays mounted so it can transition out; parked below the viewport when
+         idle rather than unmounted, which would kill the exit animation. */
+      activityWrapStyle: "position:fixed;left:28px;bottom:22px;z-index:60;width:min(560px,calc(100vw - 56px));" +
+        "display:flex;align-items:center;gap:14px;padding:12px 20px;border:1px solid #4C4741;background:#211E1C;" +
+        "box-shadow:0 14px 34px rgba(0,0,0,.5);transition:transform .34s cubic-bezier(.2,.9,.3,1.2),opacity .22s ease;" +
+        (s.activity ? "transform:translateY(0);opacity:1" : "transform:translateY(calc(100% + 30px));opacity:0;pointer-events:none"),
+      activityLabel: s.activity ? s.activity.label : "",
+      activityCount: s.activity && s.activity.total > 1 ? s.activity.done + "/" + s.activity.total : "",
+      activityPercent: s.activity ? (s.activity.total ? Math.round((s.activity.done / s.activity.total) * 100) + "%" : "···") : "0%",
+      activityBarStyle: "height:100%;background:#BF6505;transition:width .25s ease;" +
+        (s.activity
+          ? (s.activity.total ? "width:" + Math.round((s.activity.done / s.activity.total) * 100) + "%"
+                              : "width:34%;animation:sweep 1.1s ease-in-out infinite")
+          : "width:0%"),
+      activityDotStyle: "width:8px;height:8px;flex:none;background:" + (s.activity ? "#BF6505" : "#4C4741") +
+        (s.activity ? ";animation:tick 1.1s ease-in-out infinite" : ""),
+      modules,
+      railOpen: open,
+      railStyle: "display:flex;flex-direction:column;flex:none;transition:width .22s ease;width:" + (open ? "212px" : "62px"),
+      railToggleStyle: "appearance:none;background:transparent;border:none;border-top:1px solid #38342F;color:#827A72;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;padding:13px 10px;cursor:pointer;transition:all .15s;text-align:" + (open ? "left" : "center"),
+      railToggleLabel: open ? "‹ Collapse" : "›",
+      onToggleRail: () => this.setState({ railOpen: !s.railOpen }),
+      demo: s.demo,
+      onProductionMode: () => this.exitDemo(),
+      onDemoMode: () => this.enterDemo(),
+      /* The lit half is a single sliding pill rather than a background swap on
+         each button, so the state change reads as one movement. */
+      modePillStyle: "position:absolute;top:0;bottom:0;left:0;width:50%;background:#BF6505;background-image:url('grain.png');" +
+        "background-blend-mode:screen;background-size:260px 260px;pointer-events:none;" +
+        "transition:transform .32s cubic-bezier(.5,1.6,.4,1);transform:translateX(" + (s.demo ? "100%" : "0") + ")",
+      prodBtnStyle: "position:relative;appearance:none;border:none;background:transparent;width:118px;padding:8px 0;cursor:pointer;" +
+        "font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;transition:color .22s ease .06s;" +
+        "color:" + (s.demo ? "#ABA49B" : "#2A1601"),
+      demoBtnStyle: "position:relative;appearance:none;border:none;background:transparent;width:118px;padding:8px 0;cursor:pointer;" +
+        "font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;transition:color .22s ease .06s;" +
+        "color:" + (s.demo ? "#2A1601" : "#ABA49B"),
+      isMod1: s.module === 1, isMod2: s.module === 2, isMod3: s.module === 3, isMod4: s.module === 4,
+      footerStatus: s.module === 4 ? "TASK 01 · ATLAS COMBINE" : s.module === 2 ? "TASK 02 · CHANNEL PACK" : s.module === 3 ? "TASK 03 · RESAMPLE" : "TASK 04 · MATERIAL PATCH",
+      ...this.mod4View(),
+      toasts: s.toasts.map(t => ({
+        message: t.message,
+        style: "border:1px solid " + (t.kind === "error" ? "#BF0625" : t.kind === "success" ? "#BF6505" : "#4C4741") +
+          ";border-left-width:4px;background:#211E1C;padding:10px 13px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.06em;color:#DCD6CE;animation:rise .2s ease both"
+      })),
+
+      // module 1
+      isIdle: s.phase === "idle", isScanning: s.phase === "scanning", isEmpty: s.phase === "empty", showResults: s.phase === "results",
+      hasFolder: s.phase !== "idle", canRescan: s.phase === "results" && !s.applying,
+      unsupported: s.unsupported, errorMsg: s.errorMsg,
+      dirName: s.dirName || "-", ematCount: String(s.ematCount),
+      readyLabel: patched && !ready.length ? "PATCHED" : "NEED PATCHING",
+      readyCount: String(ready.length || patched),
+      skipSummary: s.skipped + " · " + s.ignored,
+      scanPhaseLabel: s.scanPhase,
+      scanDetail: s.scanPhase === "Reading materials" ? s.scanned + " of " + s.ematCount + " materials read" : s.scanned + " files seen · " + s.metas + " descriptors indexed",
+      emptyDetail: s.ematCount
+        ? "CHECKED " + s.ematCount + " MATERIAL" + (s.ematCount === 1 ? "" : "S") + " IN " + s.dirName + " - EVERY ONE ALREADY CARRIES A REAL DEFINITION."
+        : "NO .EMAT FILES UNDER " + s.dirName + ". POINT THE UNIT AT THE FOLDER THAT HOLDS YOUR MATERIALS.",
+      rows: s.rows.map(r => {
+        const selectable = r.status === "ready" && !s.applying;
+        return {
+          name: r.name, dir: r.dir, note: r.note || "", preview: r.text || r.note || "",
+          expanded: s.expanded === r.id,
+          badge: r.status === "ready" ? "needs patch" : r.status === "working" ? "writing…" : r.status === "updated" ? "patched" : r.status === "missing" ? "maps missing" : "error",
+          badgeStyle: this.badge(r.status),
+          boxStyle: this.box(r.selected, !selectable), boxMark: r.selected ? "✓" : "",
+          onToggle: selectable ? () => this.setState(st => ({ rows: st.rows.map(x => x.id === r.id ? Object.assign({}, x, { selected: !x.selected }) : x) })) : () => {},
+          onExpand: () => this.setState(st => ({ expanded: st.expanded === r.id ? null : r.id }))
+        };
+      }),
+      selectionLabel: ready.length ? selected + " of " + ready.length + " selected" : (patched ? patched + " patched this run" : "nothing to patch here"),
+      allBoxStyle: this.box(allOn, !ready.length || s.applying), allBoxMark: allOn ? "✓" : "",
+      onToggleAll: ready.length && !s.applying ? () => this.setState(st => {
+        const rd = st.rows.filter(x => x.status === "ready");
+        const on = !(rd.length && rd.every(x => x.selected));
+        return { rows: st.rows.map(x => x.status === "ready" ? Object.assign({}, x, { selected: on }) : x) };
+      }) : () => {},
+      backupBoxStyle: this.box(s.backup, s.applying), backupBoxMark: s.backup ? "✓" : "",
+      onToggleBackup: () => { if (!s.applying) this.setState(st => ({ backup: !st.backup })); },
+      applyLabel: s.applying ? "Patching…" : selected ? "Patch " + selected + " file" + (selected === 1 ? "" : "s") : "Patch",
+      applyDisabled, applyStyle: this.btn("primary", applyDisabled),
+      onApply: () => this.apply(), onPick: () => this.pick(), onRescan: () => this.scan(),
+      doneMsg: s.doneMsg,
+      onDragOver: (e) => { e.preventDefault(); if (!s.dragOver) this.setState({ dragOver: true }); },
+      onDragLeave: () => this.setState({ dragOver: false }),
+      onDrop: (e) => this.onFolderDrop(e),
+      dropStyle: "padding:64px 28px;display:grid;place-items:center;cursor:pointer;position:relative;overflow:hidden;transition:all .2s;" +
+        (s.dragOver ? "border:1px solid #BF6505;background:rgba(191,101,5,.28);background-blend-mode:multiply" : "border:1px dashed #4C4741;background:rgba(178,168,156,.10);background-blend-mode:multiply"),
+
+      // module 2
+      sets: setViews, noSets: s.sets.length === 0, hasSets: s.sets.length > 0,
+      texDragOver: s.texDragOver,
+      setsAreaStyle: "position:relative;display:flex;flex-direction:column;gap:16px;padding:2px;transition:all .18s;" +
+        (s.texDragOver ? "outline:1px dashed #BF6505;outline-offset:6px;background:rgba(191,101,5,.07)" : ""),
+      emptyDropStyle: "padding:64px 24px;display:grid;place-items:center;cursor:pointer;position:relative;overflow:hidden;transition:all .2s;" +
+        (s.texDragOver ? "border:1px solid #BF6505;background:rgba(191,101,5,.28);background-blend-mode:multiply" : "border:1px dashed #4C4741;background:rgba(178,168,156,.10);background-blend-mode:multiply"),
+      settingsOpen: s.settingsOpen,
+      settingsBtnStyle: this.btn(s.settingsOpen ? "primary" : "ghost", false),
+      dlAllDisabled: !!s.busy.zip || s.sets.length === 0,
+      dlAllStyle: this.btn("ghost", !!s.busy.zip || s.sets.length === 0),
+      onToggleSettings: () => this.setState(st => ({ settingsOpen: !st.settingsOpen })),
+      onDownloadAll: () => this.downloadAll(),
+      onAddSet: () => { const set = this.newSet(); this.setState(st => ({ sets: st.sets.concat([set]) })); },
+      onPickTextures: () => this.openTexturePicker(null, null),
+      onSetsDragOver: (e) => { e.preventDefault(); if (!s.texDragOver) this.setState({ texDragOver: true }); },
+      onSetsDragLeave: () => this.setState({ texDragOver: false }),
+      onSetsDrop: (e) => { e.preventDefault(); this.setState({ texDragOver: false }); if (e.dataTransfer.files && e.dataTransfer.files.length) this.ingestTextureFiles(e.dataTransfer.files); },
+      texDropStyle: "padding:26px;display:grid;place-items:center;cursor:pointer;transition:all .2s;" +
+        (s.texDragOver ? "border:1px solid #BF6505;background:rgba(191,101,5,.28);background-blend-mode:multiply" : "border:1px dashed #4C4741;background:rgba(178,168,156,.10);background-blend-mode:multiply"),
+      defaultRes: String(s.settings.defaultResolution), defaultFmt: s.settings.defaultExportFormat,
+      onDefaultRes: (e) => this.saveSettings(Object.assign({}, s.settings, { defaultResolution: Number(e.target.value) })),
+      onDefaultFmt: (e) => this.saveSettings(Object.assign({}, s.settings, { defaultExportFormat: e.target.value })),
+      aliases: s.settings.textureAliases.map(a => ({
+        type: a.textureType, alias: a.alias,
+        onType: (e) => this.saveSettings(Object.assign({}, s.settings, { textureAliases: s.settings.textureAliases.map(x => x.id === a.id ? Object.assign({}, x, { textureType: e.target.value }) : x) })),
+        onAlias: (e) => this.saveSettings(Object.assign({}, s.settings, { textureAliases: s.settings.textureAliases.map(x => x.id === a.id ? Object.assign({}, x, { alias: e.target.value }) : x) })),
+        onDelete: () => { this.saveSettings(Object.assign({}, s.settings, { textureAliases: s.settings.textureAliases.filter(x => x.id !== a.id) })); this.toast('Removed alias "' + a.alias + '"'); }
+      })),
+      newAliasType: s.newAliasType, newAliasPattern: s.newAliasPattern,
+      onNewAliasType: (e) => this.setState({ newAliasType: e.target.value }),
+      onNewAliasPattern: (e) => this.setState({ newAliasPattern: e.target.value }),
+      onAddAlias: () => {
+        const p = (s.newAliasPattern || "").trim();
+        if (!p) { this.toast("Enter an alias pattern first, e.g. _nrm", "error"); return; }
+        const toks = p.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
+        if (!toks.length) { this.toast("Enter an alias pattern first, e.g. _nrm", "error"); return; }
+        const existing = new Set(s.settings.textureAliases.reduce((acc, a) => acc.concat(this.aliasTokens(a)), []));
+        const clash = toks.find(t => existing.has(t));
+        if (clash) { this.toast('Alias "' + clash + '" already exists', "error"); return; }
+        this.saveSettings(Object.assign({}, s.settings, { textureAliases: s.settings.textureAliases.concat([{ id: "alias-" + Date.now(), textureType: s.newAliasType, alias: p }]) }));
+        this.setState({ newAliasPattern: "" });
+        this.toast('Added alias "' + p + '" → ' + TYPE_LABELS[s.newAliasType], "success");
+      },
+
+      // module 3
+      resizeRows: tgaRows, noResizeFiles, hasResizeFiles: !noResizeFiles,
+      bulkSizes: [["4K", 4096], ["2K", 2048], ["1K", 1024], ["NATIVE", "native"]].map(([label, size]) => ({
+        label, disabled: noResizeFiles,
+        style: "appearance:none;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;padding:7px 12px;transition:all .15s;" +
+          (noResizeFiles ? "border:1px solid #38342F;background:transparent;color:#4C4741;cursor:not-allowed" : "border:1px solid #4C4741;background:transparent;color:#DCD6CE;cursor:pointer"),
+        onClick: () => this.setState(st => ({ tgaFiles: st.tgaFiles.map(f => Object.assign({}, f, { targetSize: size === "native" ? f.nativeWidth : size })) }))
+      })),
+      resizeStatus: s.resizeStatus,
+      resizeStatusStyle: "padding:11px 14px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;" +
+        (s.resizeError ? "border:1px solid #BF0625;color:#BF0625" : "border:1px solid #BF6505;color:#E8A055"),
+      onPickTgas: () => this.openTgaPicker(),
+      onTgaDragOver: (e) => { e.preventDefault(); if (!s.tgaDragOver) this.setState({ tgaDragOver: true }); },
+      onTgaDragLeave: () => this.setState({ tgaDragOver: false }),
+      onTgaDrop: (e) => this.onTgaDrop(e),
+      tgaDropStyle: "padding:26px;display:grid;place-items:center;cursor:pointer;transition:all .2s;" +
+        (s.tgaDragOver ? "border:1px solid #BF6505;background:rgba(191,101,5,.28);background-blend-mode:multiply" : "border:1px dashed #4C4741;background:rgba(178,168,156,.10);background-blend-mode:multiply"),
+      tgaEmptyDropStyle: "padding:64px 24px;display:grid;place-items:center;cursor:pointer;position:relative;overflow:hidden;transition:all .2s;" +
+        (s.tgaDragOver ? "border:1px solid #BF6505;background:rgba(191,101,5,.28);background-blend-mode:multiply" : "border:1px dashed #4C4741;background:rgba(178,168,156,.10);background-blend-mode:multiply"),
+      onResizeClear: () => this.setState({ tgaFiles: [], resizeStatus: "" }),
+      clearStyle: this.btn("ghost", noResizeFiles),
+      onUndoAll: () => this.undoAll(),
+      undoAllDisabled: !anyModified,
+      undoAllStyle: this.btn("hazard", !anyModified),
+      onReduceAll: () => this.reduceAll(),
+      reduceAllLabel: s.reducingAll ? "⟳ Reducing…" : "⚡ Reduce all",
+      reduceAllStyle: this.btn("primary", noResizeFiles || s.reducingAll)
+    };
+  }
+}
+</script>
+</body>
+</html>
