@@ -30,18 +30,18 @@ const instrumentSerif = Instrument_Serif({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://reidhslaughter.com"),
+  metadataBase: new URL("https://www.reidhslaughter.com"),
   title: "Reid Slaughter — Design Engineer",
   description: "Explore Reid Slaughter’s portfolio of design engineering and user experience projects.",
   generator: "v0.app",
   openGraph: {
     title: "Reid Slaughter — Design Engineer",
     description: "Explore Reid Slaughter’s portfolio of design engineering and user experience projects.",
-    url: "https://reidhslaughter.com/",
+    url: "https://www.reidhslaughter.com/",
     type: "website",
     images: [
       {
-        url: "https://reidhslaughter.com/og-hero.gif",
+        url: "https://www.reidhslaughter.com/og-hero.gif",
         width: 1200,
         height: 630,
         type: "image/gif",
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Reid Slaughter — Design Engineer",
     description: "Explore Reid Slaughter’s portfolio of design engineering and user experience projects.",
-    images: ["https://reidhslaughter.com/og-hero-static.png"],
+    images: ["https://www.reidhslaughter.com/og-hero-static.png"],
   },
 }
 
