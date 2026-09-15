@@ -18,6 +18,17 @@ type Project = {
 
 const projects: Project[] = [
   {
+    slug: "fleet-fuel",
+    title: "Streamlining Fuel Management for Large Fleets",
+    date: "Apr 2024",
+    href: "/projects/fleet-fuel-integration",
+    hero: "/fleet-management-overview.webp",
+    rest: [
+      "/fleet-management-vehicles.webp",
+      "/fleet-management-live-map.webp",
+    ],
+  },
+  {
     slug: "enfusion-field-kit",
     title: "Enfusion Field Kit",
     date: "Jan 2026",
@@ -38,17 +49,6 @@ const projects: Project[] = [
       "/arma-alias-settings.png",
       "/arma-resize.png",
       "/arma-batch-export.png",
-    ],
-  },
-  {
-    slug: "fleet-fuel",
-    title: "Streamlining Fuel Management for Large Fleets",
-    date: "Apr 2024",
-    href: "/projects/fleet-fuel-integration",
-    hero: "/fleet-management-overview.webp",
-    rest: [
-      "/fleet-management-vehicles.webp",
-      "/fleet-management-live-map.webp",
     ],
   },
 ]
