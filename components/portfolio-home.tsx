@@ -43,11 +43,11 @@ const projects: Project[] = [
     title: "Streamlining Fuel Management for Large Fleets",
     date: "Apr 2024",
     href: "/projects/fleet-fuel-integration",
-    hero: "/fleet-dashboard.png",
+    hero: "https://raw.githubusercontent.com/RHS059/portfolio-9b/main/public/fleet-overview.webp",
     rest: [
-      "/fleet-fuel-integration-interface-showing-transacti.png",
-      "/fuel-integration-hierarchy.png",
-      "/fuel-integration-event-flow.png",
+      "https://raw.githubusercontent.com/RHS059/portfolio-9b/main/public/fleet-live-map.webp",
+      "https://raw.githubusercontent.com/RHS059/portfolio-9b/main/public/fleet-vehicles.webp",
+      "https://raw.githubusercontent.com/RHS059/portfolio-9b/main/public/fleet-overview-alt.webp",
     ],
   },
 ]

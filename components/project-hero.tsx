@@ -28,7 +28,7 @@ export default function ProjectHero({
 }: ProjectHeroProps) {
   const [isHovered, setIsHovered] = useState(false)
 
-  const isFleetProject = heroImage.src === "/fleet-dashboard.png"
+  const isFleetProject = heroImage.src.includes("fleet-overview.webp")
 
   const handleClick = () => {
     if (isFleetProject) {

@@ -21,7 +21,7 @@ const projectData = {
   dateShipped: "Summer 2021",
   title: "Streamlining Fuel Management for Large Fleets",
   heroImage: {
-    src: "/fleet-dashboard.png",
+    src: "https://raw.githubusercontent.com/RHS059/portfolio-9b/main/public/fleet-overview.webp",
     alt: "Fleet management dashboard showing fuel transaction data and analytics",
   },
   role: "UX Designer",
