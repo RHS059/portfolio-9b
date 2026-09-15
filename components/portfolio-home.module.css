@@ -48,7 +48,7 @@
 .bio p.strong { font-weight: 500; }
 .page .bio a { color: var(--body-2); text-decoration: underline; text-underline-offset: 2px; text-decoration-color: oklch(0.75 0.03 297); }
 .page .bio a:hover { color: var(--accent); text-decoration-color: var(--accent); }
-.stack { display: flex; flex-direction: column; gap: 14px; padding: 14px; }
+.stack { display: flex; flex-direction: column; gap: 14px; padding: 14px; background: oklch(0.885 0.003 300); }
 .page .card-link { display: block; color: inherit; }
 .card { position: relative; aspect-ratio: 16 / 9.6; border-radius: clamp(8px, 0.7vw, 12px); overflow: hidden; background-color: var(--card-bg); background-image: repeating-linear-gradient(135deg, var(--card-hatch) 0 1px, transparent 1px 10px); }
 .drift { position: absolute; inset: 0; transition: transform 6s cubic-bezier(0.22, 0.61, 0.36, 1); }
