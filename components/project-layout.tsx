@@ -1,6 +1,6 @@
 "use client"
 
-import type { ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import ProjectSidebar from "./project-sidebar"
 
 interface Section {
@@ -14,13 +14,20 @@ interface ProjectLayoutProps {
 }
 
 export default function ProjectLayout({ sections, children }: ProjectLayoutProps) {
+  const [entered, setEntered] = useState(false)
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setEntered(true))
+    return () => cancelAnimationFrame(frame)
+  }, [])
+
   return (
-    <div className="cs-grid">
-      <div className="cs-side-wrap">
+    <div className={`cs-grid${entered ? " is-entered" : ""}`}>
+      <div className="cs-side-wrap cs-route-panel">
         <ProjectSidebar sections={sections} />
       </div>
 
-      <main className="cs-main">{children}</main>
+      <main className="cs-main cs-route-panel">{children}</main>
 
       <footer className="cs-foot">
         <div>Client work shown remains the property of its owners.</div>
@@ -57,6 +64,13 @@ export default function ProjectLayout({ sections, children }: ProjectLayoutProps
           background: oklch(0.985 0.003 300);
           color: var(--cs-ink);
           font-family: var(--font-inter), Inter, Helvetica, Arial, sans-serif;
+        }
+        .cs-route-panel {
+          opacity: 0;
+          transition: opacity 280ms ease;
+        }
+        .cs-grid.is-entered .cs-route-panel {
+          opacity: 1;
         }
         .cs-side-wrap {
           grid-column: 1;
@@ -104,6 +118,12 @@ export default function ProjectLayout({ sections, children }: ProjectLayoutProps
         }
         .cs-foot a:hover {
           color: var(--cs-accent);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .cs-route-panel {
+            transition: none;
+          }
         }
 
         @media (max-width: 900px) {

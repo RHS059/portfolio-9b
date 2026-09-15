@@ -1,9 +1,11 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import styles from "./portfolio-home.module.css"
 
 const CFG = { shot: 2600, fade: 1300, lead: 420, drift: true }
+const ROUTE_FADE_MS = 220
 
 type Project = {
   slug: string
@@ -43,16 +45,15 @@ const projects: Project[] = [
     title: "Streamlining Fuel Management for Large Fleets",
     date: "Apr 2024",
     href: "/projects/fleet-fuel-integration",
-    hero: "/fleet-dashboard.png",
+    hero: "/fleet-management-overview.webp",
     rest: [
-      "/fleet-fuel-integration-interface-showing-transacti.png",
-      "/fuel-integration-hierarchy.png",
-      "/fuel-integration-event-flow.png",
+      "/fleet-management-vehicles.webp",
+      "/fleet-management-live-map.webp",
     ],
   },
 ]
 
-function Card({ p }: { p: Project }) {
+function Card({ p, onNavigate }: { p: Project; onNavigate: (href: string) => void }) {
   const cardRef = useRef<HTMLElement>(null)
   const leadRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -115,16 +116,44 @@ function Card({ p }: { p: Project }) {
     </article>
   )
 
-  return p.href ? <a className={styles["card-link"]} href={p.href}>{article}</a> : article
+  if (!p.href) return article
+
+  return (
+    <a
+      className={styles["card-link"]}
+      href={p.href}
+      onClick={(event) => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return
+        event.preventDefault()
+        onNavigate(p.href as string)
+      }}
+    >
+      {article}
+    </a>
+  )
 }
 
 export default function PortfolioHome() {
+  const router = useRouter()
+  const [leaving, setLeaving] = useState(false)
   const visible = projects.filter((p) => !!p.hero)
+
+  useEffect(() => {
+    visible.forEach((project) => {
+      if (project.href) router.prefetch(project.href)
+    })
+  }, [router, visible])
+
+  const navigate = (href: string) => {
+    if (leaving) return
+    setLeaving(true)
+    window.setTimeout(() => router.push(href), ROUTE_FADE_MS)
+  }
 
   return (
     <div className={`${styles.page} font-sans`}>
       <div className={styles.grid}>
-        <div className={styles["side-wrap"]}>
+        <div className={`${styles["side-wrap"]} ${styles["route-panel"]} ${leaving ? styles["route-panel-leaving"] : ""}`}>
           <aside className={styles.side}>
             <div>
               <h1>Reid Slaughter</h1>
@@ -160,8 +189,8 @@ export default function PortfolioHome() {
             </div>
           </aside>
         </div>
-        <main id="work" className={styles.stack}>
-          {visible.map((p) => <Card key={p.slug} p={p} />)}
+        <main id="work" className={`${styles.stack} ${styles["route-panel"]} ${leaving ? styles["route-panel-leaving"] : ""}`}>
+          {visible.map((p) => <Card key={p.slug} p={p} onNavigate={navigate} />)}
         </main>
         <footer className={styles.foot}>
           <div>Client work shown remains the property of its owners.</div>
