@@ -25,7 +25,7 @@ export default function ProjectsSection() {
       results:
         "• Improved time to resolve data issues by 90% (weeks to hours)\n• Immediate notification of data issues via email\n• Data issues (when they occur), are detected immediately\n• Users avoid costly data cleanup",
       link: "/projects/fleet-fuel-integration",
-      backgroundImage: "https://raw.githubusercontent.com/RHS059/portfolio-9b/main/public/fleet-overview.webp",
+      backgroundImage: "https://raw.githubusercontent.com/RHS059/portfolio-9b/v0/fleet-preview-thumbnails/public/fleet-overview.webp",
     },
   ]
 
