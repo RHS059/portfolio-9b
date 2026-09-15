@@ -47,7 +47,6 @@ const projects: Project[] = [
     rest: [
       "https://raw.githubusercontent.com/RHS059/portfolio-9b/v0/fleet-preview-thumbnails/public/fleet-live-map.webp",
       "https://raw.githubusercontent.com/RHS059/portfolio-9b/v0/fleet-preview-thumbnails/public/fleet-vehicles.webp",
-      "https://raw.githubusercontent.com/RHS059/portfolio-9b/v0/fleet-preview-thumbnails/public/fleet-overview-alt.webp",
     ],
   },
 ]
