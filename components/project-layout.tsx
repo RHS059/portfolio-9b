@@ -45,6 +45,7 @@ export default function ProjectLayout({ sections, children }: ProjectLayoutProps
       <style jsx global>{`
         :root {
           --cs-sidebar: oklch(0.972 0.008 92);
+          --cs-main-bg: oklch(0.922 0.008 92);
           --cs-footer: oklch(0.945 0.011 92);
           --cs-footer-rule: oklch(0.885 0.014 92);
           --cs-sidebar-rule: oklch(0.89 0.008 300);
@@ -61,7 +62,7 @@ export default function ProjectLayout({ sections, children }: ProjectLayoutProps
           display: grid;
           grid-template-columns: minmax(280px, 25vw) 1fr;
           align-items: start;
-          background: oklch(0.985 0.003 300);
+          background: var(--cs-main-bg);
           color: var(--cs-ink);
           font-family: var(--font-inter), Inter, Helvetica, Arial, sans-serif;
         }
@@ -83,6 +84,7 @@ export default function ProjectLayout({ sections, children }: ProjectLayoutProps
           grid-row: 1;
           padding: clamp(28px, 3vw, 56px) clamp(20px, 3vw, 60px);
           min-width: 0;
+          background: var(--cs-main-bg);
         }
 
         .cs-foot {
