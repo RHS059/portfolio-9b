@@ -24,7 +24,9 @@ const projectData = {
   role: "Senior UX Designer (W2 Contract)",
   timeline: "Jul 2022 to Nov 2022",
   team: "UX Designer, UI Specialist, Developer, Product Owner",
-  skills: "Figma, Google Material 2, User Research, Native Mobile Design",
+  responsibilities: "MVP definition, user research, mobile interaction design, information architecture, and end-to-end screen design",
+  tools: "Figma, Google Material 2",
+  outcome: "Native iOS and Android launch with a 4.4 star rating and 5,000+ downloads as of August 2024",
 }
 
 const sectionContent = [
