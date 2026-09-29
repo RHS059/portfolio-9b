@@ -188,6 +188,16 @@ export default function PortfolioHome() {
               </p>
               <p className={styles.i}>A client once called me a UX architect by trade and a creative technologist by heart.</p>
               <p>Outside of work I build, texture, and animate in Blender.</p>
+              <nav aria-label="Areas of expertise">
+                <p>
+                  <strong>Areas:</strong>{" "}
+                  <a href="/about">Product Design</a> ·{" "}
+                  <a href="/projects/fleet-fuel-integration">UX Design</a> ·{" "}
+                  <a href="/enfusion_field_kit_beta">Design Engineering</a> ·{" "}
+                  <a href="/writing">AI-assisted Development</a> ·{" "}
+                  <a href="/projects/arma-reforger-texture-wizard">Prototyping</a>
+                </p>
+              </nav>
               <p className={styles.strong}>I&apos;m looking for design engineering and product design roles.</p>
             </div>
           </aside>
