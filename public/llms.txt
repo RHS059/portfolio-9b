@@ -1,0 +1,18 @@
+# Reid Slaughter
+
+> Product Designer and Design Engineer specializing in UX, design engineering, AI-assisted product development, prototyping, and front-end implementation.
+
+Canonical site: https://www.reidhslaughter.com/
+About: https://www.reidhslaughter.com/about
+Writing: https://www.reidhslaughter.com/writing
+
+## Selected work
+- Fleet Fuel Integration: https://www.reidhslaughter.com/projects/fleet-fuel-integration
+- Arma Reforger Texture Wizard: https://www.reidhslaughter.com/projects/arma-reforger-texture-wizard
+- WorldCat Find: https://www.reidhslaughter.com/projects/library-holding-app
+- Enfusion Field Kit: https://www.reidhslaughter.com/enfusion_field_kit_beta
+
+## Profiles
+- GitHub: https://github.com/RHS059
+- LinkedIn: https://www.linkedin.com/in/reid59slaughter/
+- X: https://x.com/reidhslaughter
