@@ -5,7 +5,8 @@ import { Analytics } from "@vercel/analytics/next"
 import { Figtree } from "next/font/google"
 import { Instrument_Serif } from "next/font/google"
 import { Inter } from "next/font/google"
-import "./globals.css"\nimport StructuredData from "../components/structured-data"
+import "./globals.css"
+import StructuredData from "../components/structured-data"
 
 const figtree = Figtree({
   subsets: ["latin"],
@@ -108,7 +109,8 @@ export default function RootLayout({
           fetchPriority="high"
         />
       </head>
-      <body>\n        <StructuredData data={personStructuredData} />
+      <body>
+        <StructuredData data={personStructuredData} />
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`
             (function(c,l,a,r,i,t,y){
