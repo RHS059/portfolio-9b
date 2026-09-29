@@ -13,7 +13,7 @@ type Project = {
   date: string
   href?: string
   hero: string | null
-  rest: string[]
+  rest: { src: string; alt: string }[]
 }
 
 const projects: Project[] = [
@@ -57,7 +57,7 @@ function Card({ p, onNavigate }: { p: Project; onNavigate: (href: string) => voi
   const cardRef = useRef<HTMLElement>(null)
   const leadRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const shots = [p.hero as string, ...p.rest]
+  const shots = [{ src: p.hero as string, alt: `${p.title} project overview` }, ...p.rest]
 
   const clear = () => {
     if (leadRef.current) clearTimeout(leadRef.current)
@@ -103,8 +103,8 @@ function Card({ p, onNavigate }: { p: Project; onNavigate: (href: string) => voi
       <div className={styles.drift}>
         {shots.map((s, i) => (
           <div className={styles.layer} key={i} style={i === 0 ? { opacity: 1 } : undefined}>
-            <img className={styles.mat} src={s || "/placeholder.svg"} alt="" aria-hidden="true" loading={p.slug === "enfusion-field-kit" && i === 0 ? "eager" : "lazy"} decoding="async" />
-            <img className={styles.shot} src={s || "/placeholder.svg"} alt={i === 0 ? p.title : ""} loading={p.slug === "enfusion-field-kit" && i === 0 ? "eager" : "lazy"} decoding="async" />
+            <img className={styles.mat} src={s.src || "/placeholder.svg"} alt="" aria-hidden="true" loading={p.slug === "enfusion-field-kit" && i === 0 ? "eager" : "lazy"} decoding="async" />
+            <img className={styles.shot} src={s.src || "/placeholder.svg"} alt={s.alt} loading={p.slug === "enfusion-field-kit" && i === 0 ? "eager" : "lazy"} decoding="async" />
           </div>
         ))}
       </div>
@@ -183,7 +183,7 @@ export default function PortfolioHome() {
                 also dropped because we could get integrations working for customers far faster. Resolving a data issue
                 went from weeks to hours.
               </p>
-              <p className={styles.i}>A client once called me a UX architect by trade and a creative technologist by heart.</p>
+              <p>\n                I also use AI coding agents such as Claude Code and ChatGPT to move directly from product design into functional prototypes and production-ready interfaces. My recent work includes AI-assisted development, game-development tools, automation utilities, and experimental product interfaces.\n              </p>\n              <p className={styles.i}>A client once called me a UX architect by trade and a creative technologist by heart.</p>
               <p>Outside of work I build, texture, and animate in Blender.</p>
               <p className={styles.strong}>I&apos;m looking for design engineering and product design roles.</p>
             </div>
@@ -196,7 +196,7 @@ export default function PortfolioHome() {
           <div>Client work shown remains the property of its owners.</div>
           <div className={styles["foot-c"]}>Copyright © Reid Slaughter</div>
           <div className={styles["foot-r"]}>
-            <a href="https://www.linkedin.com/in/reid59slaughter/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a href="https://github.com/RHS059" target="_blank" rel="noopener noreferrer">GitHub</a>\n            <a href="https://www.linkedin.com/in/reid59slaughter/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
             <a href="https://x.com/reidhslaughter" target="_blank" rel="noopener noreferrer">X</a>
           </div>
         </footer>
