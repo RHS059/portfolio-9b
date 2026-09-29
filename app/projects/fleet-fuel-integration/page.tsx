@@ -27,7 +27,9 @@ const projectData = {
   role: "UX Designer",
   timeline: "2019 – 2022",
   team: "UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager",
-  skills: "Wireframes, Mockups",
+  responsibilities: "User research, systems design, workflow architecture, integration logic, prototyping, and cross-functional collaboration",
+  tools: "Figma-style wireframing, whiteboarding, API and integration workflows",
+  outcome: "Data issue resolution improved by 90%, from weeks to hours",
 }
 
 const sectionContent = [
