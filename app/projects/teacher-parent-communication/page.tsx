@@ -18,12 +18,14 @@ const projectData = {
   title: "Making Teacher–Parent Communication Simpler and Smarter",
   heroImage: {
     src: "/teacher-parent-communication-app-mockup.png",
-    alt: "Teacher-Parent Communication App Interface",
+    alt: "Teacher-parent communication app mockup showing role-based messaging between teachers and parents",
   },
   role: "Lead UX Designer",
   timeline: "3 months",
   team: "2 designers, 3 developers",
-  skills: "User Research, Prototyping, Design Systems",
+  responsibilities: "User research, communication workflow design, prototyping, role-based access design, and design system work",
+  tools: "Prototyping and design system tools",
+  outcome: "Prototype explored class-wide announcements, individual student updates, and topic-based discussions",
 }
 
 const sectionContent = [
