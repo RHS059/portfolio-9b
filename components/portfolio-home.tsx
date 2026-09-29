@@ -24,8 +24,8 @@ const projects: Project[] = [
     href: "/projects/fleet-fuel-integration",
     hero: "/fleet-management-overview.webp",
     rest: [
-      "/fleet-management-vehicles.webp",
-      "/fleet-management-live-map.webp",
+      { src: "/fleet-management-vehicles.webp", alt: "Collective Fleet vehicle management interface showing fleet asset records" },
+      { src: "/fleet-management-live-map.webp", alt: "Collective Fleet live map interface showing fleet vehicles and asset locations" },
     ],
   },
   {
@@ -43,12 +43,12 @@ const projects: Project[] = [
     href: "/projects/arma-reforger-texture-wizard",
     hero: "/arma-texture-wizard.png",
     rest: [
-      "/arma-drag-drop.png",
-      "/arma-auto-sort.png",
-      "/arma-manual-override.png",
-      "/arma-alias-settings.png",
-      "/arma-resize.png",
-      "/arma-batch-export.png",
+      { src: "/arma-drag-drop.png", alt: "Arma Reforger Texture Wizard bulk drag-and-drop texture upload workflow" },
+      { src: "/arma-auto-sort.png", alt: "Texture Wizard automatically grouping uploaded files into matching texture sets" },
+      { src: "/arma-manual-override.png", alt: "Texture Wizard manual override for assigning files that do not match naming conventions" },
+      { src: "/arma-alias-settings.png", alt: "Texture Wizard configurable filename alias settings for texture type detection" },
+      { src: "/arma-resize.png", alt: "Texture Wizard export resolution controls for resizing game textures" },
+      { src: "/arma-batch-export.png", alt: "Texture Wizard batch export interface for downloading converted texture sets" },
     ],
   },
 ]
