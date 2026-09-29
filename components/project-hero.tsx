@@ -13,7 +13,10 @@ interface ProjectHeroProps {
   role: string
   timeline: string
   team: string
-  skills: string
+  responsibilities: string
+  tools: string
+  aiTools?: string
+  outcome: string
 }
 
 export default function ProjectHero({
@@ -24,7 +27,10 @@ export default function ProjectHero({
   role,
   timeline,
   team,
-  skills,
+  responsibilities,
+  tools,
+  aiTools,
+  outcome,
 }: ProjectHeroProps) {
   const [isHovered, setIsHovered] = useState(false)
 
@@ -93,24 +99,22 @@ export default function ProjectHero({
         )}
       </div>
 
-      {/* Info Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-gray-600 mb-1">Role</p>
-          <p className="text-sm md:text-base text-[#181425]">{role}</p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-wide text-gray-600 mb-1">Timeline</p>
-          <p className="text-sm md:text-base text-[#181425]">{timeline}</p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-wide text-gray-600 mb-1">Team</p>
-          <p className="text-sm md:text-base text-[#181425]">{team}</p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-wide text-gray-600 mb-1">Skills</p>
-          <p className="text-sm md:text-base text-[#181425]">{skills}</p>
-        </div>
+      {/* Project facts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[
+          ["Role", role],
+          ["Responsibilities", responsibilities],
+          ["Tools", tools],
+          ...(aiTools ? [["AI Tools", aiTools]] : []),
+          ["Team", team],
+          ["Timeline", timeline],
+          ["Outcome", outcome],
+        ].map(([label, value]) => (
+          <div key={label}>
+            <p className="text-xs uppercase tracking-wide text-gray-600 mb-1">{label}</p>
+            <p className="text-sm md:text-base text-[#181425]">{value}</p>
+          </div>
+        ))}
       </div>
 
       <style jsx>{`
