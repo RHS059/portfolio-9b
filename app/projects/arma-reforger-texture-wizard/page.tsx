@@ -25,7 +25,10 @@ const projectData = {
   role: "Solo Designer & Builder",
   timeline: "1 Day",
   team: "Solo",
-  skills: "Lovable (vibe-coding), Photoshop (benchmarking)",
+  responsibilities: "Product definition, interaction design, workflow automation, testing, iteration, and implementation",
+  tools: "Lovable, Photoshop",
+  aiTools: "Lovable",
+  outcome: "~45 minute manual workflow for 14 texture sets reduced to ~90 seconds",
 }
 
 const sectionContent = [
