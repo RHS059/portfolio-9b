@@ -9,7 +9,7 @@ interface ContentBlock {
     | string[]
     | { header: string; text: string }[]
     | { src: string; alt: string; caption: string }
-    | { text: string; url: string; logo?: string }
+    | { text: string; url: string; logo?: string; logoAlt?: string }
     | { description: string }
     | { headers: string[]; rows: string[][] }
     | { header: string; text: string; image?: string; imagePlaceholder?: string }[]
@@ -114,7 +114,7 @@ export default function ProjectSection({ id, title, content }: ProjectSectionPro
                     >
                       <img
                         src={card.image || "/placeholder.svg"}
-                        alt={card.header}
+                        alt={card.imagePlaceholder || card.header}
                         className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
                       />
                     </button>
@@ -174,7 +174,7 @@ export default function ProjectSection({ id, title, content }: ProjectSectionPro
       }
 
       case "button":
-        const buttonContent = block.content as { text: string; url: string; logo?: string }
+        const buttonContent = block.content as { text: string; url: string; logo?: string; logoAlt?: string }
         return (
           <div key={index} className="flex justify-center">
             <a
@@ -185,7 +185,7 @@ export default function ProjectSection({ id, title, content }: ProjectSectionPro
             >
               {buttonContent.text}
               {buttonContent.logo && (
-                <img src={buttonContent.logo || "/placeholder.svg"} alt="Logo" className="h-6 w-auto" />
+                <img src={buttonContent.logo || "/placeholder.svg"} alt={buttonContent.logoAlt || `${buttonContent.text} logo`} className="h-6 w-auto" />
               )}
             </a>
           </div>
