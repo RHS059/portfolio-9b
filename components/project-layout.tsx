@@ -33,7 +33,7 @@ export default function ProjectLayout({ sections, children }: ProjectLayoutProps
         <div>Client work shown remains the property of its owners.</div>
         <div className="cs-foot-c">Copyright © Reid Slaughter</div>
         <div className="cs-foot-r">
-          <a href="https://www.linkedin.com/in/reid59slaughter/" target="_blank" rel="noopener noreferrer">
+          <a href="https://github.com/RHS059" target="_blank" rel="noopener noreferrer">GitHub</a>\n          <a href="https://www.linkedin.com/in/reid59slaughter/" target="_blank" rel="noopener noreferrer">
             LinkedIn
           </a>
           <a href="https://x.com/reidhslaughter" target="_blank" rel="noopener noreferrer">

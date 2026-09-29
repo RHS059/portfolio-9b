@@ -5,7 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { Figtree } from "next/font/google"
 import { Instrument_Serif } from "next/font/google"
 import { Inter } from "next/font/google"
-import "./globals.css"
+import "./globals.css"\nimport StructuredData from "../components/structured-data"
 
 const figtree = Figtree({
   subsets: ["latin"],
@@ -33,12 +33,12 @@ const instrumentSerif = Instrument_Serif({
 // so its extension and served Content-Type do not match the image.
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.reidhslaughter.com"),
-  title: "Reid Slaughter — Design Engineer",
-  description: "Explore Reid Slaughter’s portfolio of design engineering and user experience projects.",
+  title: "Reid Slaughter | Product Designer & Design Engineer",
+  description: "Product designer and design engineer specializing in UX, AI-assisted product development, Claude Code, ChatGPT, prototyping, and front-end implementation.",
   generator: "v0.app",
   openGraph: {
-    title: "Reid Slaughter — Design Engineer",
-    description: "Explore Reid Slaughter’s portfolio of design engineering and user experience projects.",
+    title: "Reid Slaughter | Product Designer & Design Engineer",
+    description: "Product designer and design engineer specializing in UX, AI-assisted product development, Claude Code, ChatGPT, prototyping, and front-end implementation.",
     url: "https://www.reidhslaughter.com/",
     type: "website",
     images: [
@@ -53,8 +53,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Reid Slaughter — Design Engineer",
-    description: "Explore Reid Slaughter’s portfolio of design engineering and user experience projects.",
+    title: "Reid Slaughter | Product Designer & Design Engineer",
+    description: "Product designer and design engineer specializing in UX, AI-assisted product development, Claude Code, ChatGPT, prototyping, and front-end implementation.",
     images: [
       {
         url: "https://www.reidhslaughter.com/og-hero.jpg",
@@ -62,6 +62,33 @@ export const metadata: Metadata = {
       },
     ],
   },
+}
+
+const personStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "@id": "https://www.reidhslaughter.com/#reid-slaughter",
+  name: "Reid Slaughter",
+  url: "https://www.reidhslaughter.com/about",
+  image: "https://www.reidhslaughter.com/reid-slaughter-purple.webp",
+  jobTitle: "Product Designer & Design Engineer",
+  description: "Product designer and design engineer specializing in UX, AI-assisted product development, prototyping, and front-end implementation.",
+  sameAs: [
+    "https://github.com/RHS059",
+    "https://www.linkedin.com/in/reid59slaughter/",
+    "https://x.com/reidhslaughter",
+  ],
+  knowsAbout: [
+    "Product Design",
+    "UX Design",
+    "Design Engineering",
+    "AI-assisted development",
+    "Claude Code",
+    "ChatGPT",
+    "Figma",
+    "Prototyping",
+    "Front-end development",
+  ],
 }
 
 export default function RootLayout({
@@ -81,7 +108,7 @@ export default function RootLayout({
           fetchPriority="high"
         />
       </head>
-      <body>
+      <body>\n        <StructuredData data={personStructuredData} />
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`
             (function(c,l,a,r,i,t,y){
