@@ -41,7 +41,7 @@ reveal the date list, or click its list button to pin it open.
    that newly published article. Eight images and their crop focal points are
    defined in `content/article-heroes.json`; prompts are in
    `docs/article-hero-prompts.md`.
-3. Run `npm run dev` and open `/writing` to review the draft. Drafts appear only
+3. Run `npm run dev` and open `/writing/<your-draft-slug>` to review the draft. Drafts appear only
    locally and on Vercel preview deployments, with noindex. Production returns
    404 for draft article and social-image URLs and excludes draft content from
    the archive and sitemap. Date labels appear only after publication.
@@ -53,7 +53,7 @@ reveal the date list, or click its list button to pin it open.
 
 Development assigns missing images automatically. Production builds validate saved
 assignments and stop if an ID is missing; deployment never rerolls an image.
-The first essay remains a two-paragraph draft for Reid to rewrite.
+The first published essay is a two-paragraph proposal for expert review across disciplines.
 
 ### Rich text format
 

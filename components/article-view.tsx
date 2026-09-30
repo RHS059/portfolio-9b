@@ -1,7 +1,7 @@
-import Image from "next/image"
 import Link from "next/link"
 import StructuredData from "./structured-data"
 import ArticleRichText from "./article-rich-text"
+import LandscapeHero from "./landscape-hero"
 import { authorId, formatArticleDate, getArticleHero, readingMinutes, siteUrl, type Article } from "@/lib/articles"
 import { richTextPlainText } from "@/lib/article-schema"
 import styles from "@/app/writing/writing.module.css"
@@ -30,9 +30,7 @@ export default function ArticleView({ article }: { article: Article }) {
         </div>
         {date && article.updatedAt && article.updatedAt !== date ? <p className={styles.meta}>Updated <time dateTime={article.updatedAt}>{formatArticleDate(article.updatedAt)}</time></p> : null}
       </header>
-      <div className={styles.hero}>
-        <Image src={hero.src} alt={hero.alt} width={1920} height={1080} sizes="(max-width: 900px) 100vw, 75vw" loading="eager" className={styles.heroImage} style={{ objectPosition: hero.position }} />
-      </div>
+      <LandscapeHero image={hero} />
       <div className={styles.content}>
         {!date ? <p className={styles.notice}>Draft preview. This essay is not published on the live portfolio.</p> : null}
         <div className={styles.body}><ArticleRichText body={article.body} /></div>
