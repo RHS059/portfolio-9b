@@ -55,8 +55,8 @@ Development assigns missing images automatically. Production builds validate sav
 assignments and stop if an ID is missing; deployment never rerolls an image.
 The first published essay is a two-paragraph proposal for expert review across disciplines.
 
-About and article heroes use layered Three.js parallax cut from the original
-full-resolution artwork, with masked water and foliage motion. See
+About and article heroes use Three.js source-camera projection onto simple
+scene geometry, with real generated water and foliage animation frames. See
 `docs/landscape-animation.md` for composition, motion and fallback behavior.
 
 ### Rich text format

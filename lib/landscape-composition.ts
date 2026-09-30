@@ -1,7 +1,7 @@
 /** Coordinates are normalized to the ORIGINAL artwork, not a regenerated atlas. */
 export type Point = readonly [number, number]
 export type Polygon = readonly Point[]
-export type LandscapeAnimation = { scene: keyof typeof landscapeCompositions }
+export type LandscapeAnimation = { scene: keyof typeof landscapeCompositions; frames?: string[]; frameRegion?: [number, number, number, number]; duration?: number }
 export type Composition = {
   middle: Polygon
   foreground: readonly Polygon[]
@@ -23,7 +23,10 @@ export const landscapeCompositions = {
     foreground: [below([0, .46], [.12, .52], [.22, .54], [.32, .66], [.50, .76], [.73, .85], [1, .94])],
     water: [[[.30, .46], [1, .46], [1, .72], [.75, .65], [.51, .56]]],
     // The boardwalk, posts and rails remain rigid. Only the side grasses move.
-    foliage: [[[0, .68], [.045, .73], [.055, .85], [.12, 1], [0, 1]], [[.54, .69], [.63, .72], [.65, .77], [.58, .76]]],
+    foliage: [
+      [[0, .68], [.045, .73], [.055, .85], [.12, 1], [0, 1]],
+      [[.30, .56], [.42, .61], [.54, .67], [.71, .71], [.87, .79], [1, .81], [1, .91], [.83, .86], [.69, .80], [.55, .75], [.41, .69], [.31, .63]],
+    ],
   },
   "lakefront-city": {
     middle: below([0, .47], [.12, .40], [.20, .43], [.31, .41], [.31, .30], [.33, .30], [.34, .43], [.47, .42], [.47, .25], [.49, .25], [.49, .13], [.51, .13], [.51, .43], [.62, .43], [.62, .30], [.66, .30], [.66, .43], [.74, .39], [.78, .46], [.87, .38], [.90, .43], [1, .40]),
@@ -35,7 +38,12 @@ export const landscapeCompositions = {
     middle: below([0, .47], [.22, .49], [.43, .47], [.67, .49], [.82, .46], [1, .47]),
     foreground: [below([0, .64], [.12, .65], [.23, .68], [.38, .66], [.56, .68], [.76, .70], [1, .74])],
     water: [],
-    foliage: [below([0, .69], [.16, .71], [.34, .72], [.56, .75], [.76, .77], [1, .80])],
+    foliage: [
+      [[.30, .63], [.64, .68], [1, .73], [1, 1], [.37, 1], [.28, .93], [.36, .84], [.28, .75]],
+      [[0, .62], [.12, .66], [.22, .76], [.12, .79], [.08, .84], [0, .76]],
+      [[.89, .49], [.95, .47], [1, .49], [1, .57], [.87, .56]],
+      [[.58, .54], [.63, .54], [.66, .59], [.56, .60]],
+    ],
   },
   "backyard-sunset": {
     middle: below([0, .48], [.28, .47], [.49, .48], [.61, .41], [.67, .45], [.83, .43], [1, .47]),

@@ -15,7 +15,21 @@
       "alt": "Purple engraved illustration of a wooden boardwalk beside the beach",
       "position": "50% 54%",
       "parallax": {
-        "scene": "beach-boardwalk"
+        "scene": "beach-boardwalk",
+        "frames": [
+          "/article-heroes/frames/beach-boardwalk-1.webp",
+          "/article-heroes/frames/beach-boardwalk-2.webp",
+          "/article-heroes/frames/beach-boardwalk-3.webp",
+          "/article-heroes/frames/beach-boardwalk-4.webp",
+          "/article-heroes/frames/beach-boardwalk-5.webp"
+        ],
+        "duration": 7.2,
+        "frameRegion": [
+          0,
+          0.41993637327677624,
+          1,
+          0.5800636267232238
+        ]
       }
     },
     {
@@ -33,7 +47,21 @@
       "alt": "Purple engraved illustration of clouds stretching over an open prairie",
       "position": "50% 45%",
       "parallax": {
-        "scene": "prairie-clouds"
+        "scene": "prairie-clouds",
+        "frames": [
+          "/article-heroes/frames/prairie-clouds-1.webp",
+          "/article-heroes/frames/prairie-clouds-2.webp",
+          "/article-heroes/frames/prairie-clouds-3.webp",
+          "/article-heroes/frames/prairie-clouds-4.webp",
+          "/article-heroes/frames/prairie-clouds-5.webp"
+        ],
+        "duration": 7.2,
+        "frameRegion": [
+          0,
+          0.41993637327677624,
+          1,
+          0.5800636267232238
+        ]
       }
     },
     {

@@ -22,7 +22,12 @@ export default function LandscapeHero({ image }: { image: Hero }) {
 
   useEffect(() => {
     const element = host.current
-    if (!element || !animation || reducedMotion) return
+    if (!element || !animation) return
+    if (reducedMotion) {
+      element.dataset.sceneReason = "reduced-motion"
+      return
+    }
+    delete element.dataset.sceneReason
     const abort = new AbortController()
     let controller: ReturnType<typeof import("@/lib/landscape-scene").createLandscapeScene> | undefined
     let loading = false
@@ -36,7 +41,11 @@ export default function LandscapeHero({ image }: { image: Hero }) {
         if (abort.signal.aborted) return
         controller = createLandscapeScene(element, animation, image.position, image.src)
         controller.setVisible(visible)
-      }).catch(() => { element.dataset.scene = "fallback" })
+      }).catch((error) => {
+        console.warn("Landscape module failed to start", error)
+        element.dataset.scene = "fallback"
+        element.dataset.sceneReason = "module-load-error"
+      })
     })
     observer.observe(element)
     return () => {

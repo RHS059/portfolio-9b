@@ -3,7 +3,7 @@ import { splitLandscapePixels } from "./landscape-pixels"
 
 // This is hidden edge padding, not a scale/zoom. Only a few pixels can be
 // exposed by the bounded camera movement. Artwork pixels are never regenerated.
-export const EDGE_PADDING = 16
+export const EDGE_PADDING = 48
 
 function canvas(width: number, height: number) {
   const element = document.createElement("canvas")
@@ -60,5 +60,31 @@ export function createLandscapeLayers(image: HTMLImageElement, composition: Comp
   for (const polygon of composition.water) fill(motion.context, polygon, width, height)
   motion.context.fillStyle = "lime"
   for (const polygon of composition.foliage) fill(motion.context, polygon, width, height)
-  return { layers, motion: motion.element, width, height }
+  const animationMask = canvas(motion.element.width, motion.element.height)
+  const maskData = motion.context.getImageData(0, 0, motion.element.width, motion.element.height)
+  for (let i = 0; i < maskData.data.length; i += 4) {
+    const alpha = Math.max(maskData.data[i], maskData.data[i + 1])
+    maskData.data[i] = 255; maskData.data[i + 1] = 255; maskData.data[i + 2] = 255; maskData.data[i + 3] = alpha
+  }
+  animationMask.context.putImageData(maskData, 0, 0)
+  return { layers, motion: motion.element, animationMask: animationMask.element, width, height }
+}
+
+export type PreparedLandscape = ReturnType<typeof createLandscapeLayers>
+
+/** Actual generated frame pixels, clipped to animated areas and depth cutouts. */
+export function createFrameLayers(prepared: PreparedLandscape, frame: HTMLImageElement, region: readonly number[] = [0, 0, 1, 1]) {
+  const { width, height, layers, animationMask } = prepared
+  const overlay = canvas(animationMask.width, animationMask.height)
+  overlay.context.drawImage(frame, EDGE_PADDING + region[0] * width, EDGE_PADDING + region[1] * height, width * region[2], height * region[3])
+  overlay.context.globalCompositeOperation = "destination-in"
+  overlay.context.drawImage(animationMask, 0, 0)
+  return layers.map((layer) => {
+    const result = canvas(layer.width, layer.height)
+    result.context.drawImage(layer, 0, 0)
+    result.context.drawImage(overlay.element, 0, 0)
+    result.context.globalCompositeOperation = "destination-in"
+    result.context.drawImage(layer, 0, 0)
+    return result.element
+  })
 }

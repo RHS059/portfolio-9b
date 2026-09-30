@@ -8,6 +8,9 @@ const heroSchema = z.object({
   alt: z.string().min(1),
   position: z.string().regex(/^\d+% \d+%$/),
   parallax: z.object({
+    frames: z.array(z.string().startsWith("/article-heroes/")).min(2).optional(),
+    duration: z.number().positive().optional(),
+    frameRegion: z.tuple([z.number(), z.number(), z.number(), z.number()]).optional(),
     scene: z.enum(Object.keys(landscapeCompositions) as [keyof typeof landscapeCompositions, ...(keyof typeof landscapeCompositions)[]]),
   }),
 })
