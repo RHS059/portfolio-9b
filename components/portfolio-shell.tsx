@@ -26,7 +26,7 @@ export default function PortfolioShell({ children, leaving = false, reading = fa
                 <AnimatedLink className={styles.cta} href="mailto:reids@reidhslaughter.com"><Mail size={15} aria-hidden="true" />Reach Out</AnimatedLink>
               </nav>
             </div>
-            {sidebarContent ?? <div className={styles.bio}>
+            <div className={styles.bio}>
               <div className={styles.eyebrow}>Who am I?</div>
               <p>
                 I design and build the front-end interfaces people use to do their jobs. Most of that work has been fleet
@@ -45,7 +45,8 @@ export default function PortfolioShell({ children, leaving = false, reading = fa
                 </p>
               </nav>
               <p className={styles.strong}>I&apos;m looking for design engineering and product design roles.</p>
-            </div>}
+            </div>
+            {sidebarContent}
           </aside>
         </div>
         <main id="work" className={`${reading ? styles.reading : styles.stack} ${alignTop ? styles.readingTop : ""} ${styles["route-panel"]} ${leaving ? styles["route-panel-leaving"] : ""}`}>
