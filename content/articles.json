@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "articles": [
+    {
+      "slug": "ai-agents-and-the-expertise-gap",
+      "title": "AI Agents Should Deliver Expert Results Without Expert Prompts",
+      "description": "Reid Slaughter proposes pairing experts across disciplines to train AI agents to produce better work from everyday instructions.",
+      "status": "draft",
+      "publishedAt": null,
+      "topics": [
+        "AI agents",
+        "Product design",
+        "AI evaluation"
+      ],
+      "body": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Working in product design, AI evaluation, and Blender, I keep noticing the same problem: getting good results from an AI agent often requires knowing enough about the craft to tell it how to do the work. I can describe modeling techniques and diagnose geometry problems. A beginner with the same reference image may know exactly what they want but lack that vocabulary. AI tools should help close that expertise gap so users can describe an outcome without having to prescribe the entire process."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "I’d like to test a training approach that pairs experts from different disciplines. A STEM specialist asks an agent to create a sixty second explainer video. A video specialist reviews and corrects the execution through the agent, then the STEM specialist checks that the edits preserved the facts. Recording the requests, corrections, and feedback could provide examples of how to translate everyday instructions into expert quality work. The test is whether those examples help new users get better results with less specialist intervention."
+              }
+            ]
+          }
+        ]
+      },
+      "heroImage": "prairie-clouds"
+    }
+  ]
+}

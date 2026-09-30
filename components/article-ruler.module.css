@@ -1,0 +1,29 @@
+.archive { position: absolute; z-index: 2; right: 0; top: 60%; transform: translateY(-50%); width: 32px; flex: none; }
+.toggle { width: 32px; height: 32px; display: grid; place-items: center; margin: 0 0 8px; border: 0; border-radius: 4px; background: transparent; color: var(--muted); cursor: pointer; }
+.toggle:hover { color: var(--accent); }
+.toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.viewport { position: relative; width: 220px; margin-left: -188px; max-height: min(280px, calc(100dvh - 100px)); padding: 8px 4px 8px 8px; overflow-y: auto; overflow-x: hidden; overscroll-behavior-y: contain; scrollbar-width: none; border: 1px solid transparent; border-radius: 8px; pointer-events: none; transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+.viewport::-webkit-scrollbar { display: none; }
+.archive[data-open="true"] .viewport { pointer-events: auto; background: var(--sidebar); border-color: var(--sidebar-rule); box-shadow: 0 8px 24px oklch(0.17 0.032 297 / 0.08); }
+.ruler { list-style: none; padding: 0; margin: 0; }
+.entry { margin: 0; padding: 0; }
+.archive .date { display: flex; align-items: center; justify-content: flex-end; gap: 18px; min-height: 32px; padding: 4px 0 4px 8px; border-radius: 4px; font-variant-numeric: tabular-nums; font-size: 13px; color: var(--muted); transform-origin: right center; transition: transform 170ms ease, color 170ms ease, background 170ms ease; }
+.date time { opacity: 0; transform: translateX(8px); transition: opacity 160ms ease, transform 160ms ease; }
+.archive[data-open="true"] .date time { opacity: 1; transform: none; }
+.tick { display: block; flex: none; width: 12px; height: 1px; margin-right: 3px; background: currentColor; pointer-events: auto; transition: width 170ms ease; }
+.archive .date:hover, .archive .date:focus-visible { color: var(--accent); background: oklch(0.44 0.2 293 / 0.06); transform: scale(1.035); }
+.archive .date:hover .tick, .archive .date:focus-visible .tick { width: 26px; }
+.entry:has(+ .entry:hover) .tick, .entry:hover + .entry .tick { width: 18px; }
+.date:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.archive .active { color: var(--accent); font-weight: 600; }
+.active .tick { width: 18px; height: 2px; }
+.minorTick { display: block; width: 7px; height: 1px; margin: 3px 3px 3px auto; background: var(--sidebar-rule); }
+.entry:last-child .minorTick { display: none; }
+.empty { display: flex; align-items: center; justify-content: flex-end; gap: 24px; }
+.emptyTicks { display: flex; flex-direction: column; align-items: flex-end; gap: 11px; padding: 8px 3px; pointer-events: auto; }
+.emptyTicks i { display: block; width: 9px; height: 1px; background: var(--sidebar-rule); }
+.emptyTicks i:nth-child(4n + 1) { width: 20px; }
+.empty p { max-width: 15ch; font-size: 12px; line-height: 1.6; color: var(--muted); opacity: 0; transition: opacity 160ms ease; }
+.archive[data-open="true"] .empty p { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .viewport, .date, .date time, .tick, .empty p { transition: none; } .archive .date:hover, .archive .date:focus-visible { transform: none; } }
+@media (max-width: 900px) { .archive { position: relative; right: auto; top: auto; transform: none; margin-left: auto; } .viewport { max-height: 160px; } }

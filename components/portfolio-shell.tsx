@@ -1,11 +1,12 @@
 import type { ReactNode } from "react"
 import { Mail } from "lucide-react"
 import PortfolioLinks from "./portfolio-links"
+import AnimatedLink from "./animated-link"
 import styles from "./portfolio-home.module.css"
 
-type Props = { children: ReactNode; leaving?: boolean; reading?: boolean }
+type Props = { children: ReactNode; leaving?: boolean; reading?: boolean; alignTop?: boolean; sidebarContent?: ReactNode }
 
-export default function PortfolioShell({ children, leaving = false, reading = false }: Props) {
+export default function PortfolioShell({ children, leaving = false, reading = false, alignTop = false, sidebarContent }: Props) {
   const Name = reading ? "p" : "h1"
   return (
     <div className={`${styles.page} font-sans`}>
@@ -22,10 +23,10 @@ export default function PortfolioShell({ children, leaving = false, reading = fa
               </ul>
               <nav className={styles.links} aria-label="Portfolio navigation">
                 <PortfolioLinks workHref={reading ? "/#work" : "#work"} />
-                <a className={styles.cta} href="mailto:reids@reidhslaughter.com"><Mail size={15} aria-hidden="true" />Reach Out</a>
+                <AnimatedLink className={styles.cta} href="mailto:reids@reidhslaughter.com"><Mail size={15} aria-hidden="true" />Reach Out</AnimatedLink>
               </nav>
             </div>
-            <div className={styles.bio}>
+            {sidebarContent ?? <div className={styles.bio}>
               <div className={styles.eyebrow}>Who am I?</div>
               <p>
                 I design and build the front-end interfaces people use to do their jobs. Most of that work has been fleet
@@ -44,10 +45,10 @@ export default function PortfolioShell({ children, leaving = false, reading = fa
                 </p>
               </nav>
               <p className={styles.strong}>I&apos;m looking for design engineering and product design roles.</p>
-            </div>
+            </div>}
           </aside>
         </div>
-        <main id="work" className={`${reading ? styles.reading : styles.stack} ${styles["route-panel"]} ${leaving ? styles["route-panel-leaving"] : ""}`}>
+        <main id="work" className={`${reading ? styles.reading : styles.stack} ${alignTop ? styles.readingTop : ""} ${styles["route-panel"]} ${leaving ? styles["route-panel-leaving"] : ""}`}>
           {children}
         </main>
         <footer className={styles.foot}>

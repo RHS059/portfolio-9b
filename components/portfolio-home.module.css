@@ -55,6 +55,7 @@
 .page .bio a:hover { color: var(--accent); text-decoration-color: var(--accent); }
 .stack { display: flex; flex-direction: column; gap: 14px; padding: 14px; background: var(--main-bg); }
 .reading { min-width: 0; min-height: calc(100vh - 60px); align-self: stretch; padding: clamp(32px, 4.5vw, 72px); background: var(--sidebar); border-left: 1px solid var(--sidebar-rule); }
+.readingTop { padding: 28px 0 48px; }
 .page .reading a { text-decoration: underline; text-underline-offset: 4px; }
 .page .reading a:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 .page .card-link { display: block; color: inherit; }
@@ -80,6 +81,7 @@
   .side { position: static; height: auto; max-height: none; overflow: visible; }
   .stack { padding: 0; gap: 0; }
   .reading { min-height: auto; border-left: 0; border-top: 1px solid var(--sidebar-rule); padding: 32px 24px 48px; }
+  .readingTop { padding: 28px 0 48px; }
   .card { border-radius: 0; }
   .foot { grid-column: 1; grid-row: auto; grid-template-columns: 1fr; row-gap: 10px; }
   .foot-c { text-align: left; }

@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prepare:articles": "node scripts/assign-article-heroes.mjs",
+    "prebuild": "node scripts/assign-article-heroes.mjs --check",
+    "predev": "node scripts/assign-article-heroes.mjs",
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
