@@ -157,6 +157,12 @@ export default function PortfolioHome() {
           <aside className={styles.side}>
             <div>
               <h1>Reid Slaughter</h1>
+              <p className={styles.role}>Product Designer &amp; Design Engineer</p>
+              <nav className={styles.links} aria-label="Portfolio navigation">
+                <a href="#work">Work</a>
+                <a href="/about">About</a>
+                <a href="/writing">Writing</a>
+              </nav>
               <ul className={styles.metrics}>
                 <li className={styles.metric}><span className={styles.num}>90%</span> faster support ticket resolution for API integration tickets</li>
                 <li className={styles.metric}><span className={styles.num}>80%</span> faster customer upgrades</li>
