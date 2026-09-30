@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import StructuredData from "../../components/structured-data"
 import PortfolioShell from "@/components/portfolio-shell"
 import LandscapeHero from "@/components/landscape-hero"
-import heroImages from "@/content/article-heroes.json"
+import heroImages from "@/lib/landscape-heroes"
 import styles from "@/app/writing/writing.module.css"
 
 const description = "Reid Slaughter designs and builds enterprise UX and AI tools, and helps train and evaluate AI models through micro1 and Mercor."

@@ -1,12 +1,92 @@
 {
   "images": [
-    { "id": "beach-dunes", "src": "/article-heroes/beach-dunes.webp", "alt": "Purple engraved illustration of beach dunes and rolling ocean waves", "position": "50% 52%" },
-    { "id": "beach-boardwalk", "src": "/article-heroes/beach-boardwalk.webp", "alt": "Purple engraved illustration of a wooden boardwalk beside the beach", "position": "50% 54%" },
-    { "id": "lakefront-city", "src": "/article-heroes/lakefront-city.webp", "alt": "Purple engraved illustration of a city skyline beside a lake and beach", "position": "50% 48%" },
-    { "id": "prairie-clouds", "src": "/article-heroes/prairie-clouds.webp", "alt": "Purple engraved illustration of clouds stretching over an open prairie", "position": "50% 45%" },
-    { "id": "backyard-sunset", "src": "/article-heroes/backyard-sunset.webp", "alt": "Purple engraved illustration of a quiet backyard at sunset", "position": "50% 50%" },
-    { "id": "coastal-town", "src": "/article-heroes/coastal-town.webp", "alt": "Purple engraved illustration of a coastal town overlooking a sheltered bay", "position": "50% 50%" },
-    { "id": "lakeside-marina", "src": "/article-heroes/lakeside-marina.webp", "alt": "Purple engraved illustration of sailboats at a lakeside marina", "position": "50% 52%" },
-    { "id": "beach-after-rain", "src": "/article-heroes/beach-after-rain.webp", "alt": "Purple engraved illustration of a beach under clearing rain clouds", "position": "50% 46%" }
+    {
+      "id": "beach-dunes",
+      "src": "/article-heroes/beach-dunes.webp",
+      "alt": "Purple engraved illustration of beach dunes and rolling ocean waves",
+      "position": "50% 52%",
+      "parallax": {
+        "atlas": "/article-heroes/parallax/beach-dunes.webp",
+        "waterline": 0.5,
+        "foreground": "grass"
+      }
+    },
+    {
+      "id": "beach-boardwalk",
+      "src": "/article-heroes/beach-boardwalk.webp",
+      "alt": "Purple engraved illustration of a wooden boardwalk beside the beach",
+      "position": "50% 54%",
+      "parallax": {
+        "atlas": "/article-heroes/parallax/beach-boardwalk.webp",
+        "waterline": 0.53,
+        "foreground": "boardwalk"
+      }
+    },
+    {
+      "id": "lakefront-city",
+      "src": "/article-heroes/lakefront-city.webp",
+      "alt": "Purple engraved illustration of a city skyline beside a lake and beach",
+      "position": "50% 48%",
+      "parallax": {
+        "atlas": "/article-heroes/parallax/lakefront-city.webp",
+        "waterline": 0.62,
+        "foreground": "tree"
+      }
+    },
+    {
+      "id": "prairie-clouds",
+      "src": "/article-heroes/prairie-clouds.webp",
+      "alt": "Purple engraved illustration of clouds stretching over an open prairie",
+      "position": "50% 45%",
+      "parallax": {
+        "atlas": "/article-heroes/parallax/prairie-clouds.webp",
+        "waterline": 1.1,
+        "foreground": "grass"
+      }
+    },
+    {
+      "id": "backyard-sunset",
+      "src": "/article-heroes/backyard-sunset.webp",
+      "alt": "Purple engraved illustration of a quiet backyard at sunset",
+      "position": "50% 50%",
+      "parallax": {
+        "atlas": "/article-heroes/parallax/backyard-sunset.webp",
+        "waterline": 0.63,
+        "foreground": "garden"
+      }
+    },
+    {
+      "id": "coastal-town",
+      "src": "/article-heroes/coastal-town.webp",
+      "alt": "Purple engraved illustration of a coastal town overlooking a sheltered bay",
+      "position": "50% 50%",
+      "parallax": {
+        "atlas": "/article-heroes/parallax/coastal-town.webp",
+        "waterline": 0.67,
+        "foreground": "coast"
+      }
+    },
+    {
+      "id": "lakeside-marina",
+      "src": "/article-heroes/lakeside-marina.webp",
+      "alt": "Purple engraved illustration of sailboats at a lakeside marina",
+      "position": "50% 52%",
+      "parallax": {
+        "atlas": "/article-heroes/parallax/lakeside-marina.webp",
+        "waterline": 0.63,
+        "foreground": "marina"
+      }
+    },
+    {
+      "id": "beach-after-rain",
+      "src": "/article-heroes/beach-after-rain.webp",
+      "alt": "Purple engraved illustration of a beach under clearing rain clouds",
+      "position": "50% 46%",
+      "parallax": {
+        "atlas": "/article-heroes/parallax/beach-after-rain.webp",
+        "waterline": 0.65,
+        "foreground": "rocks"
+      }
+    }
   ]
 }

@@ -1,5 +1,5 @@
 import articleFile from "@/content/articles.json"
-import heroFile from "@/content/article-heroes.json"
+import heroFile from "@/lib/landscape-heroes"
 import { articlesFileSchema, richTextPlainText, type Article, type PublishedArticle, type RichTextNode } from "./article-schema"
 
 const { articles } = articlesFileSchema.parse(articleFile)

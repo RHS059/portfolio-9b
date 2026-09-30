@@ -55,6 +55,10 @@ Development assigns missing images automatically. Production builds validate sav
 assignments and stop if an ID is missing; deployment never rerolls an image.
 The first published essay is a two-paragraph proposal for expert review across disciplines.
 
+About and article heroes use layered Three.js parallax with generated water and
+foliage frames. See `docs/landscape-animation.md` for assets, generation prompts,
+motion settings and fallback behavior.
+
 ### Rich text format
 
 Bodies use a Tiptap/ProseMirror-style JSON document. Supported blocks are
