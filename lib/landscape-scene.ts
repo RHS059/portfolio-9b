@@ -1,11 +1,8 @@
 import * as THREE from "three"
+import { coverPlacement, landscapeCompositions, type LandscapeAnimation } from "./landscape-composition"
+import { createLandscapeLayers, EDGE_PADDING } from "./landscape-layers"
 
-/** Three columns (far/middle/near), two rows (generated animation frames). */
-export type LandscapeAnimation = {
-  atlas: string
-  waterline: number
-  foreground: "grass" | "boardwalk" | "tree" | "garden" | "coast" | "rocks" | "marina"
-}
+export type { LandscapeAnimation } from "./landscape-composition"
 
 const vertexShader = `
 varying vec2 vUv;
@@ -15,59 +12,30 @@ void main() {
 }`
 
 const fragmentShader = `
-uniform sampler2D atlas;
+uniform sampler2D artwork;
+uniform sampler2D motion;
 uniform vec2 texel;
-uniform float column;
-uniform float phase;
-uniform float waterline;
-uniform int foreground;
+uniform float time;
 varying vec2 vUv;
-vec4 frame(float row) {
-  // Stay inside this tile: filtering must never sample a neighbouring layer.
-  vec2 p = vec2((column + vUv.x) / 3.0, (row + vUv.y) / 2.0);
-  p = clamp(p, vec2(column / 3.0, row / 2.0) + texel,
-    vec2((column + 1.0) / 3.0, (row + 1.0) / 2.0) - texel);
-  return texture2D(atlas, p);
-}
 void main() {
-  vec2 p = vec2(vUv.x, 1.0 - vUv.y);
-  float mask = 0.0;
-  if (column > 0.5 && column < 1.5) {
-    // Animate water below its edge, leaving the skyline above it fixed.
-    mask = smoothstep(waterline, waterline + 0.04, p.y);
-  } else if (column > 1.5) {
-    mask = 1.0;
-    if (foreground == 1) {
-      // Side grasses; preserve the boardwalk and railings.
-      mask = smoothstep(0.52 + 0.65 * (p.y - 0.5), 0.62 + 0.65 * (p.y - 0.5), p.x);
-    } else if (foreground == 2 || foreground == 3) {
-      // Tree canopy; leave walls, fences and garden furniture still.
-      mask = 1.0 - smoothstep(0.42, 0.55, p.y);
-    } else if (foreground == 4) {
-      mask = (1.0 - smoothstep(0.42, 0.52, p.y)) * (1.0 - smoothstep(0.3, 0.4, p.x));
-    } else if (foreground == 5 || foreground == 6) {
-      // Rock/dock scenes: only the leafy upper left edge moves.
-      mask = (1.0 - smoothstep(0.42, 0.54, p.y)) * (1.0 - smoothstep(0.16, 0.24, p.x));
-    }
-  }
-  vec4 a = frame(1.0);
-  vec4 b = frame(0.0);
-  // Slow ping-pong between real generated frames. Interpolate premultiplied
-  // colors so transparent foliage does not acquire dark halos.
-  float blend = phase * mask * 0.3;
-  float alpha = mix(a.a, b.a, blend);
-  vec3 color = mix(a.rgb * a.a, b.rgb * b.a, blend) / max(alpha, 0.0001);
-  if (alpha < 0.025) discard;
-  gl_FragColor = vec4(color, alpha);
+  vec2 mask = texture2D(motion, vUv).rg;
+  // Sub-pixel ripples/breeze within explicit water and foliage regions. No
+  // frame crossfade, whole-image rotation, color change, or blur filter.
+  vec2 offset = vec2(
+    mask.r * sin(time * 0.8) * sin(vUv.y * 170.0 + time * 0.5) * 1.1
+      + mask.g * sin(time * 0.65) * sin(vUv.y * 7.0 + time * 0.25) * 1.4,
+    mask.r * sin(time * 0.6) * sin(vUv.y * 210.0) * 0.25
+      + mask.g * sin(time * 0.45) * 0.35
+  ) * texel;
+  vec4 color = texture2D(artwork, clamp(vUv + offset, texel * 0.5, 1.0 - texel * 0.5));
+  if (color.a < 0.01) discard;
+  gl_FragColor = color;
   #include <colorspace_fragment>
 }`
 
-const foregrounds = ["grass", "boardwalk", "tree", "garden", "coast", "rocks", "marina"]
-
-export function createLandscapeScene(host: HTMLDivElement, animation: LandscapeAnimation, position: string) {
-  const renderer = new THREE.WebGLRenderer({ alpha: false, antialias: true, powerPreference: "low-power" })
+export function createLandscapeScene(host: HTMLDivElement, animation: LandscapeAnimation, position: string, src: string) {
+  const renderer = new THREE.WebGLRenderer({ alpha: false, antialias: false, powerPreference: "low-power" })
   renderer.setClearColor("#f3ebd9", 1)
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5))
   renderer.outputColorSpace = THREE.SRGBColorSpace
   const canvas = renderer.domElement
   canvas.setAttribute("aria-hidden", "true")
@@ -76,9 +44,11 @@ export function createLandscapeScene(host: HTMLDivElement, animation: LandscapeA
   const scene = new THREE.Scene()
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 30)
   camera.position.z = 6
-  const geometry = new THREE.PlaneGeometry(16 / 9, 1)
+  // Keep the optical axis parallel to the planes. lookAt during pointer
+  // movement turned the previous effect into a rotating/warping photograph.
+  const geometry = new THREE.PlaneGeometry(1, 1)
   const layers: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>[] = []
-  let texture: THREE.Texture | undefined
+  const textures: THREE.Texture[] = []
   let disposed = false
   let loaded = false
   let visible = false
@@ -87,25 +57,42 @@ export function createLandscapeScene(host: HTMLDivElement, animation: LandscapeA
   let elapsed = 0
   let x = 0
   let y = 0
+  let imageWidth = 0
+  let imageHeight = 0
+  let cameraTravel = 0
   const target = { x: 0, y: 0 }
-  const focal = position.split(" ").map((value) => parseFloat(value) / 100)
+  const image = new Image()
 
   function resize() {
     if (disposed) return
-    const width = host.clientWidth
-    const height = host.clientHeight
+    const width = host.clientWidth, height = host.clientHeight
     if (!width || !height) return
-    renderer.setSize(width, height)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+    renderer.setSize(width, height, false)
     camera.aspect = width / height
     camera.updateProjectionMatrix()
+    if (!imageWidth || !imageHeight) return
+    const fit = coverPlacement(width, height, imageWidth, imageHeight, position)
+    const viewHeight = 2 * Math.tan(THREE.MathUtils.degToRad(35 / 2)) * 6
+    // At most 3 CSS pixels of travel; less on narrow screens. Bound it by the
+    // source edge padding as well, so a very small hero cannot expose a gap.
+    cameraTravel = Math.min(3, width / 220, EDGE_PADDING * fit.scale * 0.4) * viewHeight / height
     for (const layer of layers) {
-      // Correct scale for each depth; overscan prevents exposed image edges.
-      const viewHeight = 2 * Math.tan(THREE.MathUtils.degToRad(35 / 2)) * (6 - layer.position.z)
-      const fullHeight = viewHeight * Math.max(1, camera.aspect / (16 / 9)) * 1.06
-      layer.scale.set(fullHeight, fullHeight, 1)
-      layer.position.x = (0.5 - focal[0]) * (fullHeight * 16 / 9 - viewHeight * camera.aspect)
-      layer.position.y = (focal[1] - 0.5) * (fullHeight - viewHeight)
+      const depthScale = (6 - layer.position.z) / 6
+      const worldPerPixel = viewHeight / height * depthScale
+      layer.scale.set((fit.width + EDGE_PADDING * 2 * fit.scale) * worldPerPixel,
+        (fit.height + EDGE_PADDING * 2 * fit.scale) * worldPerPixel, 1)
+      layer.position.x = (fit.left + fit.width / 2 - width / 2) * worldPerPixel
+      layer.position.y = (height / 2 - fit.top - fit.height / 2) * worldPerPixel
     }
+    render()
+  }
+
+  function render() {
+    if (!loaded || disposed) return
+    camera.position.set(x * cameraTravel, y * cameraTravel * 0.6, 6)
+    for (const layer of layers) layer.material.uniforms.time.value = elapsed
+    renderer.render(scene, camera)
   }
 
   function tick(now: number) {
@@ -116,20 +103,16 @@ export function createLandscapeScene(host: HTMLDivElement, animation: LandscapeA
     if (delta >= 1 / 30) {
       last = now
       elapsed += delta
-      const ease = 1 - Math.exp(-delta * 5)
+      const ease = 1 - Math.exp(-delta * 6)
       x += (target.x - x) * ease
       y += (target.y - y) * ease
-      camera.position.set(x * 0.09, y * 0.06, 6)
-      camera.lookAt(0, 0, 0)
-      const phase = (1 - Math.cos(elapsed * Math.PI * 2 / 12)) / 2
-      for (const layer of layers) layer.material.uniforms.phase.value = phase
-      renderer.render(scene, camera)
+      render()
     }
     request = requestAnimationFrame(tick)
   }
 
   function resume() {
-    if (request) cancelAnimationFrame(request)
+    cancelAnimationFrame(request)
     request = 0
     last = 0
     if (!disposed && loaded && visible && !document.hidden) request = requestAnimationFrame(tick)
@@ -149,38 +132,50 @@ export function createLandscapeScene(host: HTMLDivElement, animation: LandscapeA
   document.addEventListener("visibilitychange", resume)
   canvas.addEventListener("webglcontextlost", contextLost)
 
-  new THREE.TextureLoader().load(animation.atlas, (atlas) => {
-    if (disposed) { atlas.dispose(); return }
-    texture = atlas
-    atlas.colorSpace = THREE.SRGBColorSpace
-    atlas.minFilter = THREE.LinearFilter
-    atlas.magFilter = THREE.LinearFilter
-    atlas.generateMipmaps = false
-    for (let column = 0; column < 3; column++) {
-      const material = new THREE.ShaderMaterial({
-        vertexShader, fragmentShader, transparent: true, depthWrite: false,
-        uniforms: {
-          atlas: { value: atlas }, texel: { value: new THREE.Vector2(0.5 / atlas.image.width, 0.5 / atlas.image.height) },
-          column: { value: column }, phase: { value: 0 }, waterline: { value: animation.waterline },
-          foreground: { value: foregrounds.indexOf(animation.foreground) },
-        },
-      })
-      const mesh = new THREE.Mesh(geometry, material)
-      mesh.position.z = (column - 1) * 0.85
-      mesh.renderOrder = column
-      layers.push(mesh)
-      scene.add(mesh)
-    }
-    resize()
-    renderer.render(scene, camera)
-    loaded = true
-    host.dataset.scene = "ready"
-    resume()
-  }, undefined, () => dispose())
+  image.onload = () => {
+    if (disposed) return
+    try {
+      const prepared = createLandscapeLayers(image, landscapeCompositions[animation.scene])
+      imageWidth = prepared.width
+      imageHeight = prepared.height
+      const motion = new THREE.CanvasTexture(prepared.motion)
+      motion.minFilter = THREE.LinearFilter
+      motion.generateMipmaps = false
+      textures.push(motion)
+      for (let index = 0; index < prepared.layers.length; index++) {
+        const artwork = new THREE.CanvasTexture(prepared.layers[index])
+        artwork.colorSpace = THREE.SRGBColorSpace
+        artwork.minFilter = THREE.LinearFilter
+        artwork.magFilter = THREE.LinearFilter
+        artwork.generateMipmaps = false
+        textures.push(artwork)
+        const material = new THREE.ShaderMaterial({
+          vertexShader, fragmentShader, transparent: true, depthWrite: false,
+          uniforms: {
+            artwork: { value: artwork }, motion: { value: motion }, time: { value: 0 },
+            texel: { value: new THREE.Vector2(1 / prepared.layers[index].width, 1 / prepared.layers[index].height) },
+          },
+        })
+        const mesh = new THREE.Mesh(geometry, material)
+        mesh.position.z = (index - 1) * 0.85
+        mesh.renderOrder = index
+        layers.push(mesh)
+        scene.add(mesh)
+      }
+      loaded = true
+      resize()
+      host.dataset.scene = "ready"
+      resume()
+    } catch { dispose() }
+  }
+  image.onerror = dispose
+  image.src = src
 
   function dispose() {
     if (disposed) return
     disposed = true
+    image.onload = null
+    image.onerror = null
     cancelAnimationFrame(request)
     observer.disconnect()
     host.removeEventListener("pointermove", pointerMove)
@@ -189,7 +184,7 @@ export function createLandscapeScene(host: HTMLDivElement, animation: LandscapeA
     canvas.removeEventListener("webglcontextlost", contextLost)
     geometry.dispose()
     for (const layer of layers) layer.material.dispose()
-    texture?.dispose()
+    for (const texture of textures) texture.dispose()
     renderer.dispose()
     renderer.forceContextLoss()
     canvas.remove()

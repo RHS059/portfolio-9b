@@ -6,9 +6,7 @@
       "alt": "Purple engraved illustration of beach dunes and rolling ocean waves",
       "position": "50% 52%",
       "parallax": {
-        "atlas": "/article-heroes/parallax/beach-dunes.webp",
-        "waterline": 0.5,
-        "foreground": "grass"
+        "scene": "beach-dunes"
       }
     },
     {
@@ -17,9 +15,7 @@
       "alt": "Purple engraved illustration of a wooden boardwalk beside the beach",
       "position": "50% 54%",
       "parallax": {
-        "atlas": "/article-heroes/parallax/beach-boardwalk.webp",
-        "waterline": 0.53,
-        "foreground": "boardwalk"
+        "scene": "beach-boardwalk"
       }
     },
     {
@@ -28,9 +24,7 @@
       "alt": "Purple engraved illustration of a city skyline beside a lake and beach",
       "position": "50% 48%",
       "parallax": {
-        "atlas": "/article-heroes/parallax/lakefront-city.webp",
-        "waterline": 0.62,
-        "foreground": "tree"
+        "scene": "lakefront-city"
       }
     },
     {
@@ -39,9 +33,7 @@
       "alt": "Purple engraved illustration of clouds stretching over an open prairie",
       "position": "50% 45%",
       "parallax": {
-        "atlas": "/article-heroes/parallax/prairie-clouds.webp",
-        "waterline": 1.1,
-        "foreground": "grass"
+        "scene": "prairie-clouds"
       }
     },
     {
@@ -50,9 +42,7 @@
       "alt": "Purple engraved illustration of a quiet backyard at sunset",
       "position": "50% 50%",
       "parallax": {
-        "atlas": "/article-heroes/parallax/backyard-sunset.webp",
-        "waterline": 0.63,
-        "foreground": "garden"
+        "scene": "backyard-sunset"
       }
     },
     {
@@ -61,9 +51,7 @@
       "alt": "Purple engraved illustration of a coastal town overlooking a sheltered bay",
       "position": "50% 50%",
       "parallax": {
-        "atlas": "/article-heroes/parallax/coastal-town.webp",
-        "waterline": 0.67,
-        "foreground": "coast"
+        "scene": "coastal-town"
       }
     },
     {
@@ -72,9 +60,7 @@
       "alt": "Purple engraved illustration of sailboats at a lakeside marina",
       "position": "50% 52%",
       "parallax": {
-        "atlas": "/article-heroes/parallax/lakeside-marina.webp",
-        "waterline": 0.63,
-        "foreground": "marina"
+        "scene": "lakeside-marina"
       }
     },
     {
@@ -83,9 +69,7 @@
       "alt": "Purple engraved illustration of a beach under clearing rain clouds",
       "position": "50% 46%",
       "parallax": {
-        "atlas": "/article-heroes/parallax/beach-after-rain.webp",
-        "waterline": 0.65,
-        "foreground": "rocks"
+        "scene": "beach-after-rain"
       }
     }
   ]

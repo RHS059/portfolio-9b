@@ -1,5 +1,6 @@
 import { z } from "zod"
 import heroes from "@/content/article-heroes.json"
+import { landscapeCompositions } from "./landscape-composition"
 
 const heroSchema = z.object({
   id: z.string().min(1),
@@ -7,9 +8,7 @@ const heroSchema = z.object({
   alt: z.string().min(1),
   position: z.string().regex(/^\d+% \d+%$/),
   parallax: z.object({
-    atlas: z.string().startsWith("/article-heroes/parallax/"),
-    waterline: z.number().min(0).max(1.1),
-    foreground: z.enum(["grass", "boardwalk", "tree", "garden", "coast", "rocks", "marina"]),
+    scene: z.enum(Object.keys(landscapeCompositions) as [keyof typeof landscapeCompositions, ...(keyof typeof landscapeCompositions)[]]),
   }),
 })
 

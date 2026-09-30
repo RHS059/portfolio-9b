@@ -1,74 +1,38 @@
 # Layered landscape heroes
 
-The About page and every article use the same `LandscapeHero` component. The
-original purple WebP remains in the HTML as the accessible image, search/social
-asset and fallback. Three.js loads only when a hero enters the viewport and
-reduced motion is off. It pauses when offscreen or the tab is hidden, caps pixel
-ratio at 1.5 and renders at roughly 30 fps. Touch scrolling is never captured.
-Changing the OS reduced-motion preference immediately tears down the scene.
-Texture load failure or WebGL context loss restores the original image.
+About and article heroes retain the original full-resolution WebP in the HTML
+for accessibility, reduced motion and WebGL failure. Three.js loads only when a
+hero enters the viewport, pauses offscreen/in hidden tabs, and renders at roughly
+30 fps with device pixel ratio capped at 2. Touch scrolling is never captured.
+Changing reduced-motion preference tears down the scene immediately.
 
-Each scene has an image-generated transparent atlas in
-`public/article-heroes/parallax/<scene-id>.webp`: three columns (background,
-middle distance, foreground) and two rows (frames A and B). Tiles share a full
-16:9 coordinate system. They are placed on three planes at different depths,
-with perspective-correct scaling and 6% overscan. The mouse eases a small camera
-pan in both axes and returns to neutral on pointer exit.
+## Source-preserving layers
 
-The middle and foreground layers slowly interpolate the generated frames over
-a 12-second cycle. Masks keep the skyline, boardwalk, garden furniture, rocks
-and docks still while water, tree canopies and grass move. The blend is restrained
-to avoid an obvious dissolve. Atlas filtering is clamped inside each tile.
-Source illustrations and saved article IDs are unchanged.
+`lib/landscape-composition.ts` defines normalized depth contours and separate
+water/foliage masks for each original illustration. `landscape-layers.ts` cuts
+three full-resolution transparent textures from those exact source pixels:
+background, middle distance, and foreground. `landscape-pixels.ts` extends only
+hidden cut edges into the next layer, so tiny camera movements do not expose
+transparent seams or a duplicate silhouette. There is 16 source pixels of edge
+padding, not a zoom. No new artwork or reduced-resolution atlas is substituted.
 
-## Generation prompt
+The old generated atlases remain in the repository for reference but are no
+longer loaded. Their individual 682×384 tiles changed the original composition
+and lost engraving detail. Crossfading mismatched generated frames compounded
+the softness.
 
-Use the built-in image generation tool with the matching original purple hero
-as a referenced image and `transparent_background: true`. One atlas per scene:
+Each depth plane uses the source image's actual dimensions and exactly the same
+object-fit: cover/object-position calculation as the static image. The camera
+translates by at most 3 CSS pixels (less on small screens) without turning toward
+the origin. Pointer exit eases back to neutral. No 6% overscan is applied.
 
-```text
-Edit this purple engraved landscape into a precisely registered THREE-COLUMN,
-TWO-ROW sprite atlas for a layered Three.js scene. Canvas 3840 by 1440 pixels
-(8:3 aspect). Six edge-to-edge equal 1280x720 tiles. No gutters, labels, borders,
-captions or checkerboard. Each tile is a full 16:9 scene coordinate system:
-objects keep EXACTLY their original positions, sizes, horizon and perspective.
-Preserve the violet/plum intaglio engraving, ivory highlights and
-olive/terracotta accents of the reference.
+The fragment shader adds bounded, slow, sub-pixel ripples and leaf/grass movement
+inside the explicit motion masks. Boardwalks, rails, buildings and furniture are
+excluded. The motion mask edges are feathered; the artwork is never blurred.
+There are no generated-frame crossfades or whole-scene idle rotations.
 
-LEFT COLUMN, both rows: an opaque clean background plate containing the sky,
-clouds, horizon and distant hills only; reconstruct the scene behind the removed
-land, water and nearby vegetation, continuing the background to all edges.
-
-MIDDLE COLUMN: isolate the middle distance landscape, fields or beach and water,
-plus mid-distance vegetation, with REAL transparent alpha everywhere the sky
-and foreground were. Preserve ivory fill INSIDE solid objects. Exclude
-foreground objects so the other layers can composite on top. Top row is
-animation frame A. Bottom row is animation frame B: only water ripples and
-foliage subtly advance in a gentle breeze, a tiny 2-4 pixel change. Shoreline,
-buildings and all solid features stay exactly registered.
-
-RIGHT COLUMN: isolate ONLY the near foreground: close grasses, shrubs, rocks
-and, if present, the near boardwalk and railings. Everything else must be alpha
-transparent. Keep each foreground object at its original full-scene coordinates,
-not centered or rescaled. Top row frame A. Bottom row frame B: slightly move
-grass tips/leaves in a gentle breeze, only 2-4 pixels. Wood, rocks, trunks remain
-exactly fixed.
-
-IMPORTANT: this is a technical compositing asset, not six different pictures.
-The three tiles in either row must stack perfectly to reconstruct the reference.
-All six tiles have identical camera framing. Transparent areas have alpha zero,
-no printed transparency grid, no white rectangle behind isolated objects.
-
-Keep generous OVERLAP between depth layers, extending occluded edges behind the
-nearer objects so camera motion cannot reveal seams. The background sky plate
-is completely opaque and fills the entire left tiles, including below the
-horizon. No solid object changes its position between the two animation rows.
-```
-
-Generated PNGs were converted to 2046×768 WebP atlases with alpha preserved.
-The coastal-town generator returned uneven columns; those tiles were repacked
-to equal widths before use to prevent sampling a neighbouring layer.
-`content/article-heroes.json` stores atlas paths, water boundaries and foreground
-mask choices. To add a landscape, create its static fallback and atlas, register
-both in that file, and visually check neutral/pointer extremes and both frames.
-Do not reassign existing articles when changing scene rendering.
+Existing hero IDs, artwork files, article content, About copy and page spacing
+are unchanged. To tune a scene, edit its contours/masks and check it at rest and
+at pointer extremes. `node --test tests/landscape.test.mjs` checks framing and
+pixel-perfect neutral reconstruction for all eight original images (Node 22.18+
+with native TypeScript stripping).

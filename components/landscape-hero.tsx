@@ -34,7 +34,7 @@ export default function LandscapeHero({ image }: { image: Hero }) {
       loading = true
       import("@/lib/landscape-scene").then(({ createLandscapeScene }) => {
         if (abort.signal.aborted) return
-        controller = createLandscapeScene(element, animation, image.position)
+        controller = createLandscapeScene(element, animation, image.position, image.src)
         controller.setVisible(visible)
       }).catch(() => { element.dataset.scene = "fallback" })
     })
@@ -45,7 +45,7 @@ export default function LandscapeHero({ image }: { image: Hero }) {
       controller?.dispose()
       element.dataset.scene = "fallback"
     }
-  }, [animation, image.position, reducedMotion])
+  }, [animation, image.position, image.src, reducedMotion])
 
   return (
     <div ref={host} className={styles.hero} data-scene="fallback">
