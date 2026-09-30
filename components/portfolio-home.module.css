@@ -76,14 +76,15 @@
 .page .foot a { color: var(--muted); }
 .page .foot a:hover { color: var(--accent); }
 @media (max-width: 900px) {
-  .grid { grid-template-columns: 1fr; }
+  .grid { grid-template-columns: minmax(0, 1fr); }
   .side-wrap { grid-row: auto; }
   .side { position: static; height: auto; max-height: none; overflow: visible; }
-  .stack { padding: 0; gap: 0; }
+  .stack { padding: 16px; gap: 16px; }
   .reading { min-height: auto; border-left: 0; border-top: 1px solid var(--sidebar-rule); padding: 32px 24px 48px; }
   .readingTop { padding: 28px 0 48px; }
   .card { border-radius: 0; }
   .foot { grid-column: 1; grid-row: auto; grid-template-columns: 1fr; row-gap: 10px; }
+  .foot > div { white-space: normal; }
   .foot-c { text-align: left; }
   .foot-r { justify-self: start; }
 }
