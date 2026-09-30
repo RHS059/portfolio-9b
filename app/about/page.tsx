@@ -6,6 +6,19 @@ export const metadata: Metadata = {
   title: "About Reid Slaughter | Product Designer & Design Engineer",
   description: "About Reid Slaughter, a product designer and design engineer working across UX, AI-assisted product development, prototyping, and front-end implementation.",
   alternates: { canonical: "/about" },
+  openGraph: {
+    title: "About Reid Slaughter | Product Designer & Design Engineer",
+    description: "Reid Slaughter designs and builds interfaces for enterprise software, AI tools, and game development workflows.",
+    url: "https://www.reidhslaughter.com/about",
+    type: "profile",
+    images: ["/og-hero.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About Reid Slaughter | Product Designer & Design Engineer",
+    description: "Reid Slaughter designs and builds interfaces for enterprise software, AI tools, and game development workflows.",
+    images: ["/og-hero.jpg"],
+  },
 }
 
 const person = {
