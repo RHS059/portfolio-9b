@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import PortfolioLinks from "./portfolio-links"
+import PortfolioShell from "./portfolio-shell"
 import styles from "./portfolio-home.module.css"
 
 const CFG = { shot: 2600, fade: 1300, lead: 420, drift: true }
@@ -152,60 +152,8 @@ export default function PortfolioHome() {
   }
 
   return (
-    <div className={`${styles.page} font-sans`}>
-      <div className={styles.grid}>
-        <div className={`${styles["side-wrap"]} ${styles["route-panel"]} ${leaving ? styles["route-panel-leaving"] : ""}`}>
-          <aside className={styles.side}>
-            <div>
-              <h1>Reid Slaughter</h1>
-              <p className={styles.role}>Product Designer &amp; Design Engineer</p>
-              <nav className={styles.links} aria-label="Portfolio navigation">
-                <PortfolioLinks workHref="#work" />
-              </nav>
-              <ul className={styles.metrics}>
-                <li className={styles.metric}><span className={styles.num}>90%</span> faster support ticket resolution for API integration tickets</li>
-                <li className={styles.metric}><span className={styles.num}>80%</span> faster customer upgrades</li>
-                <li className={styles.metric}><span className={styles.num}>4.4★</span> app store rating, <span className={styles.num}>5k+</span> downloads</li>
-              </ul>
-              <div className={styles["cta-wrap"]}>
-                <a className={styles.cta} href="mailto:reids@reidhslaughter.com">Reach Out</a>
-              </div>
-            </div>
-            <div className={styles.bio}>
-              <div className={styles.eyebrow}>Who am I?</div>
-              <p>
-                I design and build the front-end interfaces people use to do their jobs. Most of that work has been fleet
-                and asset management for construction, utilities, and law enforcement.
-              </p>
-              <p className={styles.i}>A client once called me a UX architect by trade and a creative technologist by heart.</p>
-              <p>Outside of work I build, texture, and animate in Blender.</p>
-              <nav aria-label="Areas of expertise">
-                <p>
-                  <strong>Areas:</strong>{" "}
-                  <a href="/about">Product Design</a> ·{" "}
-                  <a href="/projects/fleet-fuel-integration">UX Design</a> ·{" "}
-                  <a href="/enfusion_field_kit_beta">Design Engineering</a> ·{" "}
-                  <a href="/writing">AI-assisted Development</a> ·{" "}
-                  <a href="/projects/arma-reforger-texture-wizard">Prototyping</a>
-                </p>
-              </nav>
-              <p className={styles.strong}>I&apos;m looking for design engineering and product design roles.</p>
-            </div>
-          </aside>
-        </div>
-        <main id="work" className={`${styles.stack} ${styles["route-panel"]} ${leaving ? styles["route-panel-leaving"] : ""}`}>
-          {visible.map((p) => <Card key={p.slug} p={p} onNavigate={navigate} />)}
-        </main>
-        <footer className={styles.foot}>
-          <div>Client work shown remains the property of its owners.</div>
-          <div className={styles["foot-c"]}>Copyright © Reid Slaughter</div>
-          <div className={styles["foot-r"]}>
-            <a href="https://github.com/RHS059" target="_blank" rel="noopener noreferrer">GitHub</a>
-            <a href="https://www.linkedin.com/in/reid59slaughter/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-            <a href="https://x.com/reidhslaughter" target="_blank" rel="noopener noreferrer">X</a>
-          </div>
-        </footer>
-      </div>
-    </div>
+    <PortfolioShell leaving={leaving}>
+      {visible.map((p) => <Card key={p.slug} p={p} onNavigate={navigate} />)}
+    </PortfolioShell>
   )
 }

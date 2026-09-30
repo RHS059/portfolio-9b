@@ -21,7 +21,7 @@ export default function WritingPage() {
   const published = getPublishedArticles()
 
   return (
-    <main className={styles.content}>
+    <section className={styles.content} aria-labelledby="writing-title">
       <StructuredData data={{
         "@context": "https://schema.org",
         "@type": "CollectionPage",
@@ -37,7 +37,7 @@ export default function WritingPage() {
       }} />
       <header>
         <p className={styles.eyebrow}>Writing</p>
-        <h1 className={styles.heading}>Design, AI, and building software.</h1>
+        <h1 id="writing-title" className={styles.heading}>Design, AI, and building software.</h1>
         <p className={styles.intro}>Short essays on product design, AI agents, and making powerful tools easier to use.</p>
       </header>
       {articles.length > 0 ? (
@@ -63,6 +63,6 @@ export default function WritingPage() {
           <Link className={styles.read} href="/">View selected work <span aria-hidden="true">↗</span></Link>
         </div>
       )}
-    </main>
+    </section>
   )
 }

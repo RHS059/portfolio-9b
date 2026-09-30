@@ -44,7 +44,7 @@ export default async function ArticlePage({ params }: Props) {
   const url = `${siteUrl}/writing/${slug}`
 
   return (
-    <main className={styles.content}>
+    <div className={styles.content}>
       {article.status === "published" ? <StructuredData data={{
         "@context": "https://schema.org",
         "@type": "Article",
@@ -79,6 +79,6 @@ export default async function ArticlePage({ params }: Props) {
           <p><Link href="/">Explore my projects</Link> or <a href="https://www.linkedin.com/in/reid59slaughter/">connect on LinkedIn</a>.</p>
         </aside>
       </article>
-    </main>
+    </div>
   )
 }

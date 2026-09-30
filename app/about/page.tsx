@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import StructuredData from "../../components/structured-data"
-import PortfolioLinks from "@/components/portfolio-links"
+import PortfolioShell from "@/components/portfolio-shell"
 
 const description = "Reid Slaughter designs and builds enterprise UX and AI tools, and helps train and evaluate AI models through micro1 and Mercor."
 
@@ -45,12 +45,9 @@ const person = {
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen bg-[#f5f2ea] text-[#181425] px-6 py-16">
+    <PortfolioShell reading>
       <StructuredData data={person} />
       <article className="mx-auto max-w-3xl space-y-8">
-        <nav className="flex flex-wrap gap-5 text-sm underline underline-offset-4" aria-label="Portfolio navigation">
-          <PortfolioLinks />
-        </nav>
         <header className="space-y-4">
           <p className="text-sm uppercase tracking-[0.18em] text-[#685c84]">About</p>
           <h1 className="text-5xl font-semibold tracking-tight">Reid Slaughter</h1>
@@ -71,6 +68,6 @@ export default function AboutPage() {
           <a href="https://x.com/reidhslaughter" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">X</a>
         </nav>
       </article>
-    </main>
+    </PortfolioShell>
   )
 }
