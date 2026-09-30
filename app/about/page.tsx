@@ -1,14 +1,16 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 import StructuredData from "../../components/structured-data"
+import PortfolioLinks from "@/components/portfolio-links"
+
+const description = "Reid Slaughter designs and builds enterprise UX and AI tools, and helps train and evaluate AI models through micro1 and Mercor."
 
 export const metadata: Metadata = {
   title: "About Reid Slaughter | Product Designer & Design Engineer",
-  description: "About Reid Slaughter, a product designer and design engineer working across UX, AI-assisted product development, prototyping, and front-end implementation.",
+  description,
   alternates: { canonical: "/about" },
   openGraph: {
     title: "About Reid Slaughter | Product Designer & Design Engineer",
-    description: "Reid Slaughter designs and builds interfaces for enterprise software, AI tools, and game development workflows.",
+    description,
     url: "https://www.reidhslaughter.com/about",
     type: "profile",
     images: ["/og-hero.jpg"],
@@ -16,7 +18,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "About Reid Slaughter | Product Designer & Design Engineer",
-    description: "Reid Slaughter designs and builds interfaces for enterprise software, AI tools, and game development workflows.",
+    description,
     images: ["/og-hero.jpg"],
   },
 }
@@ -31,13 +33,13 @@ const person = {
     url: "https://www.reidhslaughter.com/about",
     image: "https://www.reidhslaughter.com/reid-slaughter-purple.webp",
     jobTitle: "Product Designer & Design Engineer",
-    description: "Product designer and design engineer working across UX, AI-assisted product development, prototyping, and front-end implementation.",
+    description,
     sameAs: [
       "https://github.com/RHS059",
       "https://www.linkedin.com/in/reid59slaughter/",
       "https://x.com/reidhslaughter",
     ],
-    knowsAbout: ["Product Design", "UX Design", "Design Engineering", "AI-assisted development", "Claude Code", "ChatGPT", "Figma", "Prototyping", "Front-end development"],
+    knowsAbout: ["Product Design", "UX Design", "Design Engineering", "AI-assisted development", "AI model training", "AI evaluation", "Blender", "Claude Code", "ChatGPT", "Figma", "Prototyping", "Front-end development"],
   },
 }
 
@@ -46,22 +48,27 @@ export default function AboutPage() {
     <main className="min-h-screen bg-[#f5f2ea] text-[#181425] px-6 py-16">
       <StructuredData data={person} />
       <article className="mx-auto max-w-3xl space-y-8">
-        <Link href="/" className="text-sm underline underline-offset-4">← Portfolio</Link>
+        <nav className="flex flex-wrap gap-5 text-sm underline underline-offset-4" aria-label="Portfolio navigation">
+          <PortfolioLinks />
+        </nav>
         <header className="space-y-4">
           <p className="text-sm uppercase tracking-[0.18em] text-[#685c84]">About</p>
           <h1 className="text-5xl font-semibold tracking-tight">Reid Slaughter</h1>
           <p className="text-xl text-[#3b2d56]">Product Designer & Design Engineer</p>
         </header>
         <div className="space-y-5 text-lg leading-relaxed">
-          <p>I design and build front-end interfaces people use to do their jobs. My professional UX work spans enterprise fleet and asset management, public safety, construction and utilities, and library systems serving hundreds of millions of bibliographic records.</p>
+          <p>I design and build the front-end interfaces people use to do their jobs. Most of that work has been fleet and asset management for construction, utilities, and law enforcement. Later it was library systems spanning 540 million bibliographic records.</p>
+          <p>
+            For example, at <a href="https://www.collectivedata.com" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">Collective Data</a>, fuel transaction imports failed quietly. Bad records sat undetected for months, customers paid for the cleanup, and engineers burned weeks on the same support tickets. I interviewed support agents, account managers, and the vendors we pulled data from, then designed a framework that catches bad records on arrival and emails the customer the same day. I rebuilt the integration and the API calls. Onboarding time also dropped because we could get integrations working for customers far faster. Resolving a data issue went from weeks to hours.
+          </p>
           <p>I also use AI coding agents such as Claude Code and ChatGPT to move directly from product design into functional prototypes and production-ready interfaces. My recent work includes AI-assisted development, game-development tools, automation utilities, and experimental product interfaces.</p>
+          <p>Through micro1 and Mercor, I help train and evaluate models for top AI labs, drawing on my product design and Blender experience.</p>
           <p>My work sits between product design, UX architecture, design engineering, prototyping, and implementation. I am most useful on problems where understanding the system matters as much as designing the screen.</p>
         </div>
         <nav className="flex flex-wrap gap-5 pt-4" aria-label="Profiles">
           <a href="https://github.com/RHS059" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">GitHub</a>
           <a href="https://www.linkedin.com/in/reid59slaughter/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">LinkedIn</a>
           <a href="https://x.com/reidhslaughter" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">X</a>
-          <Link href="/writing" className="underline underline-offset-4">Writing</Link>
         </nav>
       </article>
     </main>

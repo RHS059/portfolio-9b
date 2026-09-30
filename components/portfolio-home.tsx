@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import PortfolioLinks from "./portfolio-links"
 import styles from "./portfolio-home.module.css"
 
 const CFG = { shot: 2600, fade: 1300, lead: 420, drift: true }
@@ -159,9 +160,7 @@ export default function PortfolioHome() {
               <h1>Reid Slaughter</h1>
               <p className={styles.role}>Product Designer &amp; Design Engineer</p>
               <nav className={styles.links} aria-label="Portfolio navigation">
-                <a href="#work">Work</a>
-                <a href="/about">About</a>
-                <a href="/writing">Writing</a>
+                <PortfolioLinks workHref="#work" />
               </nav>
               <ul className={styles.metrics}>
                 <li className={styles.metric}><span className={styles.num}>90%</span> faster support ticket resolution for API integration tickets</li>
@@ -176,21 +175,7 @@ export default function PortfolioHome() {
               <div className={styles.eyebrow}>Who am I?</div>
               <p>
                 I design and build the front-end interfaces people use to do their jobs. Most of that work has been fleet
-                and asset management for construction, utilities, and law enforcement. Later it was library systems
-                spanning 540 million bibliographic records.
-              </p>
-              <p>
-                For example, at{" "}
-                <a href="https://www.collectivedata.com" target="_blank" rel="noopener noreferrer">Collective Data</a>
-                , fuel transaction imports failed quietly. Bad records sat undetected for months, customers paid for the
-                cleanup, and engineers burned weeks on the same support tickets. I interviewed support agents, account
-                managers, and the vendors we pulled data from, then designed a framework that catches bad records on
-                arrival and emails the customer the same day. I rebuilt the integration and the API calls. Onboarding time
-                also dropped because we could get integrations working for customers far faster. Resolving a data issue
-                went from weeks to hours.
-              </p>
-              <p>
-                I also use AI coding agents such as Claude Code and ChatGPT to move directly from product design into functional prototypes and production-ready interfaces. My recent work includes AI-assisted development, game-development tools, automation utilities, and experimental product interfaces.
+                and asset management for construction, utilities, and law enforcement.
               </p>
               <p className={styles.i}>A client once called me a UX architect by trade and a creative technologist by heart.</p>
               <p>Outside of work I build, texture, and animate in Blender.</p>

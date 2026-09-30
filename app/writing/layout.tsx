@@ -1,4 +1,5 @@
 import Link from "next/link"
+import PortfolioLinks from "@/components/portfolio-links"
 import styles from "./writing.module.css"
 
 export default function WritingLayout({ children }: { children: React.ReactNode }) {
@@ -7,9 +8,7 @@ export default function WritingLayout({ children }: { children: React.ReactNode 
       <nav className={styles.nav} aria-label="Main navigation">
         <Link href="/" className={styles.brand}>Reid Slaughter</Link>
         <div className={styles.navLinks}>
-          <Link href="/">Work</Link>
-          <Link href="/about">About</Link>
-          <Link href="/writing">Writing</Link>
+          <PortfolioLinks />
         </div>
       </nav>
       {children}
