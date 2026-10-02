@@ -3,64 +3,72 @@
 import { useEffect, useId, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { List } from "lucide-react"
+import { ChevronDown, List } from "lucide-react"
 import styles from "./article-ruler.module.css"
 
 type Entry = { slug: string; title: string; publishedAt: string }
 
+function displayDate(date: string) {
+  const [year, month, day] = date.split("-")
+  return `${month}/${day}/${year}`
+}
+
 export default function ArticleRuler({ articles }: { articles: Entry[] }) {
   const pathname = usePathname()
+  const archive = useRef<HTMLElement>(null)
+  const toggle = useRef<HTMLButtonElement>(null)
   const viewport = useRef<HTMLDivElement>(null)
-  const [pinned, setPinned] = useState(false)
-  const [hovered, setHovered] = useState(false)
-  const [focused, setFocused] = useState(false)
+  const [open, setOpen] = useState(false)
   const panelId = useId()
-  const open = pinned || hovered || focused
+  const current = articles.find((article) => pathname === `/writing/${article.slug}`) ?? articles[0]
+
+  useEffect(() => { setOpen(false) }, [pathname])
 
   useEffect(() => {
+    if (!open) return
     const container = viewport.current
-    const current = container?.querySelector<HTMLElement>('[aria-current="page"]')
-    if (container && current) container.scrollTo({ top: Math.max(0, current.offsetTop - container.clientHeight / 2 + current.offsetHeight / 2), behavior: "auto" })
-  }, [pathname])
+    const selected = container?.querySelector<HTMLElement>('[aria-current="page"]')
+    if (container && selected) container.scrollTo({ top: Math.max(0, selected.offsetTop - container.clientHeight / 2 + selected.offsetHeight / 2), behavior: "auto" })
+    const dismiss = (event: PointerEvent) => {
+      if (event.target instanceof Node && !archive.current?.contains(event.target)) setOpen(false)
+    }
+    document.addEventListener("pointerdown", dismiss)
+    return () => document.removeEventListener("pointerdown", dismiss)
+  }, [open])
 
   return (
-    <nav className={styles.archive} data-open={open} aria-label="Published articles"
-      onPointerEnter={(event) => { if (event.pointerType === "mouse") setHovered(true) }}
-      onPointerLeave={() => setHovered(false)}
-      onFocusCapture={() => setFocused(true)}
-      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false) }}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          event.currentTarget.querySelector("button")?.focus()
-          setPinned(false); setHovered(false); setFocused(false)
-        }
-      }}>
-      <button className={styles.toggle} type="button" aria-label={pinned ? "Unpin article dates" : "Pin article dates"} aria-pressed={pinned} aria-expanded={open} aria-controls={panelId} onClick={() => { setPinned((value) => !value); setFocused(false); setHovered(false) }} title="Browse articles">
-        <List size={17} aria-hidden="true" />
-      </button>
-      <div id={panelId} ref={viewport} className={styles.viewport} aria-label="Scroll through article dates">
-        {articles.length > 0 ? (
-          <ol className={styles.ruler}>
-            {articles.map((article) => {
-              const active = pathname === `/writing/${article.slug}` || (pathname === "/writing" && article === articles[0])
-              const [year, month, day] = article.publishedAt.split("-")
-              return (
-                <li className={styles.entry} key={article.slug}>
-                  <Link className={`${styles.date} ${active ? styles.active : ""}`} href={`/writing/${article.slug}`} aria-current={active ? "page" : undefined} aria-label={`${month}/${day}/${year}: ${article.title}`} title={article.title} prefetch={false}>
-                    <time dateTime={article.publishedAt}>{month}/{day}/{year}</time>
-                    <span className={styles.tick} aria-hidden="true" />
-                  </Link>
-                  <span className={styles.minorTick} aria-hidden="true" />
-                </li>
-              )
-            })}
-          </ol>
-        ) : (
-          <div className={styles.empty}>
-            <p>No published articles yet.</p>
-            <div className={styles.emptyTicks} aria-hidden="true">{Array.from({ length: 12 }, (_, index) => <i key={index} />)}</div>
-          </div>
-        )}
+    <nav ref={archive} className={styles.archive} aria-label="Published articles" onKeyDown={(event) => {
+      if (event.key === "Escape" && open) {
+        event.preventDefault()
+        setOpen(false)
+        toggle.current?.focus()
+      }
+    }}>
+      <div className={styles.surface}>
+        <button ref={toggle} className={styles.toggle} type="button" aria-expanded={open} aria-controls={panelId} onClick={() => setOpen((value) => !value)}>
+          <List size={16} aria-hidden="true" />
+          <span>Articles</span>
+          <span className={styles.count}>{articles.length}</span>
+          <ChevronDown size={14} className={open ? styles.expanded : undefined} aria-hidden="true" />
+        </button>
+        {current ? <p className={styles.current}>Current article <time dateTime={current.publishedAt}>{displayDate(current.publishedAt)}</time></p> : null}
+        <div id={panelId} ref={viewport} className={styles.viewport} hidden={!open}>
+          {articles.length > 0 ? (
+            <ol className={styles.ruler}>
+              {articles.map((article) => {
+                const active = article.slug === current?.slug
+                return (
+                  <li key={article.slug}>
+                    <Link className={`${styles.date} ${active ? styles.active : ""}`} href={`/writing/${article.slug}`} aria-current={active ? "page" : undefined} aria-label={`${displayDate(article.publishedAt)}: ${article.title}${active ? " (current article)" : ""}`} prefetch={false} onClick={() => setOpen(false)}>
+                      <span className={styles.dateRow}><time dateTime={article.publishedAt}>{displayDate(article.publishedAt)}</time>{active ? <span className={styles.selected}>Current</span> : null}</span>
+                      <span className={styles.title}>{article.title}</span>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ol>
+          ) : <p className={styles.empty}>No published articles yet.</p>}
+        </div>
       </div>
     </nav>
   )

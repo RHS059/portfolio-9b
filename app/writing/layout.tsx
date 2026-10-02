@@ -4,6 +4,9 @@ import { getPublishedArticles } from "@/lib/articles"
 
 export default function WritingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <PortfolioShell reading alignTop sidebarContent={<ArticleRuler articles={getPublishedArticles().map(({ slug, title, publishedAt }) => ({ slug, title, publishedAt }))} />}>{children}</PortfolioShell>
+    <PortfolioShell reading alignTop>
+      <ArticleRuler articles={getPublishedArticles().map(({ slug, title, publishedAt }) => ({ slug, title, publishedAt }))} />
+      {children}
+    </PortfolioShell>
   )
 }

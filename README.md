@@ -29,8 +29,10 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 Articles live in `content/articles.json`. Each entry has a unique URL slug, title,
 description, topics, publication date, hero image ID, and a rich text document.
 No CMS or database is needed. `/writing` opens the newest published article.
-The sidebar archive only shows published dates; hover or focus its tick rail to
-reveal the date list, or click its list button to pin it open.
+The left-aligned Articles control sits on the article side of the sidebar divider.
+It always shows the current article date and article count; click or press Enter
+to browse dates and titles. Escape closes the list and returns focus to the
+control. On narrower screens it sits above the article to avoid overlapping text.
 
 1. Add an entry with `"status": "draft"`, `"publishedAt": null`, and a rich text body.
 2. Run `npm run prepare:articles` to randomly assign any missing `heroImage` IDs.
