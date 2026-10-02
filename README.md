@@ -92,8 +92,8 @@ Insert a `tweet` block between paragraphs with the post URL (not copied HTML):
 { "type": "tweet", "attrs": { "url": "https://x.com/OpenAIDevs/status/2105708732323909827" } }
 ```
 
-A tweet as the first body block appears directly below the article title. Other
-tweet blocks stay in their position in the article. HTTPS `x.com` and
+A tweet as the first body block appears below the hero image, before the article
+text. All tweet blocks stay in their position in the article body. HTTPS `x.com` and
 `twitter.com` post URLs are accepted; tracking parameters are removed from the
 source link. Arbitrary HTML, iframe sources, and non-post URLs are rejected.
 

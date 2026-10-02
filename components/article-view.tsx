@@ -10,8 +10,6 @@ export default function ArticleView({ article }: { article: Article }) {
   const url = `${siteUrl}/writing/${article.slug}`
   const hero = getArticleHero(article)
   const date = article.status === "published" ? article.publishedAt : null
-  const leadTweet = article.body.content?.[0]?.type === "tweet" ? article.body.content[0] : null
-  const body = leadTweet ? { ...article.body, content: article.body.content?.slice(1) } : article.body
   return (
     <article>
       {date ? <StructuredData data={{
@@ -25,7 +23,6 @@ export default function ArticleView({ article }: { article: Article }) {
       }} /> : null}
       <header className={styles.content}>
         <h1 className={styles.heading}>{article.title}</h1>
-        {leadTweet ? <ArticleRichText body={{ type: "doc", content: [leadTweet] }} /> : null}
         <div className={styles.meta}>
           <Link rel="author" href="/about">Reid Slaughter</Link>
           {date ? <time dateTime={date}>{formatArticleDate(date)}</time> : <span>Unpublished draft</span>}
@@ -36,7 +33,7 @@ export default function ArticleView({ article }: { article: Article }) {
       <LandscapeHero image={hero} />
       <div className={styles.content}>
         {!date ? <p className={styles.notice}>Draft preview. This essay is not published on the live portfolio.</p> : null}
-        <div className={styles.body}><ArticleRichText body={body} /></div>
+        <div className={styles.body}><ArticleRichText body={article.body} /></div>
         <aside className={styles.author} aria-label="About the author">
           <Link href="/about">About Reid Slaughter</Link>
           <p>Product designer and design engineer working across enterprise UX, AI tools, and front end implementation.</p>
