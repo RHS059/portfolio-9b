@@ -63,7 +63,7 @@ scene geometry, with real generated water and foliage animation frames. See
 
 Bodies use a Tiptap/ProseMirror-style JSON document. Supported blocks are
 `paragraph`, `heading` (levels 2–4), `bulletList`, `orderedList` (optional `start`),
-`listItem`, `blockquote`, `codeBlock`, and `horizontalRule`. Paragraphs and headings
+`listItem`, `blockquote`, `codeBlock`, `horizontalRule`, and `tweet`. Paragraphs and headings
 contain `text` and `hardBreak` nodes. Text supports `bold`, `italic`, `underline`,
 `strike`, `code`, and `link` marks. Links use `attrs.href` and optional `attrs.title`.
 HTML strings are not interpreted. The schema validates dates, unique slugs,
@@ -83,6 +83,35 @@ rich text structure, and safe links during the build.
   ]
 }
 ```
+
+### Inline X / Twitter posts
+
+Insert a `tweet` block between paragraphs with the post URL (not copied HTML):
+
+```json
+{ "type": "tweet", "attrs": { "url": "https://x.com/OpenAIDevs/status/2105708732323909827" } }
+```
+
+A tweet as the first body block appears directly below the article title. Other
+tweet blocks stay in their position in the article. HTTPS `x.com` and
+`twitter.com` post URLs are accepted; tracking parameters are removed from the
+source link. Arbitrary HTML, iframe sources, and non-post URLs are rejected.
+
+The official `https://platform.twitter.com/widgets.js` script loads once, only on
+pages containing embeds, after hydration. Each client navigation creates a fresh
+widget with personalization disabled (`dnt: true`). The original post link is
+server-rendered and remains available if JavaScript, X, or an ad/content blocker
+prevents the embed from loading, or the post becomes unavailable. Post content is
+rendered by X, not copied or fabricated in the article JSON.
+
+There is currently no site CSP to change. If a Content Security Policy is added,
+allow the official widget script/frame origins under `script-src` and `frame-src`
+and any widget subresources reported by the browser; do not add wildcard or
+`unsafe-inline` exceptions just for embeds. A restrictive policy safely leaves
+the source link available. Widgets are constrained to the article/mobile width.
+
+Run the article and landscape regression tests with Node 22.18+ or Node 24:
+`node --test tests/*.test.mjs`. Also run `npm run build` and `npx tsc --noEmit`.
 
 Publish on the portfolio first, then share its URL on LinkedIn and X.
 

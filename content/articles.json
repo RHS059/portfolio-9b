@@ -36,6 +36,102 @@
         ]
       },
       "heroImage": "prairie-clouds"
+    },
+    {
+      "slug": "look-past-the-flight-booking-demo",
+      "title": "Look Past the Flight Booking Demo",
+      "description": "OpenAI has a messaging problem, and I see it every time I scroll LinkedIn or Twitter(X).",
+      "status": "published",
+      "publishedAt": "2026-10-02",
+      "topics": [
+        "AI agents",
+        "Product demos",
+        "Marketing"
+      ],
+      "body": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "tweet",
+            "attrs": {
+              "url": "https://x.com/OpenAIDevs/status/2105708732323909827"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "OpenAI has a messaging problem, and I see it every time I scroll LinkedIn or Twitter(X)."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Their demos show an AI agent booking a flight, scheduling events in a calendar, etc. People watch it, and then they argue about whether they would ever trust a bot with their travel plans. Some say they would rather book it themselves. Others list everything the agent got wrong. The threads run for hundreds of comments."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "That debate misses the point."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "OpenAI picked flight booking because almost everyone understands it from start to finish. The demo proves that an AI can carry a messy, multi-step task all the way to the end."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "OpenAI wants you to take that idea and run with it. If it can book a flight, what can it handle in your life? Maybe it can chase down an insurance claim. Maybe it can compare three contractor quotes and schedule the one that fits your budget. Maybe it can clear the tedious admin work that eats your afternoons at the office."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Many people never make that jump. They fixate on the example and stop there. I don't fully blame them. Product demos train us to read features literally. When Apple shows a camera feature, Apple wants you to use that camera feature."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "AI demos work differently. The example stands in for a capability, and the audience has to do the translation. Most people won't do that work unprompted."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "That makes this a marketing problem. OpenAI needs to show the extrapolation itself. Show the flight, then show three other jobs the same agent handles for three different people. Connect the dots on screen. Right now the demos ask the audience to imagine the bigger picture, and the audience keeps staring at the plane."
+              }
+            ]
+          }
+        ]
+      },
+      "heroImage": "beach-after-rain"
     }
   ]
 }

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
-import { isSafeArticleLink, type RichTextNode } from "@/lib/article-schema"
+import { getTweetReference, isSafeArticleLink, type RichTextNode } from "@/lib/article-schema"
+import ArticleTweet from "./article-tweet"
 
 function renderNode(node: RichTextNode, key: number): ReactNode {
   const children = node.content?.map(renderNode)
@@ -30,6 +31,10 @@ function renderNode(node: RichTextNode, key: number): ReactNode {
     case "codeBlock": return <pre key={key}><code>{node.content?.map((child) => child.text ?? "").join("")}</code></pre>
     case "hardBreak": return <br key={key} />
     case "horizontalRule": return <hr key={key} />
+    case "tweet": {
+      const tweet = getTweetReference(node.attrs?.url ?? "")
+      return tweet ? <ArticleTweet key={key} tweet={tweet} /> : null
+    }
     case "doc": return <div key={key}>{children}</div>
   }
 }

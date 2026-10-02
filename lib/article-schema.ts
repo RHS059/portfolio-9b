@@ -6,15 +6,32 @@ export type RichTextMark = {
 }
 
 export type RichTextNode = {
-  type: "doc" | "paragraph" | "heading" | "text" | "hardBreak" | "bulletList" | "orderedList" | "listItem" | "blockquote" | "codeBlock" | "horizontalRule"
+  type: "doc" | "paragraph" | "heading" | "text" | "hardBreak" | "bulletList" | "orderedList" | "listItem" | "blockquote" | "codeBlock" | "horizontalRule" | "tweet"
   text?: string
   marks?: RichTextMark[]
-  attrs?: { level?: number; start?: number; language?: string }
+  attrs?: { level?: number; start?: number; language?: string; url?: string }
   content?: RichTextNode[]
 }
 
 export function isSafeArticleLink(href: string) {
   return /^https?:\/\//i.test(href) || /^mailto:/i.test(href) || /^\/(?!\/)/.test(href) || /^#[\w-]+$/.test(href)
+}
+
+export type TweetReference = { id: string; url: string; handle: string }
+
+// Accept post URLs only, never arbitrary embed HTML, scripts, or iframe URLs.
+export function getTweetReference(value: string): TweetReference | null {
+  try {
+    const url = new URL(value)
+    if (url.protocol !== "https:" || url.username || url.password || url.port) return null
+    if (!["x.com", "www.x.com", "twitter.com", "www.twitter.com"].includes(url.hostname)) return null
+    const match = url.pathname.match(/^\/([A-Za-z0-9_]{1,15})\/status\/([1-9][0-9]{0,19})\/?$/)
+    if (!match) return null
+    const [, handle, id] = match
+    return { id, handle, url: `https://x.com/${handle}/status/${id}` }
+  } catch {
+    return null
+  }
 }
 
 const markSchema: z.ZodType<RichTextMark> = z.object({
@@ -25,13 +42,13 @@ const markSchema: z.ZodType<RichTextMark> = z.object({
   if (mark.type !== "link" && mark.attrs) ctx.addIssue({ code: "custom", message: "Only link marks accept attrs." })
 })
 
-const blockTypes = new Set(["paragraph", "heading", "bulletList", "orderedList", "blockquote", "codeBlock", "horizontalRule"])
+const blockTypes = new Set(["paragraph", "heading", "bulletList", "orderedList", "blockquote", "codeBlock", "horizontalRule", "tweet"])
 
 export const richTextSchema: z.ZodType<RichTextNode> = z.lazy(() => z.object({
-  type: z.enum(["doc", "paragraph", "heading", "text", "hardBreak", "bulletList", "orderedList", "listItem", "blockquote", "codeBlock", "horizontalRule"]),
+  type: z.enum(["doc", "paragraph", "heading", "text", "hardBreak", "bulletList", "orderedList", "listItem", "blockquote", "codeBlock", "horizontalRule", "tweet"]),
   text: z.string().optional(),
   marks: z.array(markSchema).optional(),
-  attrs: z.object({ level: z.number().int().min(2).max(4).optional(), start: z.number().int().positive().optional(), language: z.string().optional() }).strict().optional(),
+  attrs: z.object({ level: z.number().int().min(2).max(4).optional(), start: z.number().int().positive().optional(), language: z.string().optional(), url: z.string().optional() }).strict().optional(),
   content: z.array(richTextSchema).optional(),
 }).strict().superRefine((node, ctx) => {
   const invalid = (message: string) => ctx.addIssue({ code: "custom", message })
@@ -41,6 +58,12 @@ export const richTextSchema: z.ZodType<RichTextNode> = z.lazy(() => z.object({
     return
   }
   if (node.text !== undefined || node.marks) invalid("Only text nodes accept text and marks.")
+  if (node.type === "tweet") {
+    if (!node.attrs?.url || !getTweetReference(node.attrs.url)) invalid("Tweets need attrs.url with an HTTPS X or Twitter post URL.")
+    if (node.content || Object.keys(node.attrs ?? {}).some((key) => key !== "url")) invalid("Tweets accept only attrs.url and no child content.")
+    return
+  }
+  if (node.attrs?.url !== undefined) invalid("Only tweets accept url.")
   if (node.type === "hardBreak" || node.type === "horizontalRule") {
     if (node.content || node.attrs) invalid("Breaks and rules do not accept content or attrs.")
     return
@@ -92,6 +115,7 @@ export type PublishedArticle = Article & { status: "published"; publishedAt: str
 export function richTextPlainText(node: RichTextNode): string {
   if (node.type === "text") return node.text ?? ""
   if (node.type === "hardBreak") return "\n"
+  if (node.type === "tweet") return ""
   const separator = ["paragraph", "heading", "codeBlock"].includes(node.type) ? "" : "\n\n"
-  return (node.content ?? []).map(richTextPlainText).join(separator)
+  return (node.content ?? []).filter((child) => child.type !== "tweet").map(richTextPlainText).join(separator)
 }
