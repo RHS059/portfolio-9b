@@ -1,0 +1,25 @@
+# Browser acceptance scenarios
+
+These scenarios are executable in `fleet-workflow.test.mjs`, but were **not executed successfully** in H3's 2026-10-06 environment. Native contract/presentation checks passed separately. Do not treat this plan or syntax validation as browser evidence.
+
+1. Initial TRK-104 unresolved; TRK-208 resolved from A; synthetic label visible
+2. Opening project details transition to the source inspector
+3. Choose B for TRK-104 without changing TRK-208 or original/service records
+4. Exclude A at vehicle+odometer scope while retaining TRK-208/A
+5. Recalculate twice and re-import the same batch without duplication
+6. Today review is visibly simulated/recorded, advisory and in-app only
+7. Policy changes invalidate review/notifications
+8. Fresh reset plus stale selected A remains unresolved despite B data
+9. Excluding newest selected B reading leaves unresolved state without old-row fallback
+10. Selection, 2D/3D/ISO, follow, pause/resume do not change domain data
+11. About opens, Escape closes it, aria-expanded agrees
+12. Reset restores scenario/configuration/mode/selection; reload honestly resets in-memory state
+13. Shop-trip illustration and unknown historical trigger are disclosed
+14. Essential authority control remains usable at 390×844; capture screenshot
+15. Capture 1920×1080 screenshot and named-environment RAF cadence, with renderer/hardware caveats
+16. Record all console/page errors and failed requests; reject unhandled JavaScript errors
+17. Separate failure injection: unavailable CDN scripts produce a usable fallback while source controls still work
+
+Additional manual/integration gates: inspect screenshots for clipping, contrast and believable fictional-site placement; verify keyboard focus through all controls; exercise browser Back/Forward and original Reno restoration (A1's existing smoke covers these); verify genuine WebGL context loss; repeat with the final H1/H2 integration commit. Browser source-failure tests do not certify map-tile availability or a functioning 3D scene. Use A1's strict ready/mapTilesLoaded smoke alongside this independent workflow suite.
+
+There is no live provider, email, model endpoint, hidden publication or hardware-FPS claim in these checks.

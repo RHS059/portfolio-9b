@@ -1,0 +1,55 @@
+▶ H1 pure presentation boundary (not browser/layout verification)
+  ✔ source values and distinct observation/import timestamps remain readable (18.733754ms)
+  ✔ raw strings are escaped rather than inserted as executable markup (1.391215ms)
+  ✔ current recorded review is honestly labeled and advisory (1.201985ms)
+  ✔ version review findings and notifications are withheld (1.757125ms)
+  ✔ cutoff review findings and notifications are withheld (0.865959ms)
+  ✔ vehicle review findings and notifications are withheld (0.779471ms)
+  ✔ live-mode review findings and notifications are withheld (0.716748ms)
+  ✔ Then mode does not surface Today findings (0.756297ms)
+✔ H1 pure presentation boundary (not browser/layout verification) (30.642621ms)
+▶ H2 presentation follows declared shop status, never inferred maintenance
+  ✔ source conflict, odometer, and animation time cannot create a shop visit (0.889474ms)
+  ✔ explicit service status drives bounded, deduplicated illustrative occupancy (0.229459ms)
+  ✔ resolving authority does not erase a separately declared in-bay visit (0.111455ms)
+✔ H2 presentation follows declared shop status, never inferred maintenance (2.175022ms)
+✔ frozen scenario contract identifies migrated TRK-104/B and independent TRK-208/A (10.405566ms)
+✔ explicit B authority beats the later imported frozen A reading (0.929552ms)
+✔ raw records, units, timestamps and service facts survive replay/configuration unchanged (2.2009ms)
+✔ vehicle+field exclusion on A leaves TRK-208/A and other fields independent (2.266988ms)
+✔ vehicle-only exclusion covers its fields but not another vehicle (0.401172ms)
+✔ explicit integration-wide exclusion has a visibly broader result (0.550062ms)
+✔ individual-reading exclusion is pinned to raw identity and cannot silently resurrect an older row (0.701396ms)
+✔ conflicting row-exclusion scope is rejected rather than silently normalized (0.298922ms)
+✔ stale selected A source remains unresolved despite fresh B input (0.552076ms)
+✔ missing selected source remains unresolved with no latest/max fallback (0.406621ms)
+✔ missing vehicle authority is distinct from missing readings (0.402664ms)
+✔ configuration commands version-check, append once, and reject changed duplicate commands (0.234586ms)
+✔ configuration effective date and exclusive end boundary are honored by replay (1.16473ms)
+✔ duplicate imports retain original receipt and do not duplicate service history (0.374473ms)
+✔ conflicting duplicate import fails atomically without overwriting raw evidence (0.205944ms)
+✔ replay is deterministic across input order and repeated runs (2.161912ms)
+✔ replay respects import cutoff while preserving not-yet-imported evidence (0.371038ms)
+✔ equal-time conflicting selected-source rows remain unresolved (0.43346ms)
+✔ invalid selected-source raw input remains evidence and does not fall back (0.817127ms)
+✔ default Today review is labeled simulated/no model call and cannot mutate policy/history (8.108003ms)
+✔ recorded review is bound to exact original input and honestly distinct from live review (2.895265ms)
+✔ recorded review rejects changed configuration rather than restamping old findings (1.948388ms)
+✔ recorded review rejects changed raw input rather than restamping old findings (1.946114ms)
+✔ recorded review rejects changed replay cutoff rather than restamping old findings (2.123946ms)
+✔ review response cannot smuggle executable commands or unknown evidence (1.287231ms)
+✔ application review adapter emits only an in-app advisory for the selected vehicle (1.177889ms)
+﹣ Fleet browser acceptance: interactive workflow and honest review boundary (0.700575ms) # SKIP
+﹣ Fleet dependency failure: source controls survive unavailable CDN scripts (0.120037ms) # SKIP
+✔ frame summary uses measured elapsed time and preserves long pauses (1.143999ms)
+✔ no samples produces no invented FPS (0.168389ms)
+✔ invalid/non-increasing intervals are not counted as frames (0.200106ms)
+✔ real measurement requires named environment and source revision (0.720313ms)
+ℹ tests 45
+ℹ suites 0
+ℹ pass 43
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 2
+ℹ todo 0
+ℹ duration_ms 130.299285
