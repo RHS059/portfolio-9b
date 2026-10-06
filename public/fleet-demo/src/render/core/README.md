@@ -6,7 +6,7 @@
 - RAF interpolates successive 20 Hz snapshots; replay reset, pause, route switch and a wrapped progress discontinuity do not interpolate stale paths.
 - 3D uses instanced vehicle geometry, batched line-segment edges, opaque Lambert surfaces and a flat selection ring. No gloss, shadows or postprocessing.
 - Only presentation state depends on camera and screen culling. `getMetrics` reports browser RAF samples, p95/p99 and frames over 50 ms; this is not a certified GPU benchmark.
-- Context failure exposes a keyboard/clickable SVG vector overlay over real CARTO raster map tiles. A tile network failure may still leave vector routes/labels visible. Status identifies fallback rather than leaving a blank canvas.
+- Context failure exposes a keyboard/clickable SVG vector overlay over real OpenStreetMap raster map tiles. A tile network failure may still leave vector routes/labels visible. Status identifies fallback rather than leaving a blank canvas.
 - Disposal stops RAF, removes observers/listeners and releases all owned Three geometries/materials/textures. It does not force loss of the shared map context.
 - Original Reno page remains owned by the integration shell; this module does not touch its simulation.
 

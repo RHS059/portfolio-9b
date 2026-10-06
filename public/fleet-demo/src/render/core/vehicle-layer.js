@@ -1,10 +1,10 @@
-import {ORIGIN} from '../map/world.js';
+import {ORIGIN,SITES} from '../map/world.js';
 import {createModelGeometry,disposeObject,THEME} from './models.js';
 /** MapLibre 4.7 custom layer contract: render(gl, matrix), not the v5 render-arguments object. */
 export function createVehicleLayer({THREE:T,maplibregl:M,getVehicles,getSelected,getView,onFailure}){
   const layer={id:'fleet-editorial-3d',type:'custom',renderingMode:'3d',
     onAdd(map,gl){
-      this.map=map;this.scene=new T.Scene();this.camera=new T.Camera();
+      this.map=map;this.scene=new T.Scene();this.camera=new T.Camera();const debug=gl.getExtension('WEBGL_debug_renderer_info');this.gpuDescription=debug?gl.getParameter(debug.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);
       this.scene.add(new T.AmbientLight(0xffffff,.8));const sun=new T.DirectionalLight(0xffffff,.5);sun.position.set(-.4,-.7,1);this.scene.add(sun);
       this.ref=M.MercatorCoordinate.fromLngLat(ORIGIN,0);const s=this.ref.meterInMercatorCoordinateUnits();
       this.world=new T.Matrix4().makeTranslation(this.ref.x,this.ref.y,this.ref.z).scale(new T.Vector3(s,-s,s));
@@ -17,7 +17,7 @@ export function createVehicleLayer({THREE:T,maplibregl:M,getVehicles,getSelected
         if(this.disposed)return;
         const facilities=mod.createFacilities?.({THREE:T});
         const group=facilities?.isObject3D?facilities:facilities?.group;
-        if(group){this.facilities=group;this.facilityAPI=facilities;this.scene.add(group);map.triggerRepaint();}
+        if(group){const placed=new Set();group.traverse(child=>{const id=child.userData?.siteId||child.name;const site=SITES.find(s=>s.id===id);if(site&&!placed.has(id)){child.position.x+=site.x;child.position.y+=site.y;placed.add(id);}});if(!placed.size){const site=SITES.find(s=>s.id==='centerpoint');group.position.x+=site.x;group.position.y+=site.y;}this.facilities=group;this.facilityAPI=facilities;this.scene.add(group);map.triggerRepaint();}
       }).catch(error=>{onFailure?.({kind:'facility-unavailable',message:'Facility cutaway is unavailable; routes and source controls remain usable.'});console.warn('Facility module',error.message);});
     },
     setFacilitySnapshot(snapshot){this.facilitySnapshot=snapshot;},

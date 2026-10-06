@@ -1,9 +1,9 @@
 name: Fleet demo invariants
 on:
   push:
-    paths: ['public/fleet-demo/**', 'app/fleet-demo/**', '.github/workflows/fleet-demo-tests.yml']
+    paths: ['public/fleet-demo/**', 'app/fleet-demo/**', 'scripts/fleet-browser-smoke.mjs', '.github/workflows/fleet-demo-tests.yml']
   pull_request:
-    paths: ['public/fleet-demo/**', 'app/fleet-demo/**', '.github/workflows/fleet-demo-tests.yml']
+    paths: ['public/fleet-demo/**', 'app/fleet-demo/**', 'scripts/fleet-browser-smoke.mjs', '.github/workflows/fleet-demo-tests.yml']
 permissions:
   contents: read
 jobs:
@@ -16,3 +16,25 @@ jobs:
           node-version: '24'
       - name: Deterministic domain and renderer tests
         run: node --test public/fleet-demo/tests/**/*.test.js
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install isolated browser test tooling
+        run: |
+          npm install --prefix "$RUNNER_TEMP/fleet-browser" --no-save --ignore-scripts playwright@1.62.0
+          "$RUNNER_TEMP/fleet-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Exercise Fleet demo in Chromium
+        env:
+          PLAYWRIGHT_PACKAGE: ${{ runner.temp }}/fleet-browser
+        run: node scripts/fleet-browser-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fleet-browser-evidence
+          path: fleet-browser-evidence/
+          retention-days: 7

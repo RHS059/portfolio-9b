@@ -292,7 +292,7 @@ test('simulated review is explicitly labeled and returns only in-app advisory no
 
 test('recorded review is clearly labeled; model action fields cannot execute', async () => {
   const state = createScenario(), before = JSON.stringify(state);
-  const provider = createRecordedReviewProvider({ review: { findings: [{ severity: 'attention', summary: 'Review A frozen data.', evidenceReadingIds: ['v1-a-3'], command: { type: 'set-authority', sourceId: 'A' } }], execute: true } });
+  const provider = createRecordedReviewProvider({ input: buildReviewInput(createScenario()), review: { findings: [{ severity: 'attention', summary: 'Review A frozen data.', evidenceReadingIds: ['v1-a-3'], command: { type: 'set-authority', sourceId: 'A' } }], execute: true } });
   const result = await reviewImports(state, provider);
   assert.equal(result.mode, 'recorded'); assert.match(result.label, /not a live model call/);
   assert.equal(result.findings[0].command, undefined); assert.equal(result.execute, undefined);
@@ -310,7 +310,7 @@ test('review provider receives frozen snapshots and cannot mutate original autho
 });
 
 test('unknown evidence ids and malformed review results fail closed', async () => {
-  await assert.rejects(() => reviewImports(createScenario(), createRecordedReviewProvider({ review: { findings: [{ summary: 'Invented evidence', evidenceReadingIds: ['not-real'] }] } })), { code: 'INVALID_REVIEW_OUTPUT' });
+  await assert.rejects(() => reviewImports(createScenario(), createRecordedReviewProvider({ input: buildReviewInput(createScenario()), review: { findings: [{ summary: 'Invented evidence', evidenceReadingIds: ['not-real'] }] } })), { code: 'INVALID_REVIEW_OUTPUT' });
   await assert.rejects(() => reviewImports(createScenario(), { mode: 'simulated', async review() { return {}; } }), { code: 'INVALID_REVIEW_OUTPUT' });
 });
 
@@ -348,4 +348,93 @@ test('review expectations track current visible evidence rather than inventing u
   const input = buildReviewInput(state, { asOf: '2026-01-10T01:01:00Z' });
   assert.ok(input.expectedFlags.every(f => !f.evidenceReadingIds.includes('v1-b-3')));
   assert.ok(input.expectedFlags.some(f => f.kind === 'unresolved-authority'));
+});
+
+test('recorded review requires the exact original input snapshot', () => {
+  assert.throws(() => createRecordedReviewProvider({ review: { findings: [] } }), { code: 'UNBOUND_RECORDED_REVIEW' });
+});
+
+test('matching recorded review preserves original SHA-256, configuration and replay cutoff', async () => {
+  const state = createScenario({ authorityApplied: false });
+  const input = buildReviewInput(state);
+  const provider = createRecordedReviewProvider({ input, review: { findings: [{ summary: 'Authority is missing for the migrated vehicle.', evidenceReadingIds: ['v1-b-3'] }] } });
+  const first = await reviewImports(state, provider), second = await reviewImports(state, provider);
+  assert.deepEqual(first, second);
+  assert.equal(first.configVersion, input.configVersion); assert.equal(first.asOf, input.asOf);
+  assert.equal(first.provenance.configVersion, input.configVersion); assert.equal(first.provenance.asOf, input.asOf);
+  assert.equal(first.provenance.hashAlgorithm, 'SHA-256'); assert.match(first.provenance.inputHash, /^[0-9a-f]{64}$/);
+  assert.equal(provider.recording.configVersion, input.configVersion);
+  assert.ok(Object.isFrozen(provider.recording.input.rawReadings[0]));
+});
+
+test('recorded missing-authority review cannot be restamped after authority is fixed', async () => {
+  const original = createScenario({ authorityApplied: false });
+  const provider = createRecordedReviewProvider({ input: buildReviewInput(original), review: { findings: [{ summary: 'Authority is missing.', evidenceReadingIds: ['v1-b-3'] }] } });
+  const accepted = await reviewImports(original, provider);
+  const changed = command(original);
+  await assert.rejects(() => reviewImports(changed, provider), error => {
+    assert.equal(error.code, 'RECORDED_REVIEW_INPUT_MISMATCH');
+    assert.equal(error.recordedProvenance.configVersion, 1);
+    assert.equal(error.requestedProvenance.configVersion, 2);
+    assert.equal(error.recordedProvenance.inputHash, accepted.provenance.inputHash);
+    assert.notEqual(error.recordedProvenance.inputHash, error.requestedProvenance.inputHash);
+    return true;
+  });
+  assert.deepEqual(await reviewImports(original, provider), accepted);
+});
+
+test('recorded review cannot be reused for a different replay cutoff', async () => {
+  const state = createScenario();
+  const asOf = '2026-01-10T01:01:00Z';
+  const provider = createRecordedReviewProvider({ input: buildReviewInput(state, { asOf }), review: { findings: [] } });
+  const result = await reviewImports(state, provider, { asOf });
+  assert.equal(result.asOf, asOf); assert.equal(result.provenance.asOf, asOf);
+  await assert.rejects(() => reviewImports(state, provider), error => {
+    assert.equal(error.code, 'RECORDED_REVIEW_INPUT_MISMATCH');
+    assert.equal(error.recordedProvenance.asOf, asOf); assert.equal(error.requestedProvenance.asOf, state.asOf);
+    return true;
+  });
+});
+
+test('new imports invalidate recordings even when configuration version and cutoff are unchanged', async () => {
+  const state = createScenario();
+  const provider = createRecordedReviewProvider({ input: buildReviewInput(state), review: { findings: [] } });
+  const changed = importReadings(state, [{ ...state.readings[0], id: 'new-evidence' }]).state;
+  assert.equal(changed.configVersion, state.configVersion); assert.equal(changed.asOf, state.asOf);
+  await assert.rejects(() => reviewImports(changed, provider), { code: 'RECORDED_REVIEW_INPUT_MISMATCH' });
+});
+
+test('recording is copied and frozen; editing supplied input or output cannot change its binding', async () => {
+  const state = createScenario(), input = copy(buildReviewInput(state));
+  const review = { findings: [{ summary: 'Original finding.', evidenceReadingIds: ['v1-a-3'] }] };
+  const provider = createRecordedReviewProvider({ input, review });
+  input.rawReadings[0].value = 0; input.configVersion = 999; review.findings[0].summary = 'Tampered finding.';
+  const result = await reviewImports(state, provider);
+  assert.equal(result.findings[0].summary, 'Original finding.'); assert.equal(result.configVersion, 1);
+  assert.throws(() => { provider.recording.input.policies[0].sourceId = 'A'; }, TypeError);
+});
+
+test('canonical key ordering tolerates equivalent serialized snapshots but raw evidence changes do not', async () => {
+  const state = createScenario(), input = buildReviewInput(state);
+  const reordered = Object.fromEntries(Object.entries(input).reverse());
+  const provider = createRecordedReviewProvider({ input: reordered, review: { findings: [] } });
+  assert.equal((await reviewImports(state, provider)).findings.length, 0);
+  const changed = copy(state); changed.readings[0].value += 1;
+  await assert.rejects(() => reviewImports(changed, provider), { code: 'RECORDED_REVIEW_INPUT_MISMATCH' });
+});
+
+test('unbound or wrong-hash custom recorded providers fail closed', async () => {
+  const state = createScenario();
+  await assert.rejects(() => reviewImports(state, { mode: 'recorded', async review() { return { findings: [] }; } }), { code: 'RECORDED_REVIEW_INPUT_MISMATCH' });
+  await assert.rejects(() => reviewImports(state, { mode: 'recorded', async review() { return { findings: [], provenance: { configVersion: state.configVersion, asOf: state.asOf, inputHash: 'wrong' } }; } }), { code: 'RECORDED_REVIEW_INPUT_MISMATCH' });
+});
+
+test('async live reviews are stamped with the snapshot reviewed, not a subsequently changed mutable caller', async () => {
+  const state = copy(createScenario()), originalVersion = state.configVersion, originalAsOf = state.asOf;
+  const result = await reviewImports(state, { mode: 'live', async review() {
+    state.configVersion = 999; state.asOf = '2026-01-20T00:00:00Z'; state.readings = [];
+    return { findings: [{ summary: 'Original snapshot evidence.', evidenceReadingIds: ['v1-b-3'] }] };
+  } });
+  assert.equal(result.configVersion, originalVersion); assert.equal(result.asOf, originalAsOf);
+  assert.equal(result.provenance.configVersion, originalVersion); assert.equal(result.provenance.asOf, originalAsOf);
 });

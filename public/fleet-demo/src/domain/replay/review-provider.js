@@ -1,5 +1,5 @@
 import { evaluateReadings } from '../readings/evaluate.js';
-import { DomainError, immutable } from '../readings/shared.js';
+import { DomainError, assertTime, immutable, stableJSON } from '../readings/shared.js';
 
 /** Portable, credential-free input for a real reviewer. All example data is synthetic. */
 export function buildReviewInput(state, { asOf = state.asOf } = {}) {
@@ -48,18 +48,56 @@ export function createSimulatedReviewProvider() {
   });
 }
 
-export function createRecordedReviewProvider({ label = 'Recorded review (not a live model call)', review }) {
+/** SHA-256 over canonical JSON. Full canonical equality, not only the hash, binds recordings. */
+async function inputProvenance(input) {
+  if (!globalThis.crypto?.subtle) throw new DomainError('REVIEW_DIGEST_UNAVAILABLE', 'Review provenance requires Web Crypto in a secure browser context.');
+  const bytes = new TextEncoder().encode(stableJSON(input));
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', bytes);
+  const inputHash = [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+  return immutable({ inputHash, hashAlgorithm: 'SHA-256', canonicalization: 'sorted-object-keys-v1', configVersion: input.configVersion, asOf: input.asOf });
+}
+
+function provenanceMismatch(recordedProvenance, requestedProvenance) {
+  const error = new DomainError('RECORDED_REVIEW_INPUT_MISMATCH', 'This recorded review belongs to a different input snapshot. Its findings cannot be shown as a current review.');
+  error.recordedProvenance = recordedProvenance;
+  error.requestedProvenance = requestedProvenance;
+  return error;
+}
+
+export function createRecordedReviewProvider({ label = 'Recorded review (not a live model call)', input, review }) {
+  if (!input || !Number.isInteger(input.configVersion) || !Array.isArray(input.rawReadings) || !Array.isArray(input.policies) || !Array.isArray(input.exclusions)) {
+    throw new DomainError('UNBOUND_RECORDED_REVIEW', 'A recording requires the exact original buildReviewInput snapshot.');
+  }
+  assertTime(input.asOf, 'Recorded review asOf');
+  const originalInput = immutable(input);
+  const originalCanonicalJSON = stableJSON(originalInput);
   const recorded = immutable(review);
-  return Object.freeze({ mode: 'recorded', label, async review() { return recorded; } });
+  let provenancePromise;
+  return Object.freeze({ mode: 'recorded', label,
+    recording: immutable({ input: originalInput, configVersion: originalInput.configVersion, asOf: originalInput.asOf }),
+    async review(requestedInput) {
+      provenancePromise ??= inputProvenance(originalInput);
+      const recordedProvenance = await provenancePromise;
+      if (stableJSON(requestedInput) !== originalCanonicalJSON) {
+        throw provenanceMismatch(recordedProvenance, await inputProvenance(requestedInput));
+      }
+      return immutable({ ...recorded, provenance: recordedProvenance });
+    },
+  });
 }
 
 /** Provider receives a frozen data snapshot only, never state setters or credentials. */
-export async function reviewImports(state, provider = createSimulatedReviewProvider()) {
+export async function reviewImports(state, provider = createSimulatedReviewProvider(), { asOf = state.asOf } = {}) {
   if (!provider || typeof provider.review !== 'function' || !['simulated', 'recorded', 'live'].includes(provider.mode)) throw new DomainError('INVALID_REVIEW_PROVIDER', 'Review provider must declare its mode and review method.');
-  const input = buildReviewInput(state);
+  const input = buildReviewInput(state, { asOf });
+  const requestedProvenance = await inputProvenance(input);
   const response = await provider.review(input);
   if (!response || !Array.isArray(response.findings)) throw new DomainError('INVALID_REVIEW_OUTPUT', 'Review must return findings.');
-  const knownIds = new Set(state.readings.map(r => r.id));
+  if (provider.mode === 'recorded' && (!response.provenance || stableJSON(response.provenance) !== stableJSON(requestedProvenance))) {
+    throw provenanceMismatch(response.provenance ?? null, requestedProvenance);
+  }
+  const provenance = provider.mode === 'recorded' ? response.provenance : requestedProvenance;
+  const knownIds = new Set(input.rawReadings.map(r => r.id));
   const findings = response.findings.map((finding, index) => {
     if (typeof finding.summary !== 'string' || !Array.isArray(finding.evidenceReadingIds) || finding.evidenceReadingIds.some(id => !knownIds.has(id))) throw new DomainError('INVALID_REVIEW_OUTPUT', 'Every finding needs a summary and known evidence ids.');
     return { id: `review-${index + 1}`, severity: ['info', 'review', 'attention'].includes(finding.severity) ? finding.severity : 'review', summary: finding.summary,
@@ -68,5 +106,5 @@ export async function reviewImports(state, provider = createSimulatedReviewProvi
   });
   // Only an advisory envelope is returned. Unknown model fields, including commands, are discarded.
   return immutable({ mode: provider.mode, label: String(provider.label || `${provider.mode} review`), advisoryOnly: true,
-    notificationChannel: 'in-app', requiresHumanDecision: true, configVersion: state.configVersion, asOf: state.asOf, findings });
+    notificationChannel: 'in-app', requiresHumanDecision: true, configVersion: provenance.configVersion, asOf: provenance.asOf, provenance, findings });
 }

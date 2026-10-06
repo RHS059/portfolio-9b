@@ -21,9 +21,12 @@ const feedback = text => { $('#app-feedback').textContent=text; };
 function snapshot(timeSeconds=0,paused=false){
   const resolved=evaluation?.vehicles.find(v=>v.vehicleId==='TRK-104')?.status==='resolved';
   const shop=stage===2 || (stage>=3 && !resolved);
+  // Illustrative repeated visit loop only; it never schedules or modifies service facts.
+  const servicePhase=(timeSeconds%32)/32;
+  const servicePose=servicePhase<.4?{routeId:'factory-to-depot',progress:servicePhase/.4,status:'en-route-to-service'}:servicePhase<.65?{routeId:'depot-bay',progress:0,status:'workshop'}:{routeId:'depot-to-factory',progress:(servicePhase-.65)/.35,status:'returning'};
   return {timeSeconds,paused,selectedId:selectedVehicleId,stage,issueActive:stage>0&&!resolved,authorityResolved:!!resolved,
     vehicles:[
-      {id:'TRK-104',progress:(timeSeconds*.008+.12)%1,routeId:shop?'depot-bay':'delivery',status:shop?'workshop':'moving'},
+      {id:'TRK-104',...(shop?servicePose:{progress:(timeSeconds*.008+.12)%1,routeId:'delivery',status:'moving'})},
       {id:'TRK-208',progress:(timeSeconds*.006+.59)%1,routeId:'delivery',status:'moving'},
       {id:'VAN-311',model:'van',progress:(timeSeconds*.012+.21)%1,routeId:'depot',status:'moving'},
       ...Array.from({length:9},(_,i)=>({id:`TRAFFIC-${String(i+1).padStart(3,'0')}`,progress:(timeSeconds*(.008+i*.0004)+i*.111)%1,routeId:i%2?'delivery':'depot',status:'moving'}))
@@ -63,6 +66,7 @@ async function handleAction(action){
       review=result;notifications=[review.notification];reviewing=false;
       feedback('Review finished. No readings, service history or configuration were changed.');render();return;
     }
+    if(action.type==='reimport'){const result=domain.importReadings(scenario,scenario.readings);scenario=result.state;reviewSequence++;reviewing=false;review=null;notifications=[];evaluate();feedback(`${result.duplicateCount} duplicate record(s) ignored; ${result.importedCount} new record(s). Raw history and service facts were not duplicated.`);render();return;}
     if(action.type==='replay'){evaluate();feedback(`Derived replay complete for configuration v${scenario.configVersion}. Raw imports and service history are unchanged.`);render();return;}
     if(action.type==='set-authority'||action.type==='add-exclusion'){
       const vehicleId=action.vehicleId||selectedVehicleId;
@@ -85,7 +89,7 @@ function bind(){
   $$('[data-vehicle]').forEach(b=>b.addEventListener('click',()=>selectVehicle(b.dataset.vehicle)));
   $('#follow').addEventListener('click',()=>{follow=!follow;$('#follow').setAttribute('aria-pressed',String(follow));scene?.setFollow(follow);if(follow)scene?.setFocus(selectedVehicleId);});
   $('#pause').addEventListener('click',()=>{if(!sim)return;const paused=!sim.getState().paused;sim.setPaused(paused);$('#pause').textContent=paused?'▶ Play':'Ⅱ Pause';$('#run-status').textContent=paused?'Scene paused':'Scene running';render();});
-  $('#reset').addEventListener('click',()=>{if(!domain)return;scenario=domain.createScenario({authorityApplied:false});evaluate();stage=0;reviewSequence++;reviewing=false;review=null;notifications=[];commandSequence=0;selectedVehicleId='TRK-104';follow=false;scene?.setFollow(false);$('#follow').setAttribute('aria-pressed','false');sim?.reset();sim?.setPaused(false);$('#pause').textContent='Ⅱ Pause';$('#run-status').textContent='Scene running';feedback('Demo reset. Original fixture restored.');render();});
+  $('#reset').addEventListener('click',()=>{if(!domain)return;scenario=domain.createScenario({authorityApplied:false});evaluate();stage=0;reviewSequence++;reviewing=false;review=null;notifications=[];commandSequence=0;selectedVehicleId='TRK-104';mode='then';view='iso';follow=false;scene?.setFollow(false);scene?.setView(view);scene?.setFocus(null);$$('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));$('#follow').setAttribute('aria-pressed','false');sim?.reset();sim?.setPaused(false);$('#pause').textContent='Ⅱ Pause';$('#run-status').textContent='Scene running';feedback('Demo reset. Original fixture restored.');render();});
   const about=visible=>{$('#about-panel').hidden=!visible;$('#about-toggle').setAttribute('aria-expanded',String(visible));};
   $('#about-toggle').addEventListener('click',()=>about($('#about-panel').hidden));$('#about-close').addEventListener('click',()=>about(false));document.addEventListener('keydown',event=>{if(event.key==='Escape')about(false);});
 }
@@ -111,7 +115,12 @@ async function main(){
   sim=createSimulation({onTick({timeSeconds,paused}){scene?.update(snapshot(timeSeconds,paused));updateMetrics(performance.now());}});
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){sim.setPaused(true);$('#pause').textContent='▶ Play';$('#run-status').textContent='Scene paused · reduced motion';}
   window.addEventListener('resize',()=>scene?.resize());
-  window.addEventListener('pagehide',()=>{sim?.dispose();scene?.dispose();panel?.dispose();},{once:true});
+  let suspendedPauseState=null;
+  window.addEventListener('pagehide',event=>{
+    if(event.persisted){suspendedPauseState=sim?.getState().paused??false;sim?.setPaused(true);}
+    else{sim?.dispose();scene?.dispose();panel?.dispose();}
+  });
+  window.addEventListener('pageshow',event=>{if(event.persisted&&suspendedPauseState!==null){sim?.setPaused(suspendedPauseState);suspendedPauseState=null;scene?.resize();render();}});
   window.__fleetDemo={getState:()=>({mode,stage,selectedVehicleId,view,follow,scenario,evaluation,review,simulation:sim.getState()}),getMetrics:()=>scene?.getMetrics?.(),version:'fleet-demo/v1'};
 }
 main().catch(error=>console.error('Fleet demo bootstrap failed',error));
