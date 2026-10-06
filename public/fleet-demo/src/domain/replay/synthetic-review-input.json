@@ -1,0 +1,334 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "asOf": "2026-01-12T03:00:00Z",
+  "task": "Review import evidence, flag suspicious records and explain evidence for a responsible fleet operator. Return advisory findings only. Do not execute changes.",
+  "providerNames": {
+    "A": "unnamed provider A",
+    "B": "unnamed provider B"
+  },
+  "assumptions": [
+    "A and B are unnamed providers. Vehicle IDs, timestamps, values and service examples are synthetic.",
+    "Freshness is an illustrative 48-hour observation-age limit, measured from observedAt, never importedAt.",
+    "Within the explicitly authoritative source, the newest observed row is selected; equal-time disagreement is unresolved.",
+    "Excluding the newest authoritative observation leaves it unresolved; older observations are not silently resurrected.",
+    "Unexplained decreases within an authoritative source stay unresolved; legitimate resets need separate evidence outside this demo.",
+    "An observation cannot be later than its import receipt; impossible or missing timestamps remain invalid raw evidence.",
+    "Canonical unit is km; one mile is 1.609344 km; derived values are rounded to 0.000001 km.",
+    "Illustrated consequence events are not a reconstruction of the historical maintenance scheduler.",
+    "Review suggestions are advisory and require a human configuration command; they cannot mutate raw readings or service facts."
+  ],
+  "vehicleMigrationFacts": [
+    {
+      "id": "TRK-104",
+      "label": "Migrated truck",
+      "migration": "B"
+    },
+    {
+      "id": "TRK-208",
+      "label": "Unmigrated truck",
+      "migration": "A"
+    }
+  ],
+  "rawReadings": [
+    {
+      "id": "v1-b-1",
+      "vehicleId": "TRK-104",
+      "sourceId": "B",
+      "field": "odometer",
+      "value": 80000,
+      "unit": "mi",
+      "observedAt": "2026-01-10T00:30:00Z",
+      "importedAt": "2026-01-10T01:00:00Z"
+    },
+    {
+      "id": "v1-a-1",
+      "vehicleId": "TRK-104",
+      "sourceId": "A",
+      "field": "odometer",
+      "value": 120000,
+      "unit": "km",
+      "observedAt": "2026-01-05T12:00:00Z",
+      "importedAt": "2026-01-10T02:00:00Z"
+    },
+    {
+      "id": "v2-a-1",
+      "vehicleId": "TRK-208",
+      "sourceId": "A",
+      "field": "odometer",
+      "value": 210000,
+      "unit": "km",
+      "observedAt": "2026-01-10T00:45:00Z",
+      "importedAt": "2026-01-10T02:15:00Z"
+    },
+    {
+      "id": "v1-b-2",
+      "vehicleId": "TRK-104",
+      "sourceId": "B",
+      "field": "odometer",
+      "value": 80150,
+      "unit": "mi",
+      "observedAt": "2026-01-11T00:30:00Z",
+      "importedAt": "2026-01-11T01:00:00Z"
+    },
+    {
+      "id": "v1-a-2",
+      "vehicleId": "TRK-104",
+      "sourceId": "A",
+      "field": "odometer",
+      "value": 120000,
+      "unit": "km",
+      "observedAt": "2026-01-05T12:00:00Z",
+      "importedAt": "2026-01-11T02:00:00Z"
+    },
+    {
+      "id": "v2-a-2",
+      "vehicleId": "TRK-208",
+      "sourceId": "A",
+      "field": "odometer",
+      "value": 210200,
+      "unit": "km",
+      "observedAt": "2026-01-11T00:45:00Z",
+      "importedAt": "2026-01-11T02:15:00Z"
+    },
+    {
+      "id": "v1-b-3",
+      "vehicleId": "TRK-104",
+      "sourceId": "B",
+      "field": "odometer",
+      "value": 80300,
+      "unit": "mi",
+      "observedAt": "2026-01-12T00:30:00Z",
+      "importedAt": "2026-01-12T01:00:00Z"
+    },
+    {
+      "id": "v1-a-3",
+      "vehicleId": "TRK-104",
+      "sourceId": "A",
+      "field": "odometer",
+      "value": 120000,
+      "unit": "km",
+      "observedAt": "2026-01-05T12:00:00Z",
+      "importedAt": "2026-01-12T02:00:00Z"
+    },
+    {
+      "id": "v2-a-3",
+      "vehicleId": "TRK-208",
+      "sourceId": "A",
+      "field": "odometer",
+      "value": 210400,
+      "unit": "km",
+      "observedAt": "2026-01-12T00:45:00Z",
+      "importedAt": "2026-01-12T02:15:00Z"
+    }
+  ],
+  "policies": [
+    {
+      "id": "initial-v2-authority",
+      "version": 1,
+      "vehicleId": "TRK-208",
+      "field": "odometer",
+      "sourceId": "A",
+      "effectiveFrom": "2026-01-01T00:00:00Z",
+      "maxAgeHours": 48
+    }
+  ],
+  "exclusions": [],
+  "configVersion": 1,
+  "results": [
+    {
+      "vehicleId": "TRK-104",
+      "status": "unresolved",
+      "reason": "missing-authority",
+      "sourceId": null,
+      "valueKm": null,
+      "readingId": null,
+      "observedAt": null,
+      "importedAt": null,
+      "policyId": null,
+      "policyVersion": null,
+      "evidenceReadingIds": [
+        "v1-a-1",
+        "v1-a-2",
+        "v1-a-3",
+        "v1-b-1",
+        "v1-b-2",
+        "v1-b-3"
+      ]
+    },
+    {
+      "vehicleId": "TRK-208",
+      "status": "resolved",
+      "reason": "explicit-authority",
+      "sourceId": "A",
+      "valueKm": 210400,
+      "readingId": "v2-a-3",
+      "observedAt": "2026-01-12T00:45:00Z",
+      "importedAt": "2026-01-12T02:15:00Z",
+      "policyId": "initial-v2-authority",
+      "policyVersion": 1,
+      "evidenceReadingIds": [
+        "v2-a-3"
+      ]
+    }
+  ],
+  "facts": [
+    {
+      "id": "cross-source-disagreement:TRK-104:v1-a-1,v1-b-3",
+      "kind": "cross-source-disagreement",
+      "severity": "review",
+      "vehicleId": "TRK-104",
+      "evidenceReadingIds": [
+        "v1-a-1",
+        "v1-b-3"
+      ],
+      "summary": "Available sources report different odometers; authority must be explicit.",
+      "details": {
+        "sources": [
+          {
+            "sourceId": "A",
+            "valueKm": 120000,
+            "observedAt": "2026-01-05T12:00:00Z",
+            "importedAt": "2026-01-10T02:00:00Z"
+          },
+          {
+            "sourceId": "B",
+            "valueKm": 129230.3232,
+            "observedAt": "2026-01-12T00:30:00Z",
+            "importedAt": "2026-01-12T01:00:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "id": "explicit-selection:TRK-208:v2-a-3",
+      "kind": "explicit-selection",
+      "severity": "info",
+      "vehicleId": "TRK-208",
+      "evidenceReadingIds": [
+        "v2-a-3"
+      ],
+      "summary": "Source A is authoritative for this vehicle; arrival order did not choose it.",
+      "details": {
+        "sourceId": "A",
+        "valueKm": 210400,
+        "policyId": "initial-v2-authority"
+      }
+    },
+    {
+      "id": "repeated-unchanged-observation:TRK-104:v1-a-1,v1-a-2,v1-a-3",
+      "kind": "repeated-unchanged-observation",
+      "severity": "review",
+      "vehicleId": "TRK-104",
+      "evidenceReadingIds": [
+        "v1-a-1",
+        "v1-a-2",
+        "v1-a-3"
+      ],
+      "summary": "The same observation was delivered on multiple import runs; a fresh import does not make it a fresh observation.",
+      "details": {
+        "sourceId": "A",
+        "observedAt": "2026-01-05T12:00:00Z",
+        "importedAt": [
+          "2026-01-10T02:00:00Z",
+          "2026-01-11T02:00:00Z",
+          "2026-01-12T02:00:00Z"
+        ],
+        "valueKm": 120000
+      }
+    },
+    {
+      "id": "unresolved-authority:TRK-104:v1-a-1,v1-a-2,v1-a-3,v1-b-1,v1-b-2,v1-b-3",
+      "kind": "unresolved-authority",
+      "severity": "attention",
+      "vehicleId": "TRK-104",
+      "evidenceReadingIds": [
+        "v1-a-1",
+        "v1-a-2",
+        "v1-a-3",
+        "v1-b-1",
+        "v1-b-2",
+        "v1-b-3"
+      ],
+      "summary": "Odometer remains unresolved: missing-authority.",
+      "details": {
+        "reason": "missing-authority",
+        "sourceId": null
+      }
+    }
+  ],
+  "expectedFlags": [
+    {
+      "vehicleId": "TRK-104",
+      "kind": "cross-source-disagreement",
+      "evidenceReadingIds": [
+        "v1-a-1",
+        "v1-b-3"
+      ],
+      "explanation": "Available sources report different odometers; authority must be explicit."
+    },
+    {
+      "vehicleId": "TRK-104",
+      "kind": "repeated-unchanged-observation",
+      "evidenceReadingIds": [
+        "v1-a-1",
+        "v1-a-2",
+        "v1-a-3"
+      ],
+      "explanation": "The same observation was delivered on multiple import runs; a fresh import does not make it a fresh observation."
+    },
+    {
+      "vehicleId": "TRK-104",
+      "kind": "unresolved-authority",
+      "evidenceReadingIds": [
+        "v1-a-1",
+        "v1-a-2",
+        "v1-a-3",
+        "v1-b-1",
+        "v1-b-2",
+        "v1-b-3"
+      ],
+      "explanation": "Odometer remains unresolved: missing-authority."
+    },
+    {
+      "vehicleId": "TRK-208",
+      "kind": "partial-migration-isolation",
+      "evidenceReadingIds": [
+        "v2-a-3"
+      ],
+      "explanation": "A is still the explicit valid authority for the unmigrated vehicle."
+    }
+  ],
+  "explicitUnknowns": [
+    "The real provider names, raw historical timestamps/values and device removal dates are unknown.",
+    "The precise historical maintenance-trigger algorithm and service ledger are unknown.",
+    "The financial impact and exact number of repeated shop visits are unknown.",
+    "A difference between sources alone does not establish which source should be authoritative.",
+    "Model confidence is advisory and cannot authorize a source change or service-history rewrite."
+  ],
+  "expectedInvariantChecks": [
+    "TRK-104 is unresolved until a human explicitly sets its authoritative source; B resolves the migrated truck in this fixture. TRK-208 continues using A.",
+    "Changing one vehicle authority does not disable either integration or change another vehicle.",
+    "Import order does not choose authority; observation time and import time remain separate.",
+    "Exclusions can target an individual raw row, integration, vehicle and field.",
+    "Missing, stale, excluded or conflicting authority is visibly unresolved without latest/max fallback.",
+    "Raw readings, original source values and service facts are never mutated by evaluation, replay or review.",
+    "Configuration changes require explicit version-checked commands and effective dates.",
+    "Duplicate import and repeated replay do not duplicate canonical readings or service facts.",
+    "Consequence examples are labeled and no exact historical scheduler or financial loss is inferred.",
+    "Review suggestions cannot execute configuration commands, alter service records or send external notifications."
+  ],
+  "allowedOutput": {
+    "findings": [
+      {
+        "severity": "info|review|attention",
+        "summary": "evidence-based explanation",
+        "confidence": "low|medium|high|unknown",
+        "evidenceReadingIds": [
+          "existing raw id"
+        ],
+        "suggestedAction": "optional human-reviewed next step"
+      }
+    ]
+  }
+}

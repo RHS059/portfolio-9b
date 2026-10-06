@@ -1,0 +1,18 @@
+name: Fleet demo invariants
+on:
+  push:
+    paths: ['public/fleet-demo/**', 'app/fleet-demo/**', '.github/workflows/fleet-demo-tests.yml']
+  pull_request:
+    paths: ['public/fleet-demo/**', 'app/fleet-demo/**', '.github/workflows/fleet-demo-tests.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Deterministic domain and renderer tests
+        run: node --test public/fleet-demo/tests/**/*.test.js

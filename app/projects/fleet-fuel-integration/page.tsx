@@ -3,6 +3,7 @@ import ProjectHero from "../../../components/project-hero"
 import ProjectSection from "../../../components/project-section"
 
 const sections = [
+  { id: "interactive-demo", title: "Interactive Demo" },
   { id: "impact", title: "Impact" },
   { id: "overview", title: "Overview" },
   { id: "the-problem-surface-level", title: "The Problem (surface level)" },
@@ -257,6 +258,18 @@ export default function FleetFuelIntegrationProject() {
     <ProjectLayout sections={sections}>
       <div className="space-y-8 md:space-y-10">
         <ProjectHero {...projectData} />
+
+        <section id="interactive-demo" className="rounded-xl border border-[#9b95b2]/30 bg-[#9b95b2]/10 p-6 md:p-8" aria-labelledby="fleet-demo-title">
+          <p className="mb-2 text-xs font-medium uppercase tracking-widest text-[#685c84]">Then / Today · Interactive exploration</p>
+          <h2 id="fleet-demo-title" className="mb-3 text-2xl font-semibold text-[#181425]">One vehicle. Two sources. One costly loop.</h2>
+          <p className="mb-5 max-w-3xl text-base leading-relaxed text-[#181425]">
+            Explore a synthetic replay of a partial telematics migration that sent vehicles back for repeated maintenance. Compare the explicit validation and source controls from 2021–22 with a present-day, agent-assisted review approach. Raw readings and service history stay intact; source authority remains an explicit decision for each vehicle.
+          </p>
+          <a href="/fleet-demo" className="inline-flex items-center gap-3 rounded-md bg-[#181425] px-5 py-3 text-sm font-medium text-white hover:bg-[#685c84] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#685c84]">
+            Open the working demo <span aria-hidden="true">↗</span>
+          </a>
+          <p className="mt-4 text-xs leading-relaxed text-[#685c84]">The Oakland operations scene, readings and service examples are illustrative. The review adapter is labeled in the demo; it does not silently change records or send external messages.</p>
+        </section>
 
         {sectionContent.map((section) => (
           <ProjectSection key={section.id} id={section.id} title={section.title} content={section.content} />

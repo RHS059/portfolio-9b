@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#eeede7">
+  <meta name="description" content="An interactive fleet integration case study: a partial telematics migration, conflicting readings, and explicit source authority.">
+  <title>Fleet / Source of truth</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="./src/app/style.css">
+  <script defer src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script defer src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a href="./" class="wordmark" aria-label="Fleet demo home"><span class="mark" aria-hidden="true">F</span> FLEET<span class="wordmark-divider">/</span><span class="muted">Operations lab</span></a>
+      <div class="topbar-right"><span class="demo-badge"><i></i> SYNTHETIC DEMO</span><a class="text-link" href="./reno.html">Original Reno console ↗</a></div>
+    </header>
+    <main class="workspace">
+      <aside class="story-panel" aria-label="Guided case study">
+        <div class="eyebrow">CASE STUDY 01 <span>DATA → OPERATIONS</span></div>
+        <h1>One vehicle.<br>Two sources.<br><em>One costly loop.</em></h1>
+        <p class="intro">A partial telematics migration leaves an old account active. Its frozen odometer keeps returning with the nightly import.</p>
+        <div class="mode-switch" aria-label="Approach"><button type="button" data-mode="then" aria-pressed="true">Then <small>2021–22</small></button><button type="button" data-mode="today" aria-pressed="false">Today <small>Agent-assisted</small></button></div>
+        <p id="mode-description" class="mode-description"></p>
+        <nav id="story-steps" class="story-steps" aria-label="Story chapters"></nav>
+        <section class="chapter-card" aria-live="polite"><span id="chapter-number" class="eyebrow"></span><h2 id="chapter-title"></h2><p id="chapter-copy"></p><button id="next-chapter" class="primary-button" type="button">Continue <span>↗</span></button></section>
+        <div class="story-footnote">Based on a real integration incident. Vehicle IDs, readings, dates and service events here are synthetic. Financial loss was not quantified.</div>
+      </aside>
+      <section class="world-panel" aria-label="Oakland operations scene">
+        <div class="world-heading"><div><span class="eyebrow">OAKLAND, CALIFORNIA</span><h2>From port to production</h2></div><button id="about-toggle" class="icon-button" type="button" aria-label="About the scene" aria-expanded="false">i</button></div>
+        <div id="world" class="world"><div id="scene-loading" class="scene-loading">Preparing operations scene…</div></div>
+        <div id="scene-notice" class="scene-notice" role="status" hidden></div>
+        <div class="world-toolbar"><div class="segmented" role="group" aria-label="Camera view"><button data-view="2d" type="button" aria-pressed="false">2D</button><button data-view="3d" type="button" aria-pressed="false">3D</button><button data-view="iso" type="button" aria-pressed="true">ISO</button></div><button id="follow" type="button" class="tool-button" aria-pressed="false">◎ Follow vehicle</button><span class="toolbar-spacer"></span><button id="pause" type="button" class="tool-button">Ⅱ Pause</button><button id="reset" type="button" class="tool-button" aria-label="Reset demo">↺ Reset</button></div>
+        <div class="place-labels"><button data-focus="oict" type="button"><span class="location-number">01</span><span><strong>OICT</strong><small>Container terminal</small></span></button><button data-focus="centerpoint" type="button"><span class="location-number">02</span><span><strong>CenterPoint</strong><small>Fictional drone assembly</small></span></button><button data-focus="depot" type="button"><span class="location-number">03</span><span><strong>Fleet workshop</strong><small>Maintenance & inspection</small></span></button></div>
+        <div class="impact-strip"><div><span class="eyebrow">SELECTED ASSET</span><strong id="selected-asset">TRK-104</strong><small id="asset-role">Migrated vehicle</small></div><div><span class="eyebrow">CANONICAL ODOMETER</span><strong id="canonical-reading">Unresolved</strong><small id="canonical-source">Explicit authority required</small></div><div><span class="eyebrow">RECORD INTEGRITY</span><strong id="integrity-count">Raw records kept</strong><small>Service history never rewritten</small></div></div>
+        <div id="about-panel" class="about-panel" hidden><button id="about-close" class="icon-button" type="button" aria-label="Close scene information">×</button><h3>An operational setting, not live telemetry</h3><p>The Oakland port provides real geographic context. The drone factory, fleet workshop, routes, traffic and material flows are illustrative. Animated movement does not change the source records.</p><p>Named integrations in this ecosystem include Networkfleet / Verizon, Samsara, and Wright Express / WEX. Anonymous Providers A and B in this incident are not attributed to those products.</p><p>The historical PM trigger is unknown. The repeated shop visits shown here illustrate the reported consequence, rather than re-create an undocumented algorithm.</p><a href="https://www.reidhslaughter.com/projects/fleet-fuel-integration" target="_blank" rel="noreferrer">Read the original case study ↗</a></div>
+      </section>
+      <aside class="inspector-panel" aria-label="Readings and source controls"><div class="inspector-heading"><span class="eyebrow">SOURCE OF TRUTH</span><h2>Inspect the evidence</h2><p>Raw imports stay intact. Authority is an explicit decision for each vehicle.</p></div><div class="vehicle-tabs" role="group" aria-label="Inspect vehicle"><button type="button" data-vehicle="TRK-104" aria-pressed="true">TRK-104 <small>Migrated</small></button><button type="button" data-vehicle="TRK-208" aria-pressed="false">TRK-208 <small>Still on A</small></button></div><div id="provenance"></div><div id="app-feedback" role="status" aria-live="polite"></div></aside>
+    </main>
+    <footer class="footer"><span><span class="status-dot"></span> <span id="run-status">Scene running</span><span class="footer-divider">/</span>20 Hz simulation · interpolated render</span><span id="performance">Performance measurement pending</span><a href="./reno.html">Reno: 2D · 3D · Isometric ↗</a></footer>
+  </div>
+  <noscript><p class="noscript">JavaScript is needed to run this interactive demo. The original case study is at reidhslaughter.com/projects/fleet-fuel-integration.</p></noscript>
+  <script type="module" src="./src/app/index.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+/** Original replaceable editorial vehicle assets, authored in meters, +Y forward / +Z up. */
+export const THEME = Object.freeze({paper:0xf7f7f2,face:0xdedfd9,ink:0x303735,muted:0x929b95,selected:0x376c56});
+export const MODEL_REGISTRY = Object.freeze({
+  truck: Object.freeze([
+    [2.6,12,3.1,0,-2.7,2.1,'paper'],[2.5,3,2.5,0,5.0,1.8,'face'],[2.2,.08,.8,0,6.52,2.25,'ink'],
+    [2.6,15,.4,0,0,.6,'ink'],...[[-1.3,5],[1.3,5],[-1.3,-6],[1.3,-6],[-1.3,-4.8],[1.3,-4.8]].map(([x,y])=>[.4,.9,.9,x,y,.5,'ink'])
+  ]),
+  van: Object.freeze([[2.2,5,2.0,0,0,1.45,'paper'],[2,.1,.65,0,2.52,1.9,'ink'],...[[-1.1,1.6],[1.1,1.6],[-1.1,-1.6],[1.1,-1.6]].map(([x,y])=>[.3,.7,.7,x,y,.4,'ink'])])
+});
+export function createModelGeometry(T,kind){
+  const positions=[],normals=[],colors=[];
+  for(const [w,l,h,x,y,z,key] of MODEL_REGISTRY[kind]||MODEL_REGISTRY.truck){
+    const indexed=new T.BoxGeometry(w,l,h);const g=indexed.toNonIndexed();indexed.dispose();g.translate(x,y,z);
+    const p=g.getAttribute('position'),n=g.getAttribute('normal'),color=new T.Color(THEME[key]);
+    for(let i=0;i<p.count;i++){positions.push(p.getX(i),p.getY(i),p.getZ(i));normals.push(n.getX(i),n.getY(i),n.getZ(i));colors.push(color.r,color.g,color.b);}g.dispose();
+  }
+  const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));geometry.setAttribute('normal',new T.Float32BufferAttribute(normals,3));geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));geometry.computeBoundingSphere();return geometry;
+}
+export function disposeObject(root){const geometries=new Set(),materials=new Set(),textures=new Set();root?.traverse?.(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of (Array.isArray(o.material)?o.material:[o.material]))if(m){materials.add(m);for(const value of Object.values(m))if(value?.isTexture)textures.add(value);}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());}
