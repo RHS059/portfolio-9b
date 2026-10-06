@@ -7,8 +7,8 @@ export async function reviewFixture({domain,scenario,vehicleId,provider}) {
     ...result,vehicleId,live:result.mode==='live',findings,
     summary:findings.length?findings.map(f=>f.summary).join(' '):'No attention findings were returned for this vehicle in the synthetic batch.',
     evidenceReadingIds:[...new Set(findings.flatMap(f=>f.evidenceReadingIds))],
-    recommendation:findings.length?[...new Set(findings.map(f=>f.suggestedAction).filter(Boolean))].join(' '):'Keep the verified source authority. A review recommendation never replaces explicit configuration.',
-    notification:{recipient:'Responsible fleet administrator',channel:'in-app only',text:`${vehicleId}: ${findings.length} advisory finding(s). Review evidence before changing authority.`},
+    recommendation:findings.length?[...new Set(findings.map(f=>f.suggestedAction).filter(Boolean))].join(' '):'No recommendation was returned. Check the selected odometer source before deciding whether a change is needed.',
+    notification:{recipient:'Fleet manager',channel:'in-app only',text:`${vehicleId}: ${findings.length} advisory finding(s). Review evidence before changing authority.`},
     caveat:'This adapter is explicitly labeled above. Review findings cannot alter raw readings, service history or source policies. Unchanged readings alone do not prove a faulty device; an administrator must verify the migration.'
   });
 }

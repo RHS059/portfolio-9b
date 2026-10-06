@@ -37,7 +37,7 @@ export function createScenario({ authorityApplied = true } = {}) {
     exclusions: [],
     serviceFacts: [
       { id: 'service-example-1', vehicleId: 'TRK-104', recordedAt: '2026-01-10T12:00:00Z', work: 'Oil change and tire rotation', provenance: 'synthetic service example; immutable' },
-      { id: 'service-example-2', vehicleId: 'TRK-104', recordedAt: '2026-01-12T12:00:00Z', work: 'Repeated oil change and tire rotation', provenance: 'synthetic service example; immutable' },
+      { id: 'service-example-2', vehicleId: 'TRK-104', recordedAt: '2026-01-11T12:00:00Z', work: 'Repeated oil change and tire rotation', provenance: 'synthetic service example; immutable' },
     ],
     consequenceEvents: [
       { id: 'consequence-1', vehicleId: 'TRK-104', at: '2026-01-10T02:00:00Z', kind: 'illustrated-oscillation', evidenceReadingIds: ['v1-b-1', 'v1-a-1'], summary: 'A frozen A reading arrives after a current B reading.', provenance: 'illustrated consequence; not an inferred historical maintenance trigger' },

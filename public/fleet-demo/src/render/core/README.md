@@ -5,8 +5,8 @@
 - Snapshots are cloned, narrowed and frozen. Entity IDs survive instancing order/culling changes.
 - RAF interpolates successive 20 Hz snapshots; replay reset, pause, route switch and a wrapped progress discontinuity do not interpolate stale paths.
 - 3D uses instanced vehicle geometry, batched line-segment edges, opaque Lambert surfaces and a flat selection ring. No gloss, shadows or postprocessing.
-- Only presentation state depends on camera and screen culling. `getMetrics` reports browser RAF samples, p95/p99 and frames over 50 ms; this is not a certified GPU benchmark.
-- Context failure exposes a keyboard/clickable SVG vector overlay over real OpenStreetMap raster map tiles. A tile network failure may still leave vector routes/labels visible. Status identifies fallback rather than leaving a blank canvas.
+- Only presentation state depends on camera and screen culling. `getMetrics` reports browser RAF samples, rolling p95/p99 and lifetime foreground frames over 50 ms; foreground stalls remain counted, document-hidden intervals are excluded, and this is not a certified GPU benchmark.
+- Context failure exposes a keyboard/clickable SVG rendering of the same OpenFreeMap vector tiles as Grid Command. A tile network failure may still leave vector routes/labels visible. Status identifies fallback rather than leaving a blank canvas.
 - Disposal stops RAF, removes observers/listeners and releases all owned Three geometries/materials/textures. It does not force loss of the shared map context.
 - Original Reno page remains owned by the integration shell; this module does not touch its simulation.
 
@@ -27,3 +27,5 @@ The applicable style principles are opaque pale surfaces, restrained charcoal ed
 ## Checks
 
 `node --test tests/render/runtime.test.js` covers the pure runtime boundary, deterministic poses, pause/reset/route changes, stable selection, projection, culling and metrics. Integration browser verification is required for WebGL/context restoration and measured hardware performance. A software-rendered browser cannot establish user GPU performance.
+
+Map provider verified from https://github.com/RHS059/grid_command/blob/main/lib/game/geography.ts (blob 3ab9c2346f2232de2f13da0f5de62a2d9dadf653). The source is https://tiles.openfreemap.org/planet and fonts use the same CDN. No provider key or token is required. Both WebGL and SVG modes consume this provider, retain OpenFreeMap/OpenMapTiles/OpenStreetMap attribution, and use original pale fill/fine outline styling.

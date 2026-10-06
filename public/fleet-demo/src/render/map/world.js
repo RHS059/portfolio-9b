@@ -13,14 +13,15 @@ const factory=toLocal([-122.3089861,37.8129817]);
 // Fictional workshop within the warehouse parcel, not an asserted real-world business.
 const depot=[factory[0]-95,factory[1]-105];
 export const SITES = Object.freeze([
-  Object.freeze({ id:'oict',label:'OICT · Oakland port',caption:'Terminal reference point · SMDG',x:port[0],y:port[1],width:220,depth:120 }),
-  Object.freeze({ id:'centerpoint',label:'Drone factory',caption:'Fictional use · 1300 Maritime St',x:factory[0],y:factory[1],width:150,depth:90 }),
-  Object.freeze({ id:'depot',label:'Depot / workshop',caption:'Fictional campus service bays',x:depot[0],y:depot[1],width:85,depth:60 })
+  Object.freeze({ id:'oict',label:'OICT · Oakland port',caption:'Terminal reference point · SMDG',x:port[0],y:port[1],width:220,depth:120,focusZoom:17.8 }),
+  Object.freeze({ id:'centerpoint',label:'Drone factory',caption:'Fictional use · 1300 Maritime St',x:factory[0],y:factory[1],width:150,depth:90,focusZoom:18.3 }),
+  Object.freeze({ id:'depot',label:'Depot / workshop',caption:'Fictional campus service bays',x:depot[0],y:depot[1],width:85,depth:60,focusZoom:18.8 })
 ]);
 // Roads follow an OSM/OSRM general-driving reconstruction. Final yard connectors are illustrative.
 const road=ROAD_ROUTE_LNGLAT.map(toLocal);
 const delivery=[port,...road,factory];
-const service=[factory,[factory[0]-40,factory[1]],[factory[0]-40,depot[1]-40],[depot[0],depot[1]-40],depot];
+const bay=[depot[0]-12,depot[1]+6];
+const service=[factory,[factory[0]-40,factory[1]],[factory[0]-40,depot[1]-40],[bay[0],depot[1]-40],bay];
 const reverse = p => [...p].reverse();
 export const ROUTES = Object.freeze({
   'port-to-factory': delivery,
@@ -29,7 +30,7 @@ export const ROUTES = Object.freeze({
   'depot-to-factory': reverse(service),
   delivery: [...delivery, ...reverse(delivery).slice(1)],
   depot: [...service, ...reverse(service).slice(1)],
-  'depot-bay': [[depot[0]-12,depot[1]+6],[depot[0]-12,depot[1]+6]]
+  'depot-bay': [bay,bay]
 });
 const prepared = new Map(Object.entries(ROUTES).map(([id, points]) => {
   let total = 0;

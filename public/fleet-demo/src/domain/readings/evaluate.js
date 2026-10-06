@@ -5,7 +5,7 @@ import { assertTime, immutable, stableJSON, timestamp } from './shared.js';
 function fact(kind, vehicleId, ids, summary, details = {}, severity = 'review') {
   return { id: `${kind}:${vehicleId}:${ids.join(',')}`, kind, severity, vehicleId, evidenceReadingIds: ids, summary, details };
 }
-function compareId(a, b) { return a.id.localeCompare(b.id); }
+function compareId(a, b) { return a.id.localeCompare(b.id) || stableJSON(a).localeCompare(stableJSON(b)); }
 
 /** A deterministic projection, not a writer and not a historical service scheduler. */
 export function evaluateReadings({ readings = [], policies = [], exclusions = [], asOf, vehicles = [] }) {
@@ -16,7 +16,14 @@ export function evaluateReadings({ readings = [], policies = [], exclusions = []
   const rows = [...readings].sort(compareId);
   const duplicateConflicts = new Set();
   const unique = new Map();
+  const outsideScope = new Map();
   for (const row of rows) {
+    // Ingestion rejects identity conflicts globally. A historical odometer projection,
+    // however, cannot be poisoned by an unseen future receipt or another field.
+    if (row.field !== 'odometer' || timestamp(row.importedAt) > now) {
+      outsideScope.set(stableJSON(row), row);
+      continue;
+    }
     const existing = unique.get(row.id);
     if (existing) {
       const { importedAt: ignoredA, ...a } = existing;
@@ -25,8 +32,8 @@ export function evaluateReadings({ readings = [], policies = [], exclusions = []
       else if (timestamp(row.importedAt) < timestamp(existing.importedAt)) unique.set(row.id, row);
     } else unique.set(row.id, row);
   }
-  const prepared = [...unique.values()].map(row => {
-    const decision = { readingId: row.id, vehicleId: row.vehicleId, sourceId: row.sourceId, status: 'pending', reason: null, valueKm: null, observedAt: row.observedAt, importedAt: row.importedAt, exclusionIds: [] };
+  const prepared = [...unique.values(), ...outsideScope.values()].sort(compareId).map(row => {
+    const decision = { readingId: row.id, vehicleId: row.vehicleId, sourceId: row.sourceId, field: row.field, status: 'pending', reason: null, valueKm: null, observedAt: row.observedAt, importedAt: row.importedAt, exclusionIds: [] };
     if (row.field !== 'odometer') { decision.status = 'unsupported-field'; decision.reason = 'not-odometer'; }
     else if (!Number.isFinite(timestamp(row.importedAt)) || !Number.isFinite(timestamp(row.observedAt))) { decision.status = 'invalid'; decision.reason = 'invalid-reading-time'; }
     else if (timestamp(row.importedAt) > now) { decision.status = 'not-yet-imported'; decision.reason = 'outside-replay-cutoff'; }

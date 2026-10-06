@@ -9,7 +9,13 @@ export class EntityRegistry {
 }
 export function pickNearest(point, entities, project, maxDistance=24) {
   let best=null,distance=maxDistance;
-  for(const entity of entities){const p=project(entity);if(!p)continue;const d=Math.hypot(point.x-p.x,point.y-p.y);if(d<distance){best=entity.id;distance=d;}}
+  for(const entity of entities){if(entity.inspectable===false)continue;const p=project(entity);if(!p)continue;const d=Math.hypot(point.x-p.x,point.y-p.y);if(d<distance){best=entity.id;distance=d;}}
   return best;
 }
 export function cullProjected(entities,project,width,height,padding=80){return entities.filter(v=>{const p=project(v);return p&&p.x>=-padding&&p.y>=-padding&&p.x<=width+padding&&p.y<=height+padding;});}
+/** Facility inspection is local camera/selection state; unchanged 20Hz snapshots cannot erase it. */
+export class InspectionSelection {
+  constructor(facilityIds=[]){this.facilityIds=new Set(facilityIds);this.snapshotId=null;this.override=null;this.id=null;}
+  update(snapshotId){if(snapshotId!==this.snapshotId)this.override=null;this.snapshotId=snapshotId;this.id=this.override||snapshotId;return this.id;}
+  focus(id){this.override=this.facilityIds.has(id)?id:null;this.id=id;return this.id;}
+}

@@ -1,6 +1,38 @@
 import { evaluateReadings } from '../readings/evaluate.js';
 import { DomainError, assertTime, immutable, stableJSON } from '../readings/shared.js';
 
+/** Demo output budget: plain text only; limits are rejected, never silently truncated. */
+export const REVIEW_OUTPUT_LIMITS = Object.freeze({ findings: 20, labelChars: 160, summaryChars: 1200, suggestedActionChars: 600, evidenceIdsPerFinding: 32, evidenceIdChars: 128, totalTextChars: 16000 });
+const unsafeTextControls = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u202A-\u202E\u2066-\u2069]/;
+
+function reviewText(value, field, limit, errorCode = 'INVALID_REVIEW_OUTPUT') {
+  if (typeof value !== 'string' || !value.trim() || value.length > limit || unsafeTextControls.test(value)) {
+    throw new DomainError(errorCode, `${field} must be nonempty plain text within ${limit} characters, without hidden control characters.`);
+  }
+  return value;
+}
+
+function validateFindings(response, knownIds) {
+  if (!response || typeof response !== 'object' || Array.isArray(response) || !Array.isArray(response.findings) || response.findings.length > REVIEW_OUTPUT_LIMITS.findings) {
+    throw new DomainError('INVALID_REVIEW_OUTPUT', `Review must return at most ${REVIEW_OUTPUT_LIMITS.findings} findings.`);
+  }
+  let textChars = 0;
+  return Array.from(response.findings).map((finding, index) => {
+    if (!finding || typeof finding !== 'object' || Array.isArray(finding)) throw new DomainError('INVALID_REVIEW_OUTPUT', 'Every finding must be an object.');
+    const summary = reviewText(finding.summary, 'Finding summary', REVIEW_OUTPUT_LIMITS.summaryChars);
+    if (!Array.isArray(finding.evidenceReadingIds) || finding.evidenceReadingIds.length > REVIEW_OUTPUT_LIMITS.evidenceIdsPerFinding ||
+      Array.from(finding.evidenceReadingIds).some(id => typeof id !== 'string' || !id || id.length > REVIEW_OUTPUT_LIMITS.evidenceIdChars || unsafeTextControls.test(id) || !knownIds.has(id))) {
+      throw new DomainError('INVALID_REVIEW_OUTPUT', 'Evidence ids must be bounded strings identifying original raw readings.');
+    }
+    const suggestedAction = finding.suggestedAction == null ? null : reviewText(finding.suggestedAction, 'Suggested action', REVIEW_OUTPUT_LIMITS.suggestedActionChars);
+    textChars += summary.length + (suggestedAction?.length ?? 0);
+    if (textChars > REVIEW_OUTPUT_LIMITS.totalTextChars) throw new DomainError('INVALID_REVIEW_OUTPUT', 'Review text exceeds the total display budget.');
+    return { id: `review-${index + 1}`, severity: ['info', 'review', 'attention'].includes(finding.severity) ? finding.severity : 'review', summary,
+      confidence: ['low', 'medium', 'high'].includes(finding.confidence) ? finding.confidence : 'unknown',
+      evidenceReadingIds: [...new Set(finding.evidenceReadingIds)], suggestedAction };
+  });
+}
+
 /** Portable, credential-free input for a real reviewer. All example data is synthetic. */
 export function buildReviewInput(state, { asOf = state.asOf } = {}) {
   const evaluation = evaluateReadings({ ...state, asOf });
@@ -59,7 +91,13 @@ async function inputProvenance(input) {
 
 function provenanceMismatch(recordedProvenance, requestedProvenance) {
   const error = new DomainError('RECORDED_REVIEW_INPUT_MISMATCH', 'This recorded review belongs to a different input snapshot. Its findings cannot be shown as a current review.');
-  error.recordedProvenance = recordedProvenance;
+  error.recordedProvenance = recordedProvenance && typeof recordedProvenance === 'object' ? immutable({
+    inputHash: typeof recordedProvenance.inputHash === 'string' && recordedProvenance.inputHash.length <= 128 ? recordedProvenance.inputHash : null,
+    hashAlgorithm: recordedProvenance.hashAlgorithm === 'SHA-256' ? 'SHA-256' : null,
+    canonicalization: recordedProvenance.canonicalization === 'sorted-object-keys-v1' ? 'sorted-object-keys-v1' : null,
+    configVersion: Number.isSafeInteger(recordedProvenance.configVersion) ? recordedProvenance.configVersion : null,
+    asOf: typeof recordedProvenance.asOf === 'string' && recordedProvenance.asOf.length <= 64 ? recordedProvenance.asOf : null,
+  }) : null;
   error.requestedProvenance = requestedProvenance;
   return error;
 }
@@ -71,9 +109,10 @@ export function createRecordedReviewProvider({ label = 'Recorded review (not a l
   assertTime(input.asOf, 'Recorded review asOf');
   const originalInput = immutable(input);
   const originalCanonicalJSON = stableJSON(originalInput);
-  const recorded = immutable(review);
+  const recorded = immutable({ findings: validateFindings(review, new Set(originalInput.rawReadings.map(row => row.id))) });
   let provenancePromise;
-  return Object.freeze({ mode: 'recorded', label,
+  const validatedLabel = reviewText(label, 'Provider label', REVIEW_OUTPUT_LIMITS.labelChars, 'INVALID_REVIEW_PROVIDER');
+  return Object.freeze({ mode: 'recorded', label: validatedLabel,
     recording: immutable({ input: originalInput, configVersion: originalInput.configVersion, asOf: originalInput.asOf }),
     async review(requestedInput) {
       provenancePromise ??= inputProvenance(originalInput);
@@ -88,23 +127,23 @@ export function createRecordedReviewProvider({ label = 'Recorded review (not a l
 
 /** Provider receives a frozen data snapshot only, never state setters or credentials. */
 export async function reviewImports(state, provider = createSimulatedReviewProvider(), { asOf = state.asOf } = {}) {
-  if (!provider || typeof provider.review !== 'function' || !['simulated', 'recorded', 'live'].includes(provider.mode)) throw new DomainError('INVALID_REVIEW_PROVIDER', 'Review provider must declare its mode and review method.');
+  // Snapshot provider identity once, before any await: an adapter cannot relabel a response.
+  const mode = provider?.mode;
+  const reviewMethod = provider?.review;
+  if (typeof reviewMethod !== 'function' || !['simulated', 'recorded', 'live'].includes(mode)) throw new DomainError('INVALID_REVIEW_PROVIDER', 'Review provider must declare its mode and review method.');
+  const label = reviewText(provider.label ?? `${mode} review`, 'Provider label', REVIEW_OUTPUT_LIMITS.labelChars, 'INVALID_REVIEW_PROVIDER');
   const input = buildReviewInput(state, { asOf });
   const requestedProvenance = await inputProvenance(input);
-  const response = await provider.review(input);
+  const response = await reviewMethod.call(provider, input);
   if (!response || !Array.isArray(response.findings)) throw new DomainError('INVALID_REVIEW_OUTPUT', 'Review must return findings.');
-  if (provider.mode === 'recorded' && (!response.provenance || stableJSON(response.provenance) !== stableJSON(requestedProvenance))) {
+  if (mode === 'recorded' && (!response.provenance || Object.keys(requestedProvenance).some(key => response.provenance[key] !== requestedProvenance[key]))) {
     throw provenanceMismatch(response.provenance ?? null, requestedProvenance);
   }
-  const provenance = provider.mode === 'recorded' ? response.provenance : requestedProvenance;
+  // Exact validated metadata only; never forward extra provider-controlled provenance fields.
+  const provenance = requestedProvenance;
   const knownIds = new Set(input.rawReadings.map(r => r.id));
-  const findings = response.findings.map((finding, index) => {
-    if (typeof finding.summary !== 'string' || !Array.isArray(finding.evidenceReadingIds) || finding.evidenceReadingIds.some(id => !knownIds.has(id))) throw new DomainError('INVALID_REVIEW_OUTPUT', 'Every finding needs a summary and known evidence ids.');
-    return { id: `review-${index + 1}`, severity: ['info', 'review', 'attention'].includes(finding.severity) ? finding.severity : 'review', summary: finding.summary,
-      confidence: ['low', 'medium', 'high'].includes(finding.confidence) ? finding.confidence : 'unknown',
-      evidenceReadingIds: [...new Set(finding.evidenceReadingIds)], suggestedAction: typeof finding.suggestedAction === 'string' ? finding.suggestedAction : null };
-  });
+  const findings = validateFindings(response, knownIds);
   // Only an advisory envelope is returned. Unknown model fields, including commands, are discarded.
-  return immutable({ mode: provider.mode, label: String(provider.label || `${provider.mode} review`), advisoryOnly: true,
+  return immutable({ mode, label, advisoryOnly: true, textFormat: 'plain-text',
     notificationChannel: 'in-app', requiresHumanDecision: true, configVersion: provenance.configVersion, asOf: provenance.asOf, provenance, findings });
 }

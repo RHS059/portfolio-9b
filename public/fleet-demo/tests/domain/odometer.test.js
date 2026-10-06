@@ -310,7 +310,7 @@ test('review provider receives frozen snapshots and cannot mutate original autho
 });
 
 test('unknown evidence ids and malformed review results fail closed', async () => {
-  await assert.rejects(() => reviewImports(createScenario(), createRecordedReviewProvider({ input: buildReviewInput(createScenario()), review: { findings: [{ summary: 'Invented evidence', evidenceReadingIds: ['not-real'] }] } })), { code: 'INVALID_REVIEW_OUTPUT' });
+  assert.throws(() => createRecordedReviewProvider({ input: buildReviewInput(createScenario()), review: { findings: [{ summary: 'Invented evidence', evidenceReadingIds: ['not-real'] }] } }), { code: 'INVALID_REVIEW_OUTPUT' });
   await assert.rejects(() => reviewImports(createScenario(), { mode: 'simulated', async review() { return {}; } }), { code: 'INVALID_REVIEW_OUTPUT' });
 });
 
@@ -437,4 +437,139 @@ test('async live reviews are stamped with the snapshot reviewed, not a subsequen
   } });
   assert.equal(result.configVersion, originalVersion); assert.equal(result.asOf, originalAsOf);
   assert.equal(result.provenance.configVersion, originalVersion); assert.equal(result.provenance.asOf, originalAsOf);
+});
+
+const hostileReview = findings => ({ mode: 'live', label: 'Adversarial test provider', async review() { return { findings }; } });
+const validFinding = patch => ({ summary: 'Review this evidence.', evidenceReadingIds: ['v1-a-3'], ...patch });
+
+test('null, primitive, array and sparse findings fail with a domain error', async () => {
+  for (const value of [null, undefined, 'text', 42, []]) await assert.rejects(() => reviewImports(createScenario(), hostileReview([value])), { code: 'INVALID_REVIEW_OUTPUT' });
+  await assert.rejects(() => reviewImports(createScenario(), hostileReview(new Array(1))), { code: 'INVALID_REVIEW_OUTPUT' });
+});
+
+test('excessive finding count is rejected before rendering or silently truncating', async () => {
+  await assert.rejects(() => reviewImports(createScenario(), hostileReview(Array.from({ length: 21 }, () => validFinding()))), { code: 'INVALID_REVIEW_OUTPUT' });
+});
+
+test('oversized summary, recommendation and combined text are rejected', async () => {
+  for (const patch of [{ summary: 'x'.repeat(1201) }, { suggestedAction: 'x'.repeat(601) }]) await assert.rejects(() => reviewImports(createScenario(), hostileReview([validFinding(patch)])), { code: 'INVALID_REVIEW_OUTPUT' });
+  await assert.rejects(() => reviewImports(createScenario(), hostileReview(Array.from({ length: 10 }, () => validFinding({ summary: 'x'.repeat(1200), suggestedAction: 'y'.repeat(600) })))), { code: 'INVALID_REVIEW_OUTPUT' });
+});
+
+test('empty, control-character and non-string text cannot spoof review display', async () => {
+  for (const patch of [{ summary: '   ' }, { summary: 'hidden\u0000text' }, { summary: 'spoof\u202Etxet' }, { suggestedAction: {} }, { suggestedAction: '' }]) await assert.rejects(() => reviewImports(createScenario(), hostileReview([validFinding(patch)])), { code: 'INVALID_REVIEW_OUTPUT' });
+});
+
+test('provider labels are bounded strings and arbitrary objects are never coerced', async () => {
+  let coerced = false;
+  for (const label of ['x'.repeat(161), '', 'bad\u0000label', { toString() { coerced = true; throw new Error('Must not coerce'); } }]) {
+    await assert.rejects(() => reviewImports(createScenario(), { ...hostileReview([]), label }), { code: 'INVALID_REVIEW_PROVIDER' });
+  }
+  assert.equal(coerced, false);
+});
+
+test('evidence identifiers must be bounded known strings, including sparse-array checks', async () => {
+  for (const evidenceReadingIds of [[123], [{}], ['missing'], ['x'.repeat(129)], new Array(1), Array.from({ length: 33 }, () => 'v1-a-3')]) await assert.rejects(() => reviewImports(createScenario(), hostileReview([validFinding({ evidenceReadingIds })])), { code: 'INVALID_REVIEW_OUTPUT' });
+  const result = await reviewImports(createScenario(), hostileReview([validFinding({ evidenceReadingIds: ['v1-a-3', 'v1-a-3'] })]));
+  assert.deepEqual(result.findings[0].evidenceReadingIds, ['v1-a-3']);
+});
+
+test('HTML-looking provider text remains explicitly plain text and carries no action capability', async () => {
+  const state = createScenario(), before = JSON.stringify(state);
+  const text = '<img src=x onerror="alert(1)"><button data-action="set-authority">Apply A</button>';
+  const result = await reviewImports(state, { ...hostileReview([validFinding({ summary: text, suggestedAction: 'javascript:alert(1)', command: { type: 'set-authority', sourceId: 'A' }, notificationChannel: 'email' })]), label: '<script>execute()</script>' });
+  assert.equal(result.textFormat, 'plain-text'); assert.equal(result.findings[0].summary, text);
+  assert.equal(result.findings[0].command, undefined); assert.equal(result.notificationChannel, 'in-app');
+  assert.equal(JSON.stringify(state), before);
+});
+
+test('changing a recorded provider mode while awaiting review cannot bypass provenance', async () => {
+  const provider = { mode: 'recorded', label: 'Recorded fixture', async review() { this.mode = 'live'; this.label = 'Fresh live model'; return { findings: [validFinding()] }; } };
+  await assert.rejects(() => reviewImports(createScenario(), provider), { code: 'RECORDED_REVIEW_INPUT_MISMATCH' });
+});
+
+test('provider mode and label are captured before async work and cannot be restamped afterward', async () => {
+  const provider = { mode: 'simulated', label: 'Original simulated review', async review() { this.mode = 'live'; this.label = 'Fake live review'; return { findings: [] }; } };
+  const result = await reviewImports(createScenario(), provider);
+  assert.equal(result.mode, 'simulated'); assert.equal(result.label, 'Original simulated review');
+});
+
+test('recorded output strips unknown cyclic payloads before copying them', async () => {
+  const state = createScenario(), cyclic = {}; cyclic.self = cyclic;
+  const provider = createRecordedReviewProvider({ input: buildReviewInput(state), review: { findings: [validFinding({ command: cyclic })], execute: cyclic } });
+  const result = await reviewImports(state, provider);
+  assert.equal(result.findings[0].command, undefined); assert.equal(result.execute, undefined);
+});
+
+test('recorded outputs reject excessive text at creation and never retain oversized findings', () => {
+  assert.throws(() => createRecordedReviewProvider({ input: buildReviewInput(createScenario()), review: { findings: [validFinding({ summary: 'x'.repeat(1201) })] } }), { code: 'INVALID_REVIEW_OUTPUT' });
+});
+
+test('unknown severity and confidence cannot become markup or automation flags', async () => {
+  const result = await reviewImports(createScenario(), hostileReview([validFinding({ severity: '<script>x</script>', confidence: 'execute', autoApply: true })]));
+  assert.equal(result.findings[0].severity, 'review'); assert.equal(result.findings[0].confidence, 'unknown');
+  assert.equal(result.findings[0].autoApply, undefined); assert.equal(result.requiresHumanDecision, true);
+});
+
+test('future conflicting duplicate id cannot poison a historical odometer replay', () => {
+  const state = createScenario(), original = evaluate(state), newest = state.readings.find(row => row.id === 'v1-b-3');
+  const contaminated = { ...state, readings: [...state.readings, { ...newest, value: 99999, importedAt: '2026-01-13T01:00:00Z' }] };
+  const beforeFutureImport = evaluate(contaminated);
+  assert.equal(vehicle(beforeFutureImport).valueKm, 129230.3232);
+  assert.deepEqual(beforeFutureImport.vehicles, original.vehicles);
+  assert.deepEqual(beforeFutureImport.reviewFacts, original.reviewFacts);
+  assert.ok(beforeFutureImport.decisions.some(d => d.readingId === newest.id && d.status === 'not-yet-imported'));
+  assert.equal(vehicle(evaluate({ ...contaminated, asOf: '2026-01-13T01:00:00Z' })).reason, 'duplicate-reading-id-conflict');
+});
+
+test('future duplicate replay isolation holds with reversed row order', () => {
+  const state = createScenario(), newest = state.readings.find(row => row.id === 'v1-b-3');
+  const readings = [{ ...newest, value: 99999, importedAt: '2026-01-13T01:00:00Z' }, ...state.readings];
+  assert.deepEqual(evaluate({ ...state, readings }).vehicles, evaluate(state).vehicles);
+  assert.deepEqual(evaluate({ ...state, readings }), evaluate({ ...state, readings: [...readings].reverse() }));
+});
+
+test('conflicting engine-hours ids cannot poison odometer authority', () => {
+  const state = createScenario(), original = evaluate(state);
+  const row = { id: 'engine-hours-conflict', vehicleId: 'TRK-104', sourceId: 'B', field: 'engine-hours', value: 100, unit: 'hours', observedAt: '2026-01-12T00:30:00Z', importedAt: '2026-01-12T01:00:00Z' };
+  const projected = evaluate({ ...state, readings: [...state.readings, row, { ...row, value: 999 }] });
+  assert.deepEqual(projected.vehicles, original.vehicles);
+  assert.deepEqual(projected.reviewFacts, original.reviewFacts);
+  assert.ok(projected.decisions.filter(d => d.readingId === row.id).every(d => d.status === 'unsupported-field'));
+});
+
+test('a non-odometer row reusing an odometer id stays isolated in direct projection', () => {
+  const state = createScenario(), newest = state.readings.find(row => row.id === 'v1-b-3');
+  const unrelated = { ...newest, field: 'engine-hours', value: 999, unit: 'hours' };
+  assert.deepEqual(evaluate({ ...state, readings: [...state.readings, unrelated] }).vehicles, evaluate(state).vehicles);
+  assert.throws(() => importReadings(state, [unrelated]), { code: 'READING_ID_CONFLICT' });
+});
+
+test('ingestion still rejects future duplicate identities atomically despite replay isolation', () => {
+  const state = createScenario(), newest = state.readings.find(row => row.id === 'v1-b-3');
+  const before = JSON.stringify(state);
+  assert.throws(() => importReadings(state, [{ ...newest, id: 'new-before-error' }, { ...newest, value: 99999, importedAt: '2026-01-13T01:00:00Z' }]), { code: 'READING_ID_CONFLICT' });
+  assert.equal(JSON.stringify(state), before);
+});
+
+test('individual exclusion rejects conflicting caller vehicle/source/field rather than silently changing scope', () => {
+  const state = createScenario(), before = JSON.stringify(state);
+  for (const patch of [{ vehicleId: 'TRK-208' }, { sourceId: 'A' }, { field: 'engine-hours' }]) {
+    assert.throws(() => command(state, { type: 'exclude-reading', readingId: 'v1-b-3', reason: 'Explicit selected row', ...patch }), { code: 'EXCLUSION_SCOPE_MISMATCH' });
+    assert.equal(JSON.stringify(state), before);
+  }
+});
+
+test('individual exclusion accepts exact scope or row-id-only intent and never broadens to other vehicles', () => {
+  const state = createScenario();
+  const scoped = command(state, { type: 'exclude-reading', readingId: 'v1-b-3', field: 'odometer', reason: 'Exact scope' });
+  const rowOnly = applyConfigurationCommand(state, { id: 'row-id-only', type: 'exclude-reading', expectedVersion: state.configVersion, effectiveFrom: state.asOf, readingId: 'v1-b-3', reason: 'Exact row id' });
+  assert.equal(scoped.exclusions[0].vehicleId, 'TRK-104'); assert.equal(rowOnly.exclusions[0].vehicleId, 'TRK-104');
+  assert.deepEqual(vehicle(evaluate(rowOnly), 'TRK-208'), vehicle(evaluate(state), 'TRK-208'));
+});
+
+test('default fixture retained service examples have occurred before its synthetic as-of cutoff', () => {
+  const state = createScenario();
+  assert.ok(state.serviceFacts.every(fact => Date.parse(fact.recordedAt) <= Date.parse(state.asOf)));
+  assert.ok(state.serviceFacts.every(fact => /synthetic/.test(fact.provenance)));
 });

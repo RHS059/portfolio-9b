@@ -63,6 +63,9 @@ export function applyConfigurationCommand(state, command) {
       nonempty(command.readingId, 'Reading id');
       const reading = state.readings.find(r => r.id === command.readingId);
       if (!reading) throw new DomainError('UNKNOWN_READING', 'Cannot exclude an unknown raw reading.');
+      for (const key of ['vehicleId', 'sourceId', 'field']) {
+        if (command[key] !== undefined && command[key] !== reading[key]) throw new DomainError('EXCLUSION_SCOPE_MISMATCH', `The supplied ${key} does not match the selected raw reading.`);
+      }
       // A row exclusion is always pinned to its exact original source, vehicle and field.
       Object.assign(rule, { readingId: reading.id, sourceId: reading.sourceId, vehicleId: reading.vehicleId, field: reading.field });
     } else {
