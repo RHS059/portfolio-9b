@@ -40,7 +40,7 @@ try{
    phase=`facility-${id}`;await page.locator(`[data-focus="${id}"]`).click();await page.waitForTimeout(750);await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:20000});await page.screenshot({path:path.join(out,`facility-${id}.png`),fullPage:true});
    if(id==='oict'&&process.env.REQUIRE_MAPPED_PORT==='1'){
      evidence.portOverview=await page.evaluate(()=>window.__fleetDemo.getMetrics());assert.equal(evidence.portOverview.portStatus,'mapped');
-     const box=await page.locator('.maplibregl-canvas').boundingBox();await page.mouse.move(box.x+box.width*.5,box.y+box.height*.5);await page.mouse.wheel(0,-600);await page.waitForTimeout(1000);
+     const box=await page.locator('.maplibregl-canvas').boundingBox();await page.mouse.move(box.x+box.width*.5,box.y+box.height*.5);for(let step=0;step<6;step++){if(await page.evaluate(()=>window.__fleetDemo.getMetrics().portDetailLevel==='detail'))break;await page.mouse.wheel(0,-600);await page.waitForTimeout(850);}
      await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.portDetailLevel==='detail'&&m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:20000});
      evidence.portDetail=await page.evaluate(()=>window.__fleetDemo.getMetrics());await page.screenshot({path:path.join(out,'facility-oict-detail.png'),fullPage:true});evidence.checks.push('Mapped terminal footprint loads and switches to individual containers at inspection scale');
    }
