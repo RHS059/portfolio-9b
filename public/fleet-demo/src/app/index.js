@@ -157,7 +157,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
       else{dispose();}
     });
     on(window,'pageshow',event=>{if(event.persisted&&suspendedPauseState!==null){sim?.setPaused(suspendedPauseState);suspendedPauseState=null;scene?.resize();render();}});
-    debugAPI={getState:()=>({intro,mode,stage,selectedVehicleId,view,follow,scenario,evaluation,review,simulation:sim.getState()}),getMetrics:()=>scene?.getMetrics?.(),version:'fleet-demo/v1'};window.__fleetDemo=debugAPI;
+    debugAPI={getState:()=>({intro,mode,stage,selectedVehicleId,view,follow,scenario,evaluation,review,simulation:sim.getState()}),getMetrics:()=>scene?.getMetrics?.(),seekScene:timeSeconds=>{if(disposed)return;sim.seek(timeSeconds);render();},version:'fleet-demo/v1'};window.__fleetDemo=debugAPI;
   }
   const controller={ready:main().catch(error=>{dispose();throw error;}),dispose};
   mountedControllers.set(root,controller);

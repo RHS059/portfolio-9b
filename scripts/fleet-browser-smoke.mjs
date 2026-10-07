@@ -3,6 +3,7 @@ import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
+import {routeDistance} from '../public/fleet-demo/src/render/map/world.js';
 import {createRequire} from 'node:module';
 const require=createRequire(path.join(process.env.PLAYWRIGHT_PACKAGE || '/tmp/fleet-browser','package.json'));
 const {chromium}=require('playwright');
@@ -44,6 +45,15 @@ try{
    if(id==='centerpoint'){
      await page.waitForFunction(()=>window.__fleetDemo.getMetrics().factoryDetailLevel==='detail');evidence.factoryDetail=await page.evaluate(()=>window.__fleetDemo.getMetrics());assert.ok(evidence.factoryDetail.factoryAssemblyState.length>0);assert.ok(evidence.factoryDetail.factoryAssemblyState.every(cell=>cell.progress===0),'Assembly stays idle without an explicit process snapshot');
      await page.screenshot({path:path.join(out,'factory-detail.png'),fullPage:true});evidence.checks.push('Factory detail is visible and assembly stays idle without process input');
+     const wasPaused=(await state()).simulation.paused;if(!wasPaused)await page.locator('#pause').click();
+     const approachProgress=routeDistance('port-to-factory',1)/routeDistance('delivery',1)-.000001,approachTime=((approachProgress-.59+1)%1)/.006;
+     await page.evaluate(time=>window.__fleetDemo.seekScene(time),approachTime);await page.waitForTimeout(120);await page.screenshot({path:path.join(out,'factory-approach-close.png'),fullPage:true});
+     const factoryBox=await page.locator('.maplibregl-canvas').boundingBox();await page.mouse.move(factoryBox.x+factoryBox.width*.5,factoryBox.y+factoryBox.height*.5);
+     for(let step=0;step<6;step++){if(await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState.zoom<=15.3))break;await page.mouse.wheel(0,550);await page.waitForTimeout(750);}
+     await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.mapTilesLoaded&&!m.cameraMoving&&m.viewState.zoom<=15.3&&m.vehicleDetail.visible===0;},undefined,{timeout:20000});
+     evidence.factoryOverview=await page.evaluate(()=>window.__fleetDemo.getMetrics());await page.screenshot({path:path.join(out,'factory-approach-overview.png'),fullPage:true});
+     await page.locator('[data-focus="centerpoint"]').click();if(!wasPaused)await page.locator('#pause').click();evidence.checks.push('Factory approach is exercised in close and overview LOD with the scene clock paused');
+
    }
    if(id==='oict'&&process.env.REQUIRE_MAPPED_PORT==='1'){
      evidence.portOverview=await page.evaluate(()=>window.__fleetDemo.getMetrics());assert.equal(evidence.portOverview.portStatus,'mapped');
