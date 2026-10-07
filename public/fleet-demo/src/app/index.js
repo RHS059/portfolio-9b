@@ -4,6 +4,7 @@ import {createSimulation} from '../core/simulation.js';
 import {sampleCargoProcess,CARGO_PRESENTATION_OFFSET_SECONDS} from '../core/cargo-process.js';
 import {sampleOrdinaryTraffic} from '../render/map/cargo-routes.js';
 import {STORY_SCENES,STORY_DURATION,sampleStory,sceneTime,sampleMileage,sampleCost} from './story-timeline.js';
+import {floatingPlaybackBottom} from './mobile-playback-placement.js';
 import {createStoryTextTransition} from './story-text-transition.js';
 import {reviewFixture} from './review-adapter.js';
 import {createProvenancePanel as createFallbackPanel} from './fallback-provenance.js';
@@ -39,6 +40,15 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   }
   function evaluate(){evaluation=domain.replayReadings(scenario,{asOf:scenario.asOf});}
   function setPaused(paused){sim?.setPaused(paused);renderPlayback();}
+  function positionMobilePlayback(){
+    const control=$('#mobile-pause'),advance=$('#story-advance-controls');
+    if(!control||!advance||typeof globalThis.getComputedStyle!=='function')return;
+    control.style.removeProperty('--mobile-playback-bottom');
+    const computed=getComputedStyle(control);if(computed.display==='none'||computed.position!=='fixed')return;
+    const rect=control.getBoundingClientRect(),region=advance.getBoundingClientRect();
+    const bottom=floatingPlaybackBottom({viewportHeight:doc.documentElement.clientHeight||window.innerHeight,bottom:Number.parseFloat(computed.bottom)||14,height:rect.height,left:rect.left,right:rect.right,region});
+    control.style.setProperty('--mobile-playback-bottom',`${bottom}px`);
+  }
   function renderPlayback(){
     const paused=sim?.getState().paused??true;$('.workspace').dataset.playing=String(!paused);
     $('#mobile-pause').textContent=paused?'▶ Play story':'Ⅱ Pause story';$('#mobile-pause').setAttribute('aria-label',paused?'Play story':'Pause story');$('#mobile-pause').setAttribute('aria-pressed',String(!paused));$('#mobile-pause').disabled=!ready;
@@ -47,6 +57,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     $('#start-story').disabled=!ready||stage===STORY_SCENES.length-1;$('#start-story-manual').disabled=!ready||stage===STORY_SCENES.length-1;$('#pause').disabled=!ready;$('#story-progress').disabled=!ready;
     $$('[data-scene-index], [data-view], [data-focus], #overview, #follow').forEach(button=>{button.disabled=!ready;});
     $('#playback-status').textContent=exploring?(paused?'Manual view · paused':'Manual view · playing'):story.complete?'End of story':paused?(reducedMotion.matches?'Paused · reduced motion':'Paused · explore at your pace'):'Autoplay · pause anytime';
+    positionMobilePlayback();
   }
   function applySceneCamera(){
     if(exploring)return;
@@ -70,7 +81,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     $('#open-source-controls').hidden=beatIndex!==6;$('#run-story-review').hidden=beatIndex!==7;
     const takeaways={6:'<strong>90% faster</strong><p>Data issue resolution went from weeks to hours.</p>'};
     $('#chapter-takeaway').innerHTML=takeaways[beatIndex]||'';
-    const body=$('#sidebar-story-body');if(body.dataset.scene!==beat.id){body.scrollTop=0;body.dataset.scene=beat.id;}
+    const body=$('#sidebar-story-body');if(body.dataset.scene!==beat.id){body.scrollTop=0;body.dataset.scene=beat.id;}positionMobilePlayback();
     });
     $('#story-position').textContent=`${String(stage+1).padStart(2,'0')} / 09 · ${story.label}`;
     $('#previous-chapter').disabled=!ready||stage===0;
@@ -151,9 +162,10 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     $('#source-dialog').hidden=true;$('.workspace').dataset.dialogOpen='false';
     // One mobile control stays reachable until the full playback control is on screen.
     if(typeof IntersectionObserver==='function'){
-      const observer=new IntersectionObserver(entries=>{if(disposed)return;const entry=entries.find(item=>item.target===$('#pause'));if(entry)$('.workspace').dataset.playbackVisible=String(entry.isIntersecting&&entry.intersectionRatio>=.5);},{threshold:[0,.5,1]});
+      const observer=new IntersectionObserver(entries=>{if(disposed)return;const entry=entries.find(item=>item.target===$('#pause'));if(entry){$('.workspace').dataset.playbackVisible=String(entry.isIntersecting&&entry.intersectionRatio>=.5);positionMobilePlayback();}},{threshold:[0,.5,1]});
       observer.observe($('#pause'));cleanups.push(()=>observer.disconnect());
     }
+    on(window,'scroll',positionMobilePlayback,{passive:true});
     $('#scene-steps').innerHTML=STORY_SCENES.map(item=>`<button type="button" data-scene-index="${item.index}" aria-label="Scene ${item.index+1}: ${item.label}" title="${item.label}">${String(item.index+1).padStart(2,'0')}</button>`).join('');
     $('#story-progress').max=String(STORY_DURATION);
     on($('#start-story'),'click',()=>{if(!ready||stage>=STORY_SCENES.length-1)return;setChapter(stage+1);setPaused(false);});on($('#start-story-manual'),'click',()=>{if(ready&&stage<STORY_SCENES.length-1)setChapter(stage+1);});on($('#previous-chapter'),'click',()=>setChapter(stage-1));on($('#next-chapter'),'click',()=>setChapter(stage+1));
@@ -195,7 +207,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     }catch(error){if(disposed)return;if($('#scene-loading'))$('#scene-loading').textContent=`Scene unavailable: ${error.message}. Story playback and source controls are still usable.`;}
     if(disposed)return;ready=true;
     sim=createSimulation({onTick:syncClock});sim.setPaused(true);render();
-    on(window,'resize',()=>scene?.resize());
+    on(window,'resize',()=>{scene?.resize();positionMobilePlayback();});
     let suspendedPauseState=null;
     on(window,'pagehide',event=>{if(event.persisted){suspendedPauseState=sim?.getState().paused??true;setPaused(true);}else dispose();});
     on(window,'pageshow',event=>{if(event.persisted&&suspendedPauseState!==null){setPaused(suspendedPauseState);suspendedPauseState=null;scene?.resize();render();}});
