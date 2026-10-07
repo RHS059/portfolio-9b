@@ -75,14 +75,32 @@ check('port LOD selects one bounded representation and does not mutate mapped in
   group.userData.update?.(Object.freeze({timeSeconds:9999,issueActive:true,authorityResolved:false}));assert.equal(JSON.stringify(geography),before);assert.ok(Object.isFrozen(layout.rows));
 }));
 
-check('mapped port has no opaque ground pad or invented low-level water-covering surface',()=>withPort(group=>{
-  group.traverse(mesh=>{
+// Articulated hardware is authored around its own origin. Test the rendered pose,
+// including every parent transform and visibility, rather than unplaced mesh data.
+function lowVisibleSurfaceCandidates(group){
+  group.updateWorldMatrix(true,true);const candidates=[],vertex=new THREE.Vector3();
+  group.traverseVisible(mesh=>{
     if(!mesh.isMesh||mesh.isInstancedMesh)return;
     const position=mesh.geometry.getAttribute('position');let maxZ=-Infinity,minZ=Infinity;
-    for(let i=0;i<position.count;i++){minZ=Math.min(minZ,position.getZ(i));maxZ=Math.max(maxZ,position.getZ(i));}
-    assert.ok(!(minZ<=.5&&maxZ<=.5),`${mesh.name} is an opaque ground-plane candidate`);
+    for(let i=0;i<position.count;i++){vertex.fromBufferAttribute(position,i).applyMatrix4(mesh.matrixWorld);minZ=Math.min(minZ,vertex.z);maxZ=Math.max(maxZ,vertex.z);}
+    if(minZ<=.5&&maxZ<=.5)candidates.push(mesh.name);
   });
+  return candidates;
+}
+
+check('mapped port has no opaque ground pad or invented low-level water-covering surface',()=>withPort(group=>{
+  assert.deepEqual(lowVisibleSurfaceCandidates(group),[],'Visible world-space opaque ground-plane candidate');
 }));
+
+check('ground-surface guard rejects transformed low planes and ignores only elevated or hidden geometry',()=>{
+  const root=new THREE.Group(),parent=new THREE.Group(),mesh=new THREE.Mesh(new THREE.PlaneGeometry(200,100),new THREE.MeshBasicMaterial());mesh.name='forbidden-water-cover';parent.add(mesh);root.add(parent);
+  try{
+    assert.deepEqual(lowVisibleSurfaceCandidates(root),['forbidden-water-cover']);
+    parent.position.z=34;assert.deepEqual(lowVisibleSurfaceCandidates(root),[],'Elevated hoist geometry must use its world elevation');
+    mesh.position.z=10;parent.position.z=-10;assert.deepEqual(lowVisibleSurfaceCandidates(root),['forbidden-water-cover'],'Nested transforms can move locally elevated geometry onto the ground');
+    parent.visible=false;assert.deepEqual(lowVisibleSurfaceCandidates(root),[]);parent.visible=true;assert.deepEqual(lowVisibleSurfaceCandidates(root),['forbidden-water-cover'],'Revealing a pooled object must restore the guard');
+  }finally{release(root);}
+});
 
 check('facility adapter forwards mapped geography exactly once and keeps depot/factory local',()=>{
   const root=createFacilities({THREE,geography:{oict:geography}});

@@ -33,13 +33,26 @@ export function createForklift({THREE}){
 
 export function createRollerAMR({THREE}){
  const T=THREE,b=createFactoryGeometry(T),root=new T.Group();root.name='factory-roller-amr';
- b.box(.58,.80,.25,0,0,.19,'paper');b.box(.61,.83,.06,0,0,.08,'dark');b.box(.59,.81,.08,0,0,.33,'face');
- for(const x of[-.24,.24])for(const y of[-.27,.27])b.cylinder(.07,.05,x,y,.07,'ink',[0,0,Math.PI/2],12);
- b.box(.48,.64,.40,0,0,.57,'face');for(const x of[-.39,.39])b.box(.07,1.2,.14,x,0,.89,'dark');
+ const rounded=(width,depth,height,z,r,tone)=>{const x=width/2,y=depth/2,shape=new T.Shape();shape.moveTo(-x+r,-y);shape.lineTo(x-r,-y);shape.quadraticCurveTo(x,-y,x,-y+r);shape.lineTo(x,y-r);shape.quadraticCurveTo(x,y,x-r,y);shape.lineTo(-x+r,y);shape.quadraticCurveTo(-x,y,-x,y-r);shape.lineTo(-x,-y+r);shape.quadraticCurveTo(-x,-y,-x+r,-y);b.add(new T.ExtrudeGeometry(shape,{depth:height,bevelEnabled:false,curveSegments:3,steps:1}),[0,0,z],[0,0,0],[1,1,1],tone);};
+ rounded(.66,.90,.055,.07,.10,'dark');rounded(.62,.84,.22,.125,.08,'paper');rounded(.60,.82,.035,.345,.07,'face');
+ // Open lift columns and cross-braces make the mobile base distinct from its roller top module.
+ for(const x of[-.23,.23])for(const y of[-.28,.28])b.box(.055,.055,.47,x,y,.60,'muted');
+ for(const x of[-.23,.23]){b.link([x,-.28,.39],[x,.28,.81],.025,.025,'dark');b.link([x,.28,.39],[x,-.28,.81],.025,.025,'dark');}
+ for(const x of[-.39,.39])b.box(.07,1.2,.14,x,0,.89,'dark');
  for(let y=-.52;y<=.53;y+=.13)b.cylinder(.055,.73,0,y,.92,'muted',[0,0,Math.PI/2],10);
- b.box(.12,.20,.10,0,.46,.36,'dark');b.cylinder(.055,.06,0,-.40,.24,'ink',[Math.PI/2,0,0]);
+ // Front scan window, corner sensing apertures, service panel and top emergency-stop form.
+ b.ellipsoid(.095,.065,.055,0,.425,.225,'ink');
+ for(const x of[-.22,.22])b.cylinder(.035,.022,x,.422,.23,'dark',[0,0,0]);
+ b.box(.28,.012,.12,0,-.425,.23,'face');b.box(.20,.014,.022,0,-.434,.23,'muted');b.cylinder(.025,.024,.20,-.25,.387,'dark');
+ const wheels=[];
+ for(const x of[-.31,.31]){const g=createFactoryGeometry(T);g.cylinder(.11,.075,0,0,0,'ink',[0,0,Math.PI/2],16);g.cylinder(.065,.078,0,0,0,'face',[0,0,Math.PI/2],12);g.box(.081,.13,.018,0,0,0,'dark');const wheel=g.finish('amr-drive-wheel');wheel.position.set(x,0,.11);root.add(wheel);wheels.push(wheel);}
+ for(const x of[-.22,.22])for(const y of[-.30,.30])b.cylinder(.05,.032,x,y,.055,'ink',[0,0,Math.PI/2],10);
  root.add(b.finish('amr-roller-platform'));const payloadMount=new T.Group();payloadMount.name='amr-payload-mount';payloadMount.position.set(0,0,.975);root.add(payloadMount);
- root.userData={kind:'roller-amr',illustrative:true,payloadMount,transferHeight:.975,dimensions:{width:.86,length:1.2,height:.975},dispose(){}};return root;
+ let disposed=false;
+ root.userData={kind:'roller-amr',illustrative:true,payloadMount,transferHeight:.975,dimensions:{width:.86,length:1.2,height:.975},
+  update({travelMeters=0}={}){if(disposed)return;for(const wheel of wheels)wheel.rotation.x=Number.isFinite(travelMeters)&&travelMeters!==0?-travelMeters/.11:0;},
+  dispose(){disposed=true;}
+ };root.userData.update();return root;
 }
 
 export function createPallet({THREE}){
