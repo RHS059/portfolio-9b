@@ -35,7 +35,7 @@ The pure `samplePortTransfer(from,to,progress)` export resolves the same transpo
 
 ### Preferred shared cargo renderer
 
-`createPalletCargo(THREE)` from `process-assets.js` creates the same closed transport mesh with pallet-bottom origin. A3 may retain/reparent a single mesh per domain cargo ID across ship → crane → flatbed → forklift.
+`createPalletCargo(THREE)` from `process-assets.js` creates the same closed transport mesh with pallet-bottom origin. The renderer may retain/reparent a single mesh per domain cargo ID across ship → crane → flatbed → forklift.
 
 Call `port.userData.setCargoRenderer('external')` when the renderer owns those meshes. The port then still poses the cranes and exposes resolved poses, but hides every local cargo copy. `setCargoRenderer('local')` supports isolated asset QA and ownership-specific rendering. Never activate both visible representations.
 

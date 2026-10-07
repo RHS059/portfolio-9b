@@ -38,7 +38,7 @@ The existing `createDetailedVehicle({THREE,kind,trailerAttached=true})` and `det
 - `detailedTrailerWheelLayout()`: trailer-local axle/tire centers, with tandem axles at Y−8.28 and −9.58
 - `DETAIL_MODEL_METADATA.boxTrailer` and `.flatbedTrailer`: full bounds, contacts, anchors and a pick anchor. The constructor also exposes immutable metadata as `.metadata` and on `group.userData`
 
-The standalone trailer origin is the kingpin's XY ground projection, +Y forward / +Z up. Its body is translated −1.28 m in Y from the legacy assembled truck coordinates. A3 owns the path and articulation solver: transform the tractor fifth-wheel into world space, then place the independently rotated trailer so its kingpin meets that exact world point. There is no following delay, motion timer, cargo ownership state or hidden hitch animation in this asset module. Supply separate absolute traveled distances to tractor and trailer for correct independent wheel motion.
+The standalone trailer origin is the kingpin's XY ground projection, +Y forward / +Z up. Its body is translated −1.28 m in Y from the legacy assembled truck coordinates. The renderer owns the path and articulation solver: transform the tractor fifth-wheel into world space, then place the independently rotated trailer so its kingpin meets that exact world point. There is no following delay, motion timer, cargo ownership state or hidden hitch animation in this asset module. Supply separate absolute traveled distances to tractor and trailer for correct independent wheel motion.
 
 Exact trailer-local empty envelopes (Float32 tolerance 0.00001 m):
 
@@ -56,7 +56,7 @@ The canonical rear load mount is `slots[0].support = [0,-10.38,1.33]`. Each slot
 
 Pallet yaw 0° or 90° (and their half-turn equivalents) fits every declared slot. At the canonical rear slot, rear clearance is .65 m at yaw 0° and .55 m at yaw 90°. Preserve the payload's world transform across ownership reparenting, then deliberately compose any required local yaw. Do not rotate the pallet merely because its owner changed. `pickBounds` are nominal unrotated cargo-local extents around the support point and must be transformed with cargo yaw when picking.
 
-The trailer creates no cargo mesh. A3 can use the port asset's `createPalletCargo(THREE)` and retain/reparent the same mesh for the same cargo ID. Hide any old owner representation before exposing the new one. Actual ray tests show an unobstructed path from above to the support plane over every slot: crane cargo cannot pass through a hidden trailer roof.
+The trailer creates no cargo mesh. The renderer can use the port asset's `createPalletCargo(THREE)` and retain/reparent the same mesh for the same cargo ID. Hide any old owner representation before exposing the new one. Actual ray tests show an unobstructed path from above to the support plane over every slot: crane cargo cannot pass through a hidden trailer roof.
 
 With tractor roots `[-56,-56.5,.15]` and `[-40,-56.5,.15]`, both headings π, the canonical loaded support becomes `[bayX,-47.4,1.48]`. The flatbed rear remains at or south of Y−46.1675; the box rear reaches Y−46.111. Both remain outside the factory's south wall Y−45.
 
