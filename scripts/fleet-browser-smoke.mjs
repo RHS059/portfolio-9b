@@ -19,15 +19,29 @@ try{
  page.on('pageerror',error=>evidence.errors.push(String(error)));
  page.on('console',msg=>{if(['warning','warn','error'].includes(msg.type()))evidence.console.push({level:msg.type(),text:msg.text(),phase,url:page.url(),location:msg.location(),at:new Date().toISOString()});});
  await page.goto(url,{waitUntil:'domcontentloaded'});
- await page.waitForFunction(()=>{const m=window.__fleetDemo?.getMetrics?.();return m?.ready&&m.mapTilesLoaded;},undefined,{timeout:30000});
+ await page.waitForFunction(()=>{const m=window.__fleetDemo?.getMetrics?.();return m?.ready&&!m.initializing&&m.mapTilesLoaded&&m.camera?.focus==='depot'&&!m.cameraMoving;},undefined,{timeout:30000});
  if(process.env.REQUIRE_FACILITIES==='1')await page.waitForFunction(()=>window.__fleetDemo.getMetrics().facilitiesLoaded,undefined,{timeout:15000});
  await page.waitForTimeout(800);
- await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded;},undefined,{timeout:30000});
+ await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:30000});
  phase='initial-scene';await page.screenshot({path:path.join(out,'01-desktop-initial.png'),fullPage:true});
  const state=()=>page.evaluate(()=>window.__fleetDemo.getState());
  for(const id of ['depot','oict','centerpoint']){phase=`facility-${id}`;await page.locator(`[data-focus="${id}"]`).click();await page.waitForTimeout(750);await page.waitForFunction(()=>window.__fleetDemo.getMetrics().mapTilesLoaded,undefined,{timeout:20000});await page.screenshot({path:path.join(out,`facility-${id}.png`),fullPage:true});}
  await page.locator('[data-focus="depot"]').click();
+ phase='manual-camera';
+ const sceneBox=await page.locator('.maplibregl-canvas').boundingBox();
+ const mx=sceneBox.x+sceneBox.width*.72,my=sceneBox.y+sceneBox.height*.62;
+ await page.mouse.move(mx,my);await page.mouse.down();await page.mouse.move(mx+80,my+40,{steps:8});await page.mouse.up();
+ await page.waitForFunction(()=>!window.__fleetDemo.getMetrics().cameraMoving);
+ await page.screenshot({path:path.join(out,'06-pan-alignment.png'),fullPage:true});
+ await page.mouse.move(mx,my);await page.mouse.down({button:'right'});await page.mouse.move(mx-65,my+30,{steps:8});await page.mouse.up({button:'right'});
+ await page.waitForFunction(()=>!window.__fleetDemo.getMetrics().cameraMoving);
+ await page.screenshot({path:path.join(out,'07-orbit-alignment.png'),fullPage:true});
+ evidence.checks.push('manual map pan and orbit remain usable with scene overlay');
+ await page.locator('#reset').click();
+ await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;});
+
  phase='source-workflow';const initial=await state();
+ const initialView=await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState);assert.ok(initialView.zoom>17,'Opening must actually frame the workshop');
  assert.equal(initial.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').status,'unresolved');
  assert.equal(initial.evaluation.vehicles.find(v=>v.vehicleId==='TRK-208').sourceId,'A');
  const raw=JSON.stringify(initial.scenario.readings),services=JSON.stringify(initial.scenario.serviceFacts);
@@ -71,8 +85,9 @@ assert.equal(await page.evaluate(()=>document.querySelector('#project-info').get
  evidence.checks.push('390px responsive layout stacks metadata below scene without overlap or horizontal overflow');
  await page.setViewportSize({width:1600,height:1000});
  const beforeLoss=await state();
- for(const selector of ['.fleet-three-overlay','.maplibregl-canvas']){
+ for(const selector of ['.fleet-three-overlay','.maplibregl-canvas','.maplibregl-canvas']){
    phase=`${selector}-context-loss`;
+   const viewBefore=await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState);
    const available=await page.evaluate(selector=>{const canvas=document.querySelector(selector);if(!canvas)return false;const gl=canvas.getContext('webgl2')||canvas.getContext('webgl');const ext=gl?.getExtension('WEBGL_lose_context');if(!ext)return false;window.__fleetTestContextExtension=ext;ext.loseContext();return true;},selector);
    assert.equal(available,true,`Context-loss extension required for ${selector}`);
    await page.waitForFunction(()=>window.__fleetDemo.getMetrics().contextLost,undefined,{timeout:10000});
@@ -80,6 +95,8 @@ assert.equal(await page.evaluate(()=>document.querySelector('#project-info').get
    await page.screenshot({path:path.join(out,selector.includes('three')?'04-overlay-context-loss.png':'04-map-context-loss.png'),fullPage:true});
    phase=`${selector}-context-recovery`;await page.evaluate(()=>window.__fleetTestContextExtension.restoreContext());
    await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return !m.contextLost&&m.ready&&m.renderer.includes('Three');},undefined,{timeout:15000});
+   const viewAfter=await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState);
+   assert.ok(Math.abs(viewAfter.zoom-viewBefore.zoom)<.01);assert.ok(Math.abs(viewAfter.pitch-viewBefore.pitch)<.01);assert.ok(Math.abs(viewAfter.bearing-viewBefore.bearing)<.01);for(let i=0;i<2;i++)assert.ok(Math.abs(viewAfter.center[i]-viewBefore.center[i])<.00001);
    evidence.checks.push(`${selector} actual context loss and recovery preserve records`);
  }
  phase='legacy-reno';await page.getByRole('link',{name:'Original Reno console ↗'}).click();await page.waitForLoadState('domcontentloaded');await page.getByRole('button',{name:'Live',exact:true}).click();

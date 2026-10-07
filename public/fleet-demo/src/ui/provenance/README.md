@@ -1,4 +1,4 @@
-# H1 provenance panel
+# Provenance panel
 
 Native browser ES modules for the frozen v1 component contract. No dependencies,
 network calls, domain imports, raw-data writes or service-history writes.
@@ -10,11 +10,11 @@ panel.update(model);
 panel.dispose();
 ```
 
-The implementation consumes the v1 model and the current A1 adapter's optional
+The implementation consumes the v1 model and the app adapter's optional
 `canonical`, `vehicles`, `asOf`, and `reviewing` fields. Source controls dispatch
 only `select-vehicle`, `set-authority`, `add-exclusion`, `replay`, `review-imports`
-and the explicit A1 integration addition `reimport`.
-A1 remains responsible for optimistic configuration version checks, effective
+and the integration action `reimport`.
+The app remains responsible for optimistic configuration version checks, effective
 dates, source-policy writes, replay and review providers.
 
 Scope values are `field`, `vehicle`, `integration`, and `reading`. An exact
@@ -26,11 +26,11 @@ Today displays simulated or recorded reviews only, with explicit no-live-call
 labels. Review findings/notifications are withheld if the vehicle, configuration
 version or replay cutoff does not match. The domain provider owns SHA-256 binding
 to the exact reviewed input; the UI does not replace that validation. The current
-A1 adapter clears reviews after new imports/configuration changes.
+app adapter clears reviews after new imports/configuration changes.
 
 ## Integration note
 
-A1's October 6 update (Discord message 1557174772733845525) explicitly requested
+The integration contract includes
 the existing `reimport` selector in addition to the original five v1 actions.
 This component now emits `{type:'reimport'}` for that additive control; the app
 continues to own duplicate-import handling. No other command shape changed.

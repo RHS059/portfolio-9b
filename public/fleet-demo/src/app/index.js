@@ -28,7 +28,7 @@ function snapshot(timeSeconds=0,paused=false){
   const servicePose=servicePhase<.4?{routeId:'factory-to-depot',progress:servicePhase/.4,status:'en-route-to-service'}:servicePhase<.65?{routeId:'depot-bay',progress:0,status:'workshop'}:{routeId:'depot-to-factory',progress:(servicePhase-.65)/.35,status:'returning'};
   return {timeSeconds,paused,selectedId:selectedVehicleId,stage,issueActive:stage>0&&!resolved,authorityResolved:!!resolved,
     vehicles:[
-      {id:'TRK-104',...(shop?servicePose:{progress:(timeSeconds*.008+.12)%1,routeId:'delivery',status:'moving'})},
+      {id:'TRK-104',...(shop?(stage===0?{routeId:'depot-bay',progress:0,status:'workshop'}:servicePose):{progress:(timeSeconds*.008+.12)%1,routeId:'delivery',status:'moving'})},
       {id:'TRK-208',progress:(timeSeconds*.006+.59)%1,routeId:'delivery',status:'moving'},
       {id:'VAN-311',model:'van',inspectable:false,progress:(timeSeconds*.012+.21)%1,routeId:'depot',status:'moving'},
       ...Array.from({length:9},(_,i)=>({id:`TRAFFIC-${String(i+1).padStart(3,'0')}`,inspectable:false,progress:(timeSeconds*(.008+i*.0004)+i*.111)%1,routeId:i%2?'delivery':'depot',status:'moving'}))

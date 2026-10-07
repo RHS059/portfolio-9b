@@ -1,25 +1,29 @@
 # Fleet demo integration contract v1
 
-Frozen 2026-10-06. All source modules are browser-native ES modules, no build/transpile dependency. Node's built-in test runner runs tests. Generated `support.js` is untouched. The original application lives in `reno.html` with its original relative dependencies.
+The demo uses browser-native ES modules with no build or transpilation dependency. Node's test runner covers its domain, presentation and geometry contracts. The original console remains in `reno.html`; its generated `support.js` is unchanged.
 
-Ownership: A1 index/bootstrap `src/app`, `src/contracts`, `src/core`, build/CI integration; A2 `src/domain`; A3 `src/render/core`; Hal H1 `src/ui/provenance`; H2 `src/render/facilities`; H3 `tests/acceptance`. Integrator adapts at the boundary; no owner edits another owner's prefix without consent.
+## Scene
 
-## Renderer
+`createFleetScene({container,onSelect,onStatus})` from `src/render/core/index.js` returns `update(snapshot)`, `setView('iso'|'3d'|'2d')`, `setFocus(entityId)`, `setFollow(boolean)`, `resize()`, `dispose()` and `getMetrics()`. A null focus restores the geographic overview. Selection uses stable IDs.
 
-Export `createFleetScene({container,onSelect,onStatus})` from `src/render/core/index.js`. Return `update(snapshot)`, `setView('iso'|'3d'|'2d')`, `setFocus(entityId)`, `setFollow(boolean)`, `resize()`, `dispose()`, `getMetrics()`. `onSelect(entityId)` reports clicks. `onStatus({kind,message})` reports context loss/fallback.
+Snapshot: `{timeSeconds,paused,selectedId,stage,vehicles:[{id,progress,routeId,status,model?,inspectable?}],facilities:[{id,label}],issueActive,authorityResolved}`. The visual clock supplies 20 Hz updates; the scene interpolates at browser RAF. Camera, culling, model choice and visual motion cannot mutate source readings or service history. Metrics report the actual browser/renderer and distinguish observed cadence from target-device performance.
 
-Snapshot: `{timeSeconds,paused,selectedId,stage,vehicles:[{id,progress,routeId,status}],facilities:[{id,label}],issueActive,authorityResolved}`. Stable IDs: migrated vehicle `TRK-104`, unmigrated vehicle `TRK-208`; facilities `oict`, `centerpoint`, `depot`. Road route IDs may be renderer-defined and reported to integrator. Snapshot update occurs at 20Hz; renderer interpolates at browser RAF. Domain data and actual records never depend on rendered geometry or animation time. Renderer may add getMetrics fields but cannot claim target hardware performance from software rendering.
+Stable entities: migrated vehicle `TRK-104`, unmigrated vehicle `TRK-208`, and locations `oict`, `centerpoint`, `depot`. Background traffic can set `inspectable:false` when it has no source records in this fixture.
 
 ## Provenance UI
 
-Export `createProvenancePanel({container,onAction})` from `src/ui/provenance/index.js`. Return `{update(model),dispose()}`. Model: `{mode,selectedVehicleId,readings,policies,exclusions,decisions,serviceHistory,review,configurationVersion,authorityStatus,notifications}`. Actions: `{type:'select-vehicle',vehicleId}`, `{type:'set-authority',vehicleId,sourceId}`, `{type:'add-exclusion',scope,sourceId,vehicleId,field,readingId}`, `{type:'replay'}`, `{type:'review-imports'}`. Individual exact domain field mapping will be adapter-owned, not assumed.
+`createProvenancePanel({container,onAction})` from `src/ui/provenance/index.js` returns `{update(model),dispose()}`. The model supplies `{mode,selectedVehicleId,readings,policies,exclusions,decisions,serviceHistory,review,configurationVersion,authorityStatus,canonical,notifications,asOf}`. Optional `showVehicleSelector:false` lets the containing app provide vehicle tabs.
 
-Then mode describes source controls and validation built in 2021–22. Today adds explicitly labeled review recommendations and in-app notifications; never silently edits raw readings, service history, or policy. Providers A/B are anonymous and are not attributed to named ecosystem products.
+Actions are declarative: `select-vehicle`, `set-authority`, `add-exclusion`, `replay`, `reimport` and `review-imports`. Exclusion scopes are exactly `reading`, `field`, `vehicle`, or `integration`; unknown or contradictory scopes are rejected. The app converts these intents into version-checked domain commands.
+
+Then describes the 2021–22 source controls. Today is an explicitly labeled advisory review with in-app notifications. It cannot silently edit records, service facts or settings. Providers A/B remain anonymous and are not attributed to named ecosystem products.
 
 ## Facilities
 
-H2 exports from `src/render/facilities/index.js`. Preferred `createFacilities({THREE})` returns a THREE.Group in local Oakland scene coordinates; negotiate geometry origin/units with A3. Optional scene update function animates AMRs/incoming/outgoing sorting as purely visual state. No private assets.
+`createFacilities({THREE})` from `src/render/facilities/index.js` returns an untagged THREE.Group with direct children identified by `userData.siteId`. Each child is authored at its own local origin in meters: X east, Y north, Z up. The scene positions these groups once. A `userData.update(snapshot)` hook animates only presentation; `userData.dispose()` stops updates while the scene owns GPU resource disposal.
+
+Interiors, robots, production activity and service movement are illustrative. Site placement and map provenance are documented beside the geographic data. The exact historical maintenance-trigger algorithm is unknown.
 
 ## Domain
 
-A2 supplies the final frozen function signatures in `src/domain/index.js`; A1 adapts their model into UI/render snapshots. Deterministic authority, effective-dated versioned config, four scopes of exclusions, immutable raw records/service history, duplicate import/replay idempotence, unresolved missing authoritative source and multi-vehicle isolation are required. Never latest/max fallback. Service consequences are explicitly illustrative; exact historical PM trigger is unknown.
+`src/domain/readings/index.js` exports immutable fixture creation/import, per-vehicle effective-dated source policy, four exclusion scopes, deterministic evaluation/replay, and review-provider boundaries. See `src/domain/readings/README.md` for exact signatures. Missing or unusable readings from the chosen source remain unresolved; there is no newest-import, largest-value or alternate-source fallback. Duplicate imports and repeated replay are idempotent. Raw readings and completed service facts are preserved.

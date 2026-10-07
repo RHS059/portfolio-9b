@@ -10,9 +10,9 @@ export const VIEW_MODES = Object.freeze(['iso', '3d', '2d']);
  * snapshot: {timeSeconds,paused,selectedId,stage,vehicles:[{id,progress,routeId,status}],
  *   facilities:[{id,label}], issueActive, authorityResolved}
  * Entity IDs above are stable. Renderer owns RAF/interpolation, NEVER domain mutations.
- * Optional facility module: createFacilities({THREE}) -> THREE.Group (A3 adapter allowed).
+ * Optional facility module: createFacilities({THREE}) -> THREE.Group (local-coordinate adapter).
  *
- * Domain API is owned by A2 and documented in CONTRACTS.md once confirmed.
+ * Domain API is documented in CONTRACTS.md and src/domain/readings/README.md.
  * Provenance UI API: createProvenancePanel({container,onAction}) -> {update(model),dispose()}
  * model: {mode,selectedVehicleId,readings,policies,exclusions,decisions,serviceHistory,
  *   review,configurationVersion,authorityStatus,notifications}
