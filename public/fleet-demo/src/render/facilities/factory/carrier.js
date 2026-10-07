@@ -10,7 +10,7 @@ export const PRODUCT_CARRIER=freeze({
   gripPoint:[-1.25,0,.17],gripHalfWidth:.095,
   gripContacts:[[-1.31,0,.14],[-1.19,0,.14]],
   gripBlock:{center:[-1.25,0,.12],size:[.12,.12,.10]},
-  forkPocket:{supportZ:.095,minZ:.04,maxZ:.10,forkCentersX:[-.30,.30]},
+  forkPocket:{supportZ:.10,minZ:.04,maxZ:.10,forkCentersX:[-.30,.30]},
 });
 
 /** Original open transport frame. No cargo identity, placement, clock or custody. */

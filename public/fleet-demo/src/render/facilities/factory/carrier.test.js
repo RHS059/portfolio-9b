@@ -68,3 +68,7 @@ check('actual AMR bodies fit beside the fixed QA and dispatch roller beds',()=>{
   f.remove(amr);
  }
 });
+check('fork contact metadata matches the actual underside of the carrier crossmembers',()=>{
+ const c=createProductCarrier({THREE:T});c.updateMatrixWorld(true);const meshes=[];c.getObjectByName('product-carrier-frame').traverse(o=>{if(o.isMesh)meshes.push(o);});
+ for(const x of[-.3,.3])for(const y of[-.48,.48]){const hit=new T.Raycaster(new T.Vector3(x,y,.05),new T.Vector3(0,0,1),0,.2).intersectObjects(meshes)[0];assert.ok(hit);near([hit.point.z],[PRODUCT_CARRIER.forkPocket.supportZ]);}
+});
