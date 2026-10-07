@@ -29,22 +29,48 @@ export async function exerciseCargoFlow({page,evidence,out,setPhase=()=>{}}){
     assert.deepEqual(facts(await state()),preserved,'Visual seeking must preserve readings, services and source settings');
     return m;
   };
+  const frameMaterial=async(id,list,site)=>{
+    await page.locator(`[data-focus="${site}"]`).click();
+    await page.waitForFunction(()=>!window.__fleetDemo.getMetrics().cameraMoving);
+    for(let step=0;step<7;step++){
+      const point=await page.evaluate(({id,list})=>{const item=window.__fleetDemo.getMetrics().cargoProcessRender[list].find(x=>x.id===id);return window.__fleetDemo.projectScenePoint(item.position);},{id,list});
+      const box=await page.locator('#world').boundingBox();
+      assert.ok(point&&Number.isFinite(point.x)&&Number.isFinite(point.y),'Material must project to a visible scene point');
+      assert.ok(point.x>=0&&point.x<=box.width&&point.y>=0&&point.y<=box.height,`${id} is outside the focused site`);
+      await page.mouse.move(box.x+point.x,box.y+point.y);await page.mouse.down();
+      await page.mouse.move(box.x+box.width/2,box.y+box.height/2,{steps:8});await page.mouse.up();
+      await page.waitForFunction(()=>!window.__fleetDemo.getMetrics().cameraMoving);
+      if(await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState.zoom>=21))break;
+      const previousZoom=await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState.zoom);
+      await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.wheel(0,-850);
+      await page.waitForFunction(previous=>{const m=window.__fleetDemo.getMetrics();return m.viewState.zoom>previous+.05&&!m.cameraMoving&&m.mapTilesLoaded;},previousZoom);
+    }
+    assert.ok(await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState.zoom>=21),'Contact captures need inspection-scale framing');
+  };
+  const capture=async(name)=>{await page.screenshot({path:path.join(out,name),fullPage:true});return name;};
   setPhase('connected-cargo');
   evidence.cargoHandoffs=[];
   const pairs=[
-    {time:47.5,id:'CARGO-01-B0002',list:'cargo',from:'crane',to:'trailer',parent:'TRAILER-401'},
-    {time:87.5,id:'CARGO-01-B0002',list:'cargo',from:'trailer',to:'forklift',parent:'FORKLIFT-01'},
-    {time:112.5,id:'CARGO-01-B0002',list:'cargo',from:'floor-robot',to:'workcell',parent:'frame-jig'},
-    {time:53.5,id:'DRONE-CARGO-01-B0001',list:'products',from:'forklift',to:'trailer',parent:'TRAILER-501'},
+    {time:47.5,id:'CARGO-01-B0002',list:'cargo',from:'crane',to:'trailer',parent:'TRAILER-401',site:'oict',name:'ship-to-flatbed'},
+    {time:87.5,id:'CARGO-01-B0002',list:'cargo',from:'trailer',to:'forklift',parent:'FORKLIFT-01',site:'centerpoint',name:'forklift-pickup'},
+    {time:112.5,id:'CARGO-01-B0002',list:'cargo',from:'floor-robot',to:'workcell',parent:'frame-jig',site:'centerpoint',name:'amr-intake'},
+    {time:53.5,id:'DRONE-CARGO-01-B0001',list:'products',from:'forklift',to:'trailer',parent:'TRAILER-501',site:'centerpoint',name:'outbound-load'},
+    {time:19.5,id:'DRONE-CARGO-01-B0001',list:'products',from:'workcell',to:'floor-robot',parent:'AMR-01',site:'centerpoint',name:'output-carrier'},
+    {time:27.5,id:'DRONE-CARGO-01-B0001',list:'products',from:'floor-robot',to:'qa-station',parent:'QA-01',site:'centerpoint',name:'qa-intake'},
+    {time:35.5,id:'DRONE-CARGO-01-B0001',list:'products',from:'qa-station',to:'floor-robot',parent:'AMR-01',site:'centerpoint',name:'qa-release'},
+    {time:43.5,id:'DRONE-CARGO-01-B0001',list:'products',from:'floor-robot',to:'dispatch-staging',parent:'DISPATCH-01',site:'centerpoint',name:'dispatch-staging'},
   ];
   for(const pair of pairs){
     const before=(await seek(pair.time-.01))[pair.list].find(x=>x.id===pair.id);
+    await frameMaterial(pair.id,pair.list,pair.site);
+    const beforeCapture=await capture(`cargo-${pair.name}-before.png`);
     const after=(await seek(pair.time))[pair.list].find(x=>x.id===pair.id);
+    const afterCapture=await capture(`cargo-${pair.name}-after.png`);
     assert.ok(before?.visible&&after?.visible,pair.id);
     assert.equal(before.owner.kind,pair.from);assert.equal(after.owner.kind,pair.to);assert.equal(after.parentId,pair.parent);
     const distance=Math.hypot(...after.position.map((v,i)=>v-before.position[i]));
     assert.ok(distance<.05,`${pair.id} moved ${distance}m during its final 10ms handoff`);
-    evidence.cargoHandoffs.push({id:pair.id,timeSeconds:pair.time,before,after,distanceMeters:distance});
+    evidence.cargoHandoffs.push({id:pair.id,timeSeconds:pair.time,before,after,distanceMeters:distance,captures:[beforeCapture,afterCapture]});
   }
   const outbound=await seek(55.5),carrier=outbound.trucks.find(t=>t.id==='OUTBOUND-501');
   assert.ok(carrier?.loaded);assert.equal(carrier.secureProgress,1);assert.equal(carrier.stopped,false);
@@ -54,8 +80,18 @@ export async function exerciseCargoFlow({page,evidence,out,setPhase=()=>{}}){
   assert.deepEqual(materialState(await metrics()),materialState(warm),'Pause holds all cargo, carrier and actor poses');
   await page.locator('[data-focus="centerpoint"]').click();
   await page.waitForFunction(()=>!window.__fleetDemo.getMetrics().cameraMoving);
+  await frameMaterial('CARGO-01-B0001','cargo','centerpoint');
   await page.screenshot({path:path.join(out,'cargo-factory-assembly.png'),fullPage:true});
-  await seek(116.5);
+  await seek(114);await frameMaterial('CARGO-01-B0002','cargo','centerpoint');
+  const openingContact=await page.evaluate(()=>window.__fleetDemo.getMetrics().factoryAssemblyState.find(cell=>cell.id==='frame-jig'));
+  assert.equal(openingContact.contactEngaged,true);assert.equal(openingContact.armAction,'open-box');
+  await capture('cargo-box-gripper-contact.png');
+  await seek(17.5);await frameMaterial('DRONE-CARGO-01-B0001','products','centerpoint');
+  const outputContact=await page.evaluate(()=>window.__fleetDemo.getMetrics().factoryAssemblyState.find(cell=>cell.id==='frame-jig'));
+  assert.equal(outputContact.contactEngaged,true);assert.equal(outputContact.contactAccepted,true);assert.equal(outputContact.carryingProduct,true);
+  await capture('cargo-output-carrier-contact.png');
+  evidence.cargoMechanismContact={opening:openingContact,output:outputContact};
+  await seek(116.5);await frameMaterial('CARGO-01-B0002','cargo','centerpoint');
   await page.screenshot({path:path.join(out,'cargo-box-opening.png'),fullPage:true});
   await seek(33.5);await page.locator('[data-focus="oict"]').click();
   await page.waitForFunction(()=>!window.__fleetDemo.getMetrics().cameraMoving);
