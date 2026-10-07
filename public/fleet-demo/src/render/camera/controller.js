@@ -5,9 +5,9 @@ export function viewportZoom(base,width=800,height=600){return base+Math.min(0,M
 export function occupiedTopClearance(scene,obstacle){return obstacle&&obstacle.width>0&&obstacle.height>0&&obstacle.bottom>scene.top&&obstacle.top<scene.bottom&&obstacle.right>scene.left&&obstacle.left<scene.right?Math.max(12,obstacle.bottom-scene.top+12):12;}
 export function captureMapView(map){if(!map)return null;const center=map.getCenter();return{center:center.toArray?center.toArray():[center.lng,center.lat],zoom:map.getZoom(),pitch:map.getPitch(),bearing:map.getBearing()};}
 export function createCameraController(getMap){
-  let mode='iso',focus=null,follow=false,last=0,pendingFocus=false,pendingOrientation=null,manual=false;
+  let mode='iso',focus=null,follow=false,last=0,pendingFocus=false,pendingOrientation=null,manual=false,lastPosition=null;
   function setFocus(id,animate=true,orientation=null){
-    focus=id;manual=false;pendingFocus=!!id;pendingOrientation=orientation;const site=SITES.find(s=>s.id===id),map=getMap();
+    focus=id;manual=false;pendingFocus=!!id;lastPosition=null;pendingOrientation=orientation;const site=SITES.find(s=>s.id===id),map=getMap();
     if(!site)return;
     pendingFocus=false;if(!map)return;
     const duration=animate?motionDuration(650):0;
@@ -18,10 +18,10 @@ export function createCameraController(getMap){
   return {
     setView(next,{focusId,animate=true}={}){if(!VIEW_PRESETS[next])return;mode=next;if(typeof focusId==='string')setFocus(focusId,animate,VIEW_PRESETS[next]);else getMap()?.easeTo({...VIEW_PRESETS[next],duration:animate?motionDuration(450):0});},
     setFocus,
-    setFollow(value){follow=!!value;},
+    setFollow(value){if(follow!==!!value)lastPosition=null;follow=!!value;},
     markManual(){manual=true;pendingOrientation=null;},
     resize(){if(!manual&&SITES.some(s=>s.id===focus))setFocus(focus,false);},
-    update(entities,now){if(!focus||!getMap())return;const v=entities.find(v=>v.id===focus);if(!v)return;if(pendingFocus){pendingFocus=false;const target={...pendingOrientation,center:toLngLat([v.x,v.y]),zoom:viewportZoom(18.3,getMap()?.getContainer?.().getBoundingClientRect().width,getMap()?.getContainer?.().getBoundingClientRect().height)};if(follow){getMap()?.jumpTo(target);last=now;}else getMap()?.easeTo({...target,duration:motionDuration(550)});pendingOrientation=null;}if(follow&&now-last>=80){last=now;getMap()?.jumpTo({center:toLngLat([v.x,v.y])});}},
+    update(entities,now){if(!focus||!getMap())return;const v=entities.find(v=>v.id===focus);if(!v)return;if(pendingFocus){pendingFocus=false;const target={...pendingOrientation,center:toLngLat([v.x,v.y]),zoom:viewportZoom(18.3,getMap()?.getContainer?.().getBoundingClientRect().width,getMap()?.getContainer?.().getBoundingClientRect().height)};if(follow){getMap()?.jumpTo(target);last=now;lastPosition=[v.x,v.y];}else getMap()?.easeTo({...target,duration:motionDuration(550)});pendingOrientation=null;}if(follow&&now-last>=80&&(!lastPosition||lastPosition[0]!==v.x||lastPosition[1]!==v.y)){last=now;lastPosition=[v.x,v.y];getMap()?.jumpTo({center:toLngLat(lastPosition)});}},
     get(){return {mode,focus,follow,manual};}
   };
 }

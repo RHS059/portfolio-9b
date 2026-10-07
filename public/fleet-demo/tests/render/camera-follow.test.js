@@ -8,3 +8,12 @@ test('following a newly focused truck applies its full camera target before norm
  camera.update([{id:'TRK-208',x:101,y:201}],150);assert.equal(jumps.length,1);
  camera.update([{id:'TRK-208',x:102,y:202}],180);assert.equal(jumps.length,2);assert.notDeepEqual(jumps[1].center,jumps[0].center);
 });
+test('paused follow leaves the static basemap idle and resumes tracking when the truck moves',()=>{
+ const jumps=[],map={getContainer:()=>({getBoundingClientRect:()=>({width:1200,height:800})}),jumpTo:v=>jumps.push(v),easeTo:()=>{}};
+ const camera=createCameraController(()=>map);camera.setFollow(true);camera.setFocus('TRK-208');
+ const held=[{id:'TRK-208',x:100,y:200}];camera.update(held,100);
+ for(let time=180;time<=10100;time+=80)camera.update(held,time);
+ assert.equal(jumps.length,1,'An unchanged followed pose must not invalidate map rendering');
+ camera.update([{...held[0],x:101}],10180);assert.equal(jumps.length,2);
+ camera.setFocus('TRK-208');camera.update(held,10200);assert.equal(jumps.length,3,'Explicit focus still applies its target');
+});

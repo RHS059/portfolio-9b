@@ -15,6 +15,9 @@ const controlProperties=[...styleProperties,'backgroundColor','borderTopColor','
 const sidebarProperties=['width','paddingTop','paddingRight','paddingBottom','paddingLeft','position','top'];
 const styles=(locator,properties)=>locator.evaluate((element,keys)=>{const style=getComputedStyle(element);return Object.fromEntries(keys.map(key=>[key,style[key]]));},properties);
 const ready=page=>page.waitForFunction(()=>window.__fleetDemo?.getState()?.scenario&&document.querySelector('.fleet-scene-root'),undefined,{timeout:60000});
+// Next can commit the URL before the old route's DOM and passive-effect cleanup.
+// Require actual Fleet teardown before testing the disposed simulation or releasing a held import.
+const tornDown=page=>page.waitForFunction(()=>!document.querySelector('#intro-panel')&&!document.querySelector('.fleet-scene-root')&&typeof window.__fleetDemo==='undefined',undefined,{timeout:10000});
 const mappedScene=page=>page.waitForFunction(()=>{const metrics=window.__fleetDemo?.getMetrics?.();return metrics?.ready&&metrics.renderer?.includes('Three')&&metrics.mapTilesLoaded===true&&!metrics.initializing&&!metrics.cameraMoving;},undefined,{timeout:60000});
 const compare=(label,actual,expected)=>{assert.deepEqual(actual,expected,label);evidence.checks.push(label);};
 const capture=(name)=>page.screenshot({path:path.join(output,name),fullPage:true});
@@ -152,6 +155,7 @@ try{
   await page.locator('#about-toggle').click();
   await page.locator('#about-panel a[href="/projects/fleet-fuel-integration"]').click();
   await page.waitForURL(url=>url.pathname==='/projects/fleet-fuel-integration');
+  await tornDown(page);
   assert.equal(await page.evaluate(()=>typeof window.__fleetDemo),'undefined');
   const stoppedTime=await page.evaluate(()=>window.__fleetPrevious.getState().simulation.timeSeconds);
   await page.waitForTimeout(200);
@@ -204,6 +208,7 @@ try{
   // component cancellation independently of the controller-bound Details toggle.
   await interrupted.locator('#about-panel a[href="/projects/fleet-fuel-integration"]').dispatchEvent('click');
   await interrupted.waitForURL(url=>url.pathname==='/projects/fleet-fuel-integration');
+  await tornDown(interrupted);
   releaseInterrupted();await interrupted.waitForTimeout(500);
   assert.equal(await interrupted.evaluate(()=>typeof window.__fleetDemo),'undefined');
   assert.equal(await interrupted.locator('.fleet-scene-root').count(),0);
