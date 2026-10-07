@@ -1,6 +1,7 @@
 name: Fleet demo invariants
 on:
   push:
+    branches: [main]
     paths: ['public/fleet-demo/**', 'app/fleet-demo/**', 'scripts/fleet-browser-smoke.mjs', '.github/workflows/fleet-demo-tests.yml']
   pull_request:
     paths: ['public/fleet-demo/**', 'app/fleet-demo/**', 'scripts/fleet-browser-smoke.mjs', '.github/workflows/fleet-demo-tests.yml']

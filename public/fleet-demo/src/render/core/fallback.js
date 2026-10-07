@@ -21,8 +21,9 @@ export function createFallback({container,onSelect}){
       if(site.footprintWorld){const points=site.footprintWorld.map(([x,y])=>{const q=project({x,y});return `${q.x},${q.y}`;}).join(' ');group.append(el('polygon',{points,fill:'none',stroke:'#68766b','stroke-width':1.25,'stroke-dasharray':'6 4'}));sites.append(group);continue;}
       group.append(el('rect',{x:p.x-w/2,y:p.y-h/2,width:w,height:h,fill:'#f8f8f3',stroke:'#505c53','stroke-width':1.2}));
       // Abstract loading/service zones, intentionally distinct from an as-built footprint.
-      for(let i=0;i<4;i++)if(site.footprintWorld){const points=site.footprintWorld.map(([x,y])=>{const q=project({x,y});return `${q.x},${q.y}`;}).join(' ');group.append(el('polygon',{points,fill:'none',stroke:'#68766b','stroke-width':1.25,'stroke-dasharray':'6 4'}));sites.append(group);continue;}
-      group.append(el('rect',{x:p.x-w/2+5+i*(w-10)/4,y:p.y-h/2+5,width:Math.max(2,(w-20)/4),height:Math.max(2,h-10),fill:i%2?'#eef0e8':'#e2e5dd',stroke:'#a3aaa1','stroke-width':.6}));
+      for(let i=0;i<4;i++){
+        group.append(el('rect',{x:p.x-w/2+5+i*(w-10)/4,y:p.y-h/2+5,width:Math.max(2,(w-20)/4),height:Math.max(2,h-10),fill:i%2?'#eef0e8':'#e2e5dd',stroke:'#a3aaa1','stroke-width':.6}));
+      }
       sites.append(group);
     }
     drawVehicles(last);

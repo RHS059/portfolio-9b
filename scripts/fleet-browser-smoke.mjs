@@ -20,12 +20,16 @@ try{
  page.on('console',msg=>{if(['warning','warn','error'].includes(msg.type())||/THREE\.WebGLRenderer: Context (Lost|Restored)\./.test(msg.text()))evidence.console.push({level:msg.type(),text:msg.text(),phase,url:page.url(),location:msg.location(),at:new Date().toISOString()});});
  await page.addInitScript(()=>{
    const ids=new WeakMap();let generation=0;const events=[];
-   const describe=canvas=>{let gl;try{gl=canvas.getContext('webgl2')||canvas.getContext('webgl');}catch{}if(!ids.has(canvas))ids.set(canvas,++generation);return{generation:ids.get(canvas),className:canvas.className,isConnected:canvas.isConnected,width:canvas.width,height:canvas.height,contextLost:gl?.isContextLost?.()??null,attributes:gl?.getContextAttributes?.()??null};};
+   const describe=canvas=>{let gl;const metrics=window.__fleetDemo?.getMetrics?.();const initialized=canvas.className.includes('maplibregl')?!!metrics?.viewState:typeof metrics?.overlayContextLost==='boolean';if(initialized)try{gl=canvas.getContext('webgl2')||canvas.getContext('webgl');}catch{}if(!ids.has(canvas))ids.set(canvas,++generation);return{generation:ids.get(canvas),className:canvas.className,isConnected:canvas.isConnected,width:canvas.width,height:canvas.height,contextLost:gl?.isContextLost?.()??null,attributes:gl?.getContextAttributes?.()??null};};
    window.__fleetGraphicsDiagnostics=()=>({events:[...events],canvases:[...document.querySelectorAll('.fleet-three-overlay,.maplibregl-canvas')].map(describe)});
    for(const type of ['webglcontextlost','webglcontextrestored'])document.addEventListener(type,event=>{const record={type,at:performance.now(),canvas:describe(event.target),metrics:window.__fleetDemo?.getMetrics?.()??null};events.push(record);queueMicrotask(()=>{const fallback=document.querySelector('svg[aria-label="Oakland fleet map, 2D fallback"]');record.afterHandlers={metrics:window.__fleetDemo?.getMetrics?.()??null,fallbackVisible:!!fallback&&getComputedStyle(fallback).display!=='none',status:document.querySelector('.fleet-scene-status')?.textContent??null};});if(events.length>100)events.shift();},true);
  });
  await page.goto(url,{waitUntil:'domcontentloaded'});
- await page.waitForFunction(()=>{const m=window.__fleetDemo?.getMetrics?.();return m?.ready&&!m.initializing&&m.mapTilesLoaded&&m.camera?.focus==='depot'&&!m.cameraMoving;},undefined,{timeout:30000});
+ if(evidence.errors.length)throw new Error(`Startup page error: ${evidence.errors[0]}`);
+ await Promise.race([
+   page.waitForFunction(()=>{const m=window.__fleetDemo?.getMetrics?.();return m?.ready&&!m.initializing&&m.mapTilesLoaded&&m.camera?.focus==='depot'&&!m.cameraMoving;},undefined,{timeout:30000}),
+   page.waitForEvent('pageerror',{timeout:30000}).then(error=>{throw error;})
+ ]);
  if(process.env.REQUIRE_FACILITIES==='1')await page.waitForFunction(()=>window.__fleetDemo.getMetrics().facilitiesLoaded,undefined,{timeout:15000});
  if(process.env.REQUIRE_MAPPED_PORT==='1')await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.portStatus==='mapped'&&m.portRowCount>0&&m.portContainerCount>0&&m.portCraneCount>0;},undefined,{timeout:15000});
  await page.waitForTimeout(800);
