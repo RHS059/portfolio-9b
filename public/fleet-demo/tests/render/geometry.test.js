@@ -19,17 +19,28 @@ actual('mapped port injection reaches real asset and instanced surfaces use two-
 actual('actual scene disposes independent Three resources when MapLibre remove omits custom cleanup',async t=>{
  const {installDomHost,Element}=await import('./dom-host.js');const {createFleetScene}=await import('../../src/render/core/index.js');const host=installDomHost(t),container=new Element('div'),maps=[];let disposed=0,lost=0;
  const gl={getExtension:()=>null,getParameter:()=> 'test renderer',RENDERER:0,isContextLost:()=>false};
- class Renderer{constructor(){this.info={render:{}};}getContext(){return gl;}setClearColor(){}setPixelRatio(){}setSize(){}render(){}dispose(){disposed++;}forceContextLoss(){lost++;}}
+ class Renderer{constructor({canvas}){this.info={render:{}};this.gl=canvas.gl ||= {lost:false,isContextLost(){return this.lost;}};}getContext(){return this.gl;}setClearColor(){}setPixelRatio(){}setSize(){}render(){}dispose(){disposed++;}forceContextLoss(){lost++;}}
  class Map471{
   constructor(options){this.options=options;this.canvas=new Element('canvas');this.canvas.className='maplibregl-canvas';options.container.append(this.canvas);this.listeners={};this.layers={};this.sources={};maps.push(this);queueMicrotask(()=>this.listeners.load?.());}
   on(name,fn){this.listeners[name]=fn;}getCanvas(){return this.canvas;}getContainer(){return this.options.container;}getCenter(){return{toArray:()=>this.options.center};}getZoom(){return this.options.zoom;}getPitch(){return this.options.pitch;}getBearing(){return this.options.bearing;}
-  addSource(id,source){this.sources[id]=source;}getSource(id){return this.sources[id];}addLayer(layer){this.layers[layer.id]=layer;layer.onAdd?.(this,gl);}getLayer(id){return this.layers[id];}
+  addSource(id,source){this.sources[id]=source;}getSource(id){return this.sources[id];}addLayer(layer){this.layers[layer.id]=layer;layer.onAdd?.(this,gl);}getLayer(id){return this.layers[id];}removeLayer(id){this.layers[id]?.onRemove?.();delete this.layers[id];}
   remove(){this.removed=true;this.canvas.remove();/* Matches 4.7.1: no layer.onRemove here. */}
   fitBounds(){}easeTo(){}project(){return{x:100,y:100};}resize(){}triggerRepaint(){}isSourceLoaded(){return true;}
  }
  globalThis.THREE={...T,WebGLRenderer:Renderer};globalThis.maplibregl={Map:Map471,LngLatBounds:class{extend(){return this;}},MercatorCoordinate:{fromLngLat:()=>({x:.2,y:.3,z:0,meterInMercatorCoordinateUnits:()=>1e-8})}};
- const scene=createFleetScene({container});t.after(()=>scene.dispose());await host.settle();const first=maps[0],oldLayer=first.layers['fleet-editorial-3d'];assert.equal(oldLayer.disposed,false);
- first.canvas.dispatchEvent(new Event('webglcontextlost',{cancelable:true}));assert.equal(oldLayer.disposed,true);assert.equal(disposed,1);assert.equal(lost,1);
+ const scene=createFleetScene({container});t.after(()=>scene.dispose());await host.settle();const first=maps[0];
+ for(let cycle=0;cycle<2;cycle++){const old=first.layers['fleet-editorial-3d'],overlay=container.walk().find(node=>node.className==='fleet-three-overlay');old.renderer.getContext().lost=true;overlay.dispatchEvent(new Event('webglcontextlost',{cancelable:true}));assert.equal(old.disposed,true,'retire resource listeners before native GL restoration');assert.equal(disposed,cycle+1);assert.equal(lost,0,'lost context is not force-lost again');old.renderer.getContext().lost=false;overlay.dispatchEvent(new Event('webglcontextrestored'));host.flush();await host.settle();assert.equal(container.walk().find(node=>node.className==='fleet-three-overlay'),overlay,'native restoration reuses its canvas');assert.notEqual(first.layers['fleet-editorial-3d'],old,'fresh renderer owns the restored generation');assert.equal(scene.getMetrics().contextLost,false);}
+ const oldLayer=first.layers['fleet-editorial-3d'];
+ first.canvas.dispatchEvent(new Event('webglcontextlost',{cancelable:true}));assert.equal(oldLayer.disposed,true);assert.equal(disposed,3);assert.equal(lost,1);
  await new Promise(resolve=>setTimeout(resolve,10));await host.settle();assert.equal(maps.length,2);assert.equal(scene.getMetrics().mapRebuilds,1);
- scene.dispose();scene.dispose();assert.equal(disposed,2);assert.equal(lost,2);assert.ok(maps.every(map=>map.removed));assert.equal(container.children.length,0);assert.equal(host.frames.size,0);
+ scene.dispose();scene.dispose();assert.equal(disposed,4);assert.equal(lost,2);assert.ok(maps.every(map=>map.removed));assert.equal(container.children.length,0);assert.equal(host.frames.size,0);
+});
+
+test('pinned r128 geometry managers retain obsolete listeners unless disposed before restore',{skip:!T||!process.env.FLEET_THREE_MODULE},async()=>{
+ const {readFile}=await import('node:fs/promises');const source=await readFile(process.env.FLEET_THREE_MODULE,'utf8');const start=source.indexOf('function WebGLGeometries('),end=source.indexOf('function WebGLIndexedBufferRenderer(',start);assert.ok(start>0&&end>start);
+ const Geometries=new Function(source.slice(start,end)+';return WebGLGeometries;')();let generation=1,lost=false;const stale=[];
+ const manager=()=>{const ownGeneration=generation;const check=kind=>{if(!lost&&ownGeneration!==generation)stale.push(kind);};return Geometries({}, {remove:()=>check('buffer')},{memory:{geometries:0}},{releaseStatesOfGeometry:()=>check('vao')});};
+ const make=()=>new T.BufferGeometry().setAttribute('position',new T.Float32BufferAttribute([0,0,0],3));
+ const retained=make();manager().get({},retained);generation=2;manager().get({},retained);retained.dispose();assert.deepEqual(stale,['buffer','vao'],'reproduces obsolete disposal callback pattern without a GPU');
+ stale.length=0;const retired=make();manager().get({},retired);lost=true;retired.dispose();generation=3;lost=false;const replacement=make();manager().get({},replacement);replacement.dispose();assert.deepEqual(stale,[],'retiring while lost removes callbacks before the next generation');
 });

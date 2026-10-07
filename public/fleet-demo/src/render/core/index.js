@@ -57,13 +57,13 @@ export function createFleetScene({container,onSelect=()=>{},onStatus=()=>{}}){
   function rebuildMap(savedView){
     if(disposed)return;destroyMap();const previous=canvas;canvas=makeCanvas();canvas.style.visibility='hidden';canvas.style.display=mode==='2d'?'none':'';root.insertBefore(canvas,overlay);previous.remove();canvas.addEventListener('webglcontextlost',onLost);canvas.addEventListener('webglcontextrestored',onRestored);mapRebuilds++;metrics.suspend();startMap(savedView);
   }
-  function rebuildOverlay(){
+  function rebuildOverlay(reuseRestoredCanvas=false){
     if(disposed||!map||!layer||!contextLost)return;
-    const now=performance.now();rebuildTimes=rebuildTimes.filter(time=>now-time<10000);if(rebuildTimes.length>=3){report('fallback','2D Oakland map · repeated graphics reset · source controls remain live');return;}rebuildTimes.push(now);
+    const now=performance.now();if(!reuseRestoredCanvas){rebuildTimes=rebuildTimes.filter(time=>now-time<10000);if(rebuildTimes.length>=3){report('fallback','2D Oakland map · repeated graphics reset · source controls remain live');return;}rebuildTimes.push(now);}
     const previousLayer=layer,projection=previousLayer.camera.projectionMatrix.clone(),hadProjection=previousLayer.projectionReady,previous=canvas;
     previous.removeEventListener('webglcontextlost',onLost);previous.removeEventListener('webglcontextrestored',onRestored);layer=null;
     if(map.getLayer('fleet-editorial-3d'))map.removeLayer('fleet-editorial-3d');
-    canvas=makeCanvas();canvas.style.visibility='hidden';canvas.style.display=mode==='2d'?'none':'';root.insertBefore(canvas,overlay);previous.remove();canvas.addEventListener('webglcontextlost',onLost);canvas.addEventListener('webglcontextrestored',onRestored);
+    if(!reuseRestoredCanvas){canvas=makeCanvas();canvas.style.visibility='hidden';canvas.style.display=mode==='2d'?'none':'';root.insertBefore(canvas,overlay);previous.remove();}canvas.addEventListener('webglcontextlost',onLost);canvas.addEventListener('webglcontextrestored',onRestored);
     try{layer=createVehicleLayer({canvas,THREE:globalThis.THREE,maplibregl:globalThis.maplibregl,getVehicles:()=>visibleVehicles,getSelected:()=>selected,getView:()=>mode,onFailure:onStatus});map.addLayer(layer);layer.camera.projectionMatrix.copy(projection);layer.projectionReady=hadProjection;layer.setFacilitySnapshot(buffer.current);layer.draw();overlayRebuilds++;map.triggerRepaint();if(!layer.renderer.getContext().isContextLost())showMap();}
     catch(error){showFallback('2D Oakland map · scene recovery unavailable · source controls remain live');}
   }
@@ -76,12 +76,15 @@ export function createFleetScene({container,onSelect=()=>{},onStatus=()=>{}}){
       // Retire the lost MapLibre canvas before its restore listener can reuse stale GPU buckets.
       rebuildTimes=rebuildTimes.filter(time=>now-time<10000);if(rebuildTimes.length>=3){destroyMap();initializing=false;report('fallback','2D Oakland map · repeated graphics reset · source controls remain live');return;}
       rebuildTimes.push(now);destroyMap();clearTimeout(rebuildTimer);rebuildTimer=setTimeout(()=>rebuildMap(savedView),0);
-    }else{overlayRecoveryTimer=setTimeout(()=>{if(contextLost)rebuildOverlay();},2500);}
+    }else{
+      // r128 retains geometry dispose listeners across native restore. Retire them while GL is lost.
+      layer?.onRemove?.();overlayRecoveryTimer=setTimeout(()=>{if(contextLost)rebuildOverlay();},2500);
+    }
   }
   function onRestored(e){
     if(disposed)return;const target=e?.target||canvas,restoredCanvas=canvas,generation=overlayGeneration;recordContextEvent('restored',target);contextEvents.restored++;clearTimeout(overlayRecoveryTimer);cancelAnimationFrame(restoreFrame);
-    // Three installs its own listener after ours; resize only after its restore handler finishes.
-    restoreFrame=requestAnimationFrame(()=>{if(disposed||!layer)return;if(canvas!==restoredCanvas||generation!==overlayGeneration||target!==canvas){contextEvents.staleRestored++;return;}if(layer.renderer.getContext().isContextLost()){overlayRecoveryTimer=setTimeout(rebuildOverlay,1000);return;}layer.resize();layer.invalidate();metrics.reset();contextEvents.restoreCompleted++;if(sceneLoaded)showMap();});
+    // Recreate retired resources after native restoration; reject stale canvas generations.
+    restoreFrame=requestAnimationFrame(()=>{if(disposed||!layer)return;if(canvas!==restoredCanvas||generation!==overlayGeneration||target!==canvas){contextEvents.staleRestored++;return;}if(layer.renderer.getContext().isContextLost()){overlayRecoveryTimer=setTimeout(rebuildOverlay,1000);return;}if(layer.disposed){rebuildOverlay(true);contextEvents.restoreCompleted++;metrics.reset();return;}layer.resize();layer.invalidate();metrics.reset();contextEvents.restoreCompleted++;if(sceneLoaded)showMap();});
   }
 
   const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null;observer?.observe(container);const headingElement=container.parentElement?.querySelector('.world-heading');if(headingElement)observer?.observe(headingElement);window.addEventListener('resize',resize);
