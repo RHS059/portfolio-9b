@@ -35,7 +35,7 @@ export function createFactoryWorkcells({THREE}){
     // Operator console with angled dark screen and raised buttons.
     b.box(.35,.35,1.1,x+4.6,y-2.9,.55,'muted');b.box(1.15,.7,.12,x+4.6,y-2.9,1.15,'face');b.box(.65,.08,.48,x+4.6,y-2.68,1.48,'dark');
     for(const dx of [-.32,0,.32])b.cylinder(.04,.04,x+4.6+dx,y-3.0,1.25,'ink');
-    for(const [id,shape,tone]of [['shoulder','cylinder','muted'],['upper','box','paper'],['elbow','cylinder','dark'],['forearm','box','paper'],['wrist','cylinder','muted'],['tool','box','face'],['left-jaw','box','dark'],['right-jaw','box','dark'],['component','box','muted'],['component-motor','cylinder','muted'],['component-shell','ellipsoid','paper']])definitions.push({id:cell.id+'-'+id,shape,tone});
+    for(const [id,shape,tone]of [['shoulder','cylinder','muted'],['upper','box','paper'],['elbow','cylinder','dark'],['forearm','box','paper'],['wrist','cylinder','muted'],['tool','box','face'],['tool-stem','box','muted'],['left-jaw','box','dark'],['right-jaw','box','dark'],['component','box','muted'],['component-motor','cylinder','muted'],['component-shell','ellipsoid','paper']])definitions.push({id:cell.id+'-'+id,shape,tone});
 
   }
   // Roller conveyor between the workcell banks, with rails, drive unit and carrier pallets.
@@ -59,8 +59,8 @@ export function createFactoryWorkcells({THREE}){
       if(connected&&view.active&&view.armAction==='open-box'){
         opening=cartonOpeningPose(view.boxOpen);const t=opening.tool;
         pose=assemblyPose({progress:view.progress,tool:[CELL_INPUT_OFFSET[0]+t[0],CELL_INPUT_OFFSET[1]+t[1],CELL_INPUT_OFFSET[2]+.19+t[2]]});
-      }else if(connected&&view.active&&view.armAction==='handoff-output'){
-        handoff=outputHandoffPose(view.outputTransferProgress);pose=assemblyPose({progress:0});
+      }else if(connected&&view.outputProductId&&view.armAction==='handoff-output'){
+        handoff=outputHandoffPose(view.outputTransferProgress);pose=assemblyPose({progress:view.outputTransferProgress,wristLift:handoff.wristLift,tool:handoff.tool.map((v,i)=>v-(i===2?FACTORY_FLOOR_Z:0))});
       }else if(connected&&view.active&&view.armAction==='assemble-drone')pose=assemblyPose({progress:step.phase,pickup:[CELL_INPUT_OFFSET[0]+step.sourcePoint[0],CELL_INPUT_OFFSET[1]+step.sourcePoint[1],CELL_INPUT_OFFSET[2]+.19+step.sourcePoint[2]]},0,target);
       else if(view.legacyPose)pose=assemblyPose({progress:view.progress},0,target);
       else pose=assemblyPose({progress:0},0,target);
@@ -68,12 +68,13 @@ export function createFactoryWorkcells({THREE}){
       rig.axis(prefix+'shoulder',translated(pose.shoulder),[.62,.62,.65],pose.jointAxis);rig.between(prefix+'upper',translated(pose.shoulder),translated(pose.elbow),.42,.48);
       rig.axis(prefix+'elbow',translated(pose.elbow),[.56,.56,.62],pose.jointAxis);rig.between(prefix+'forearm',translated(pose.elbow),translated(pose.wrist),.28,.34);
       rig.axis(prefix+'wrist',translated(pose.wrist),[.34,.34,.36],pose.jointAxis);rig.set(prefix+'tool',translated([pose.tool[0],pose.tool[1],pose.tool[2]+.3]),[.4,.3,.18]);
-      for(const [id,sign]of[['left-jaw',-1],['right-jaw',1]])rig.set(prefix+id,translated([pose.tool[0]+sign*(opening?(opening.engaged?.045:.15):pose.grip),pose.tool[1],pose.tool[2]+.1]),[.07,.24,.32]);
+      rig.hide(prefix+'tool-stem');if(handoff)rig.between(prefix+'tool-stem',translated([pose.tool[0],pose.tool[1],pose.tool[2]+.39]),translated(pose.wrist),.10,.10);
+      for(const [id,sign]of[['left-jaw',-1],['right-jaw',1]])rig.set(prefix+id,translated([pose.tool[0]+sign*(handoff?handoff.gripHalfWidth:opening?(opening.engaged?.045:.15):pose.grip),pose.tool[1],pose.tool[2]+.1]),[.07,.24,.32]);
       const componentPosition=pose.componentAt,componentScale=step.step.size;
       rig.hide(prefix+'component');rig.hide(prefix+'component-motor');rig.hide(prefix+'component-shell');
       const partHeld=(view.hasMaterial&&view.armAction==='assemble-drone'&&step.carrying)||(view.legacyPose&&pose.carrying);
       if(partHeld)rig.set(prefix+(partStage==='cylinder'?'component-motor':partStage==='ellipsoid'?'component-shell':'component'),translated(componentPosition),componentScale);
-      lastStates.push(Object.freeze({id:cell.id,stage:pose.stage,progress:pose.phase,carrying:partHeld,installed:view.legacyPose?pose.installed:step.installed,tool:Object.freeze([cell.x+pose.tool[0],cell.y+pose.tool[1],FACTORY_FLOOR_Z+pose.tool[2]]),coordinateSpace:'site-root',active:view.active,cargoId:view.cargoId,processStage:view.stage,boxOpen:view.boxOpen,assemblyProgress:view.assemblyProgress,armAction:view.armAction,contactEngaged:opening?.engaged||handoff?.contactEngaged||false,outputProductId:view.outputProductId,outputTransferProgress:view.outputTransferProgress,productSupport:null,handoffPending:!!handoff,handoffPhase:handoff?'awaiting-contact-geometry':null,contactAccepted:false,partId:view.armAction==='assemble-drone'?step.step.id:null}));
+      lastStates.push(Object.freeze({id:cell.id,stage:handoff?'handoff-output':pose.stage,progress:pose.phase,carrying:partHeld,installed:view.legacyPose?pose.installed:step.installed,tool:Object.freeze([cell.x+pose.tool[0],cell.y+pose.tool[1],FACTORY_FLOOR_Z+pose.tool[2]]),coordinateSpace:'site-root',active:view.active,cargoId:view.cargoId,processStage:view.stage,boxOpen:view.boxOpen,assemblyProgress:view.assemblyProgress,armAction:view.armAction,contactEngaged:opening?.engaged||handoff?.contactEngaged||false,outputProductId:view.outputProductId,outputTransferProgress:view.outputTransferProgress,productSupport:handoff?Object.freeze([cell.x+handoff.carrierPosition[0],cell.y+handoff.carrierPosition[1],handoff.carrierPosition[2]]):null,handoffPending:false,handoffPhase:handoff?.phase||null,contactAccepted:!!handoff,carryingProduct:!!handoff?.contactEngaged,partId:view.armAction==='assemble-drone'?step.step.id:null}));
     }
     const clock=allowDemoCycle?(snapshot?.timeSeconds||0):0,common=assemblyPose({timeSeconds:clock});
     for(let i=0;i<3;i++){if(factoryProcess(snapshot)){rig.hide('conveyor-pallet-'+i);rig.hide('conveyor-kit-'+i);continue;}const y=((common.conveyor+i/3)%1)*31+1;rig.set('conveyor-pallet-'+i,[-3.5,y,1.28],[1.5,2.1,.2]);rig.set('conveyor-kit-'+i,[-3.5,y,1.48],[.65,.8,.18]);}

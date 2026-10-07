@@ -7,6 +7,7 @@ import {FACTORY_FLOOR_Z} from './assembly-plan.js';
 import {outputHandoffPose} from './output-handoff.js';
 import {transferMountEntries,TRANSFER_STATIONS} from './transfer-stations.js';
 export {sampleOutputTransfer,outputHandoffPose,OUTPUT_HANDOFF} from './output-handoff.js';
+export {createProductCarrier,PRODUCT_CARRIER} from './carrier.js';
 export {createAssemblyProduct} from './product.js';
 
 export const FACTORY_DIMENSIONS = Object.freeze({ width:150, depth:90, height:12 });
@@ -25,8 +26,8 @@ export function createFactory({ THREE }) {
     overviewBuilder.box(13,10,0.4,x,y,1.5,'paper');for(const dx of [-5,5])overviewBuilder.box(0.7,8,1.2,x+dx,y,0.7,'muted');
   }
   b.text('ASSEMBLY',-3,-9,0.04,0.5);b.rectangle(-3,16,54,42,0.04);
-  overviewBuilder.box(10.6,3.3,.12,42,26,.915,'paper');b.rectangle(42,26,20,14,0.44);b.text('QA',42,15,0.04,.7);
-  for(const x of[50,62])overviewBuilder.box(3.2,4.65,.12,x,-14,.915,'face');
+  overviewBuilder.box(8.4,3.3,.12,42,26,.915,'paper');b.rectangle(42,26,20,14,0.44);b.text('QA',42,15,0.04,.7);
+  for(const x of[50,62])overviewBuilder.box(3.2,3.525,.12,x,-14.5625,.915,'face');
   b.text('DISPATCH',53,-25,0.04,.45);for(const x of [-34,25])b.line([[x,-25,0.04],[x,35,0.04]]);
   for(const x of[-56,-40])b.box(8,2.6,.25,x,-46.3,-.125,'ground');
   const group=new THREE.Group();group.name='centerpoint';const structure=b.finish('factory-structure'),overview=overviewBuilder.finish('factory-overview'),detail=createFactoryWorkcells({THREE});for(const child of[structure,overview,detail])child.position.z=FACTORY_FLOOR_Z;detail.visible=false;group.add(structure,overview,detail);

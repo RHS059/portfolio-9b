@@ -21,7 +21,7 @@ test('outgoing action reads only explicit transfer progress and product identity
 test('carrier remains at assembly support before grasp and reaches exact AMR support after release',()=>{
  near(outputHandoffPose(0).productSupport,[0,0,1.53]);near(outputHandoffPose(.1).productSupport,[0,0,1.53]);
  near(outputHandoffPose(1).productSupport,[-3,-4,1.225]);
- for(let i=0;i<=100;i++){const p=outputHandoffPose(i/100);assert.equal(p.tool,null);assert.equal(p.gripPoint,null);assert.equal(p.contactAccepted,false);assert.equal(p.transferReady,false);}
+ for(let i=0;i<=100;i++){const p=outputHandoffPose(i/100);assert.ok(p.tool.every(Number.isFinite));assert.ok(p.gripPoint.every(Number.isFinite));assert.equal(p.contactAccepted,true);assert.equal(p.transferReady,true);}
  assert.ok(Object.isFrozen(outputHandoffPose(.5).productSupport));
 });
 check('factory exposes site-root carrier/pickup and paired QA/dispatch mount nodes',()=>{
@@ -32,7 +32,7 @@ check('factory exposes site-root carrier/pickup and paired QA/dispatch mount nod
 check('actual jig and roller meshes meet their declared support heights',()=>{
  const f=createFactory({THREE});f.userData.setDetailLevel('detail');f.updateMatrixWorld(true);
  const meshes=[];f.traverseVisible(o=>{if(o.isMesh&&!o.isInstancedMesh)meshes.push(o);});
- const points=[[-16,5,1.53],[9,5,1.53],[37,26,1.225],[42,26,1.225],[47,26,1.225],[50,-12,1.225],[50,-16,1.225],[62,-12,1.225],[62,-16,1.225]];
+ const points=[[-16,5,1.53],[9,5,1.53],[37.855,26,1.225],[42,26,1.225],[46.145,26,1.225],[50,-12.855,1.225],[50,-16,1.225],[62,-12.855,1.225],[62,-16,1.225]];
  for(const [x,y,z]of points){const ray=new THREE.Raycaster(new THREE.Vector3(x,y,z+.1),new THREE.Vector3(0,0,-1));const hits=ray.intersectObjects(meshes);assert.ok(hits.length,`No support at ${x},${y}`);assert.ok(Math.abs(hits[0].point.z-z)<1e-5,`Support at ${x},${y}: ${hits[0].point.z} != ${z}`);}
 });
 check('QA portal leaves the full-size aircraft passage above its roller plane clear',()=>{
@@ -43,12 +43,18 @@ check('QA portal leaves the full-size aircraft passage above its roller plane cl
   assert.equal(ray.intersectObjects(meshes).length,0,`Blocked QA passage at y=${y},z=${z}`);
  }
 });
-check('unverified outgoing contact cannot move the arm or expose an accepted product support',()=>{
- const f=createFactory({THREE});let original,parked;
+check('paired roller contacts are separate from unobstructed AMR dock centers',()=>{
+ const f=createFactory({THREE});f.userData.setDetailLevel('detail');f.updateMatrixWorld(true);const meshes=[];f.traverseVisible(o=>{if(o.isMesh&&!o.isInstancedMesh)meshes.push(o);});
+ for(const[id,point]of[['qa:QA-01:roller-input',[37.855,26,1.225]],['qa:QA-01:roller-output',[46.145,26,1.225]],['dispatch:DISPATCH-01:roller-input',[50,-12.855,1.225]],['dispatch:DISPATCH-02:roller-input',[62,-12.855,1.225]]])near(f.userData.getMount(id).position.toArray(),point);
+ for(const [x,y]of[[37,26],[47,26],[50,-12],[62,-12]]){const ray=new THREE.Raycaster(new THREE.Vector3(x,y,1.325),new THREE.Vector3(0,0,-1));const hit=ray.intersectObjects(meshes)[0];assert.ok(hit);assert.ok(hit.point.z<.26,`Fixed machinery occupies AMR dock ${x},${y}`);}
+});
+check('outgoing motion needs an explicit product identity and stays deterministic across LOD',()=>{
+ const f=createFactory({THREE});let original;
  for(const p of[0,.12,.3,.65,.9,1,.3]){
   f.userData.setCellPoses([cell(p)]);const actual=f.userData.getAssemblyState()[0],expected=f.userData.getOutputHandoff('frame-jig',p);
-  if(parked)near(actual.tool,parked);else parked=actual.tool;assert.equal(actual.productSupport,null);assert.equal(actual.contactEngaged,false);assert.equal(actual.contactAccepted,false);assert.equal(actual.handoffPending,true);assert.equal(expected.transferReady,false);assert.equal(actual.outputProductId,cell(p).outputProductId);
+  near(actual.tool,expected.tool);near(actual.productSupport,expected.carrierPosition);assert.equal(actual.contactEngaged,expected.contactEngaged);
   f.userData.setDetailLevel('detail');f.userData.setDetailLevel('overview');assert.deepEqual(f.userData.getHandledCargoIds(),[]);
   if(p===.3){if(original)assert.deepEqual(actual,original);else original=actual;}
  }
+ f.userData.setCellPoses([{...cell(.5),outputProductId:null}]);assert.equal(f.userData.getAssemblyState()[0].contactEngaged,false);
 });
