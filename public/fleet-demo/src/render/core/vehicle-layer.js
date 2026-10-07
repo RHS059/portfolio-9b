@@ -1,6 +1,7 @@
 import {OICT_GEOGRAPHY} from '../map/oict-geography.js';
+import {createVehicleDetailPool} from './vehicle-detail.js';
 import {vehiclePresentationPose} from './presentation-pose.js';
-import {placeFacilityGroups,workshopSupportElevation,WORKSHOP_SURFACES,portDetailLevel,applyFacilityFacePolicy} from './facilities-adapter.js';
+import {placeFacilityGroups,workshopSupportElevation,WORKSHOP_SURFACES,portDetailLevel,factoryDetailLevel,applyFacilityFacePolicy} from './facilities-adapter.js';
 import {ORIGIN,SITES,toLocal} from '../map/world.js';
 import {createModelGeometry,createModelBuckets,disposeObject,THEME} from './models.js';
 /** MapLibre 4.7 custom layer contract: render(gl, matrix), not the v5 render-arguments object. */
@@ -15,6 +16,7 @@ export function createVehicleLayer({THREE:T,maplibregl:M,getVehicles,getSelected
       this.meshes=new Map();this.capacity=0;this.matrix=new T.Matrix4();this.position=new T.Vector3();this.quaternion=new T.Quaternion();this.scale=new T.Vector3(1,1,1);this.axis=new T.Vector3(0,0,1);
       this.ring=new T.Mesh(new T.RingGeometry(11,12,36),new T.MeshBasicMaterial({color:THEME.selected,side:T.DoubleSide}));this.scene.add(this.ring);
       this.disposed=false;this.facilityState='loading';this.baySupportElevation=WORKSHOP_SURFACES.railTop;
+      this.detailState='loading';import('../vehicles/detail-model.js').then(mod=>{if(this.disposed)return;this.detailPool=createVehicleDetailPool({THREE:T,scene:this.scene,createDetailedVehicle:mod.createDetailedVehicle,modelMetadata:mod.DETAIL_MODEL_METADATA,onFailure:()=>{this.detailState='unavailable';}});this.detailState='ready';this.invalidate();}).catch(()=>{this.detailState='unavailable';});
       // Facility module is optional while integrating; a failed module does not blank the road view.
       import('../facilities/index.js').then(mod=>{
         if(this.disposed)return;
@@ -41,12 +43,13 @@ export function createVehicleLayer({THREE:T,maplibregl:M,getVehicles,getSelected
     render(gl,matrix){if(!this.disposed){this.camera.projectionMatrix.fromArray(matrix).multiply(this.world);this.projectionReady=true;this.projectionRevision++;}},
     draw(){
       if(this.disposed||!this.projectionReady||getView()==='2d')return;
-      const vehicles=getVehicles();const key=this.facilitySnapshot?.paused?`${this.projectionRevision}|${getSelected()}|${this.facilitySnapshot.stage}|${this.facilitySnapshot.issueActive}|${this.facilitySnapshot.authorityResolved}|${JSON.stringify(vehicles)}`:null;if(key&&key===this.lastDrawKey)return;this.lastDrawKey=key;this.allocate(vehicles.length||1);
+      const vehicles=getVehicles();const key=this.facilitySnapshot?.paused?`${this.projectionRevision}|${getSelected()}|${this.facilitySnapshot.stage}|${this.facilitySnapshot.issueActive}|${this.facilitySnapshot.authorityResolved}|${JSON.stringify([vehicles,this.facilitySnapshot.factoryAssembly||null])}`:null;if(key&&key===this.lastDrawKey)return;this.lastDrawKey=key;this.allocate(vehicles.length||1);
       // Modest exaggeration remains purely visual. Culling never advances a vehicle.
-      const k=Math.min(2,Math.max(1,Math.pow(2,16.3-this.map.getZoom())));
+      const k=Math.min(2,Math.max(1,Math.pow(2,16.3-this.map.getZoom()))),center=this.map.getCenter?.(),xy=center?toLocal(center.toArray?center.toArray():[center.lng,center.lat]):[0,0];
+      const detailIds=this.detailPool?.update(vehicles,{zoom:this.map.getZoom(),center:xy,selectedId:getSelected(),roadScale:k,baySupportElevation:this.baySupportElevation})||new Set();
       for(const [kind,group] of this.meshes){
         let count=0;const output=group.lines.geometry.getAttribute('position').array;
-        for(const v of vehicles){if((v.model||'truck')!==kind)continue;
+        for(const v of vehicles){if((v.model||'truck')!==kind||detailIds.has(v.id))continue;
           const pose=vehiclePresentationPose(v,k,this.baySupportElevation),scale=pose.scale;this.position.set(v.x,v.y,pose.z);this.quaternion.setFromAxisAngle(this.axis,-v.heading);this.scale.set(scale,scale,scale);this.matrix.compose(this.position,this.quaternion,this.scale);for(const mesh of group.parts)mesh.setMatrixAt(count,this.matrix);
           const e=group.edgePositions,c=Math.cos(v.heading),s=Math.sin(v.heading),offset=count*e.length;
           for(let i=0;i<e.length;i+=3){output[offset+i]=v.x+(e[i]*c+e[i+1]*s)*scale;output[offset+i+1]=v.y+(-e[i]*s+e[i+1]*c)*scale;output[offset+i+2]=e[i+2]*scale+pose.z+.02;}
@@ -56,10 +59,11 @@ export function createVehicleLayer({THREE:T,maplibregl:M,getVehicles,getSelected
         group.lines.geometry.setDrawRange(0,count*group.edgePositions.length/3);group.lines.geometry.getAttribute('position').needsUpdate=true;
       }
       const selected=vehicles.find(v=>v.id===getSelected());this.ring.visible=!!selected;if(selected){const pose=vehiclePresentationPose(selected,k,this.baySupportElevation);this.ring.position.set(selected.x,selected.y,selected.routeId==='depot-bay'?this.baySupportElevation+.015:.2);this.ring.scale.setScalar(pose.scale);}
-      const port=this.facilities?.children?.find(child=>child.userData?.siteId==='oict');if(port?.userData?.setDetailLevel){const center=this.map.getCenter(),xy=toLocal(center.toArray?center.toArray():[center.lng,center.lat]),level=portDetailLevel(this.map.getZoom(),xy);if(level!==this.portLOD){port.userData.setDetailLevel(level);this.portLOD=level;}}
+      const port=this.facilities?.children?.find(child=>child.userData?.siteId==='oict');if(port?.userData?.setDetailLevel){const level=portDetailLevel(this.map.getZoom(),xy);if(level!==this.portLOD){port.userData.setDetailLevel(level);this.portLOD=level;}}
+      const factory=this.facilities?.children?.find(child=>child.userData?.siteId==='centerpoint');if(factory?.userData?.setDetailLevel){const level=factoryDetailLevel(this.map.getZoom(),xy);if(level!==this.factoryLOD){factory.userData.setDetailLevel(level);this.factoryLOD=level;}}
       if(this.facilitySnapshot){this.facilities?.userData?.update?.(this.facilitySnapshot);if(this.facilityAPI!==this.facilities)this.facilityAPI?.update?.(this.facilitySnapshot);}
       this.renderer.render(this.scene,this.camera);this.drawFrames++;
     },
-    onRemove(){if(this.disposed)return;this.disposed=true;this.facilities?.userData?.dispose?.();if(this.facilityAPI!==this.facilities)this.facilityAPI?.dispose?.();disposeObject(this.scene);const wasLost=this.renderer?.getContext?.()?.isContextLost?.();this.renderer?.dispose();if(!wasLost)this.renderer?.forceContextLoss();this.meshes?.clear();}
+    onRemove(){if(this.disposed)return;this.disposed=true;this.detailPool?.dispose();this.facilities?.userData?.dispose?.();if(this.facilityAPI!==this.facilities)this.facilityAPI?.dispose?.();disposeObject(this.scene);const wasLost=this.renderer?.getContext?.()?.isContextLost?.();this.renderer?.dispose();if(!wasLost)this.renderer?.forceContextLoss();this.meshes?.clear();}
   };return layer;
 }

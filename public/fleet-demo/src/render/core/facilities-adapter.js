@@ -40,3 +40,6 @@ export function portDetailLevel(zoom,worldCenter){
 
 /** Instanced geography sees the same projection reflection as vehicles. Keep both faces available. */
 export function applyFacilityFacePolicy(T,group){group.traverse(object=>{if(object.isInstancedMesh)for(const material of Array.isArray(object.material)?object.material:[object.material]){material.side=T.DoubleSide;material.needsUpdate=true;}});}
+
+/** Close machinery is visible only while inspecting the factory itself. */
+export function factoryDetailLevel(zoom,worldCenter){const factory=SITES.find(s=>s.id==='centerpoint');return zoom>=17.5&&Math.abs(worldCenter[0]-factory.x)<=factory.width/2+25&&Math.abs(worldCenter[1]-factory.y)<=factory.depth/2+25?'detail':'overview';}

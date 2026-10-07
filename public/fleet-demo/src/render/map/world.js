@@ -41,6 +41,8 @@ const prepared = new Map(Object.entries(ROUTES).map(([id, points]) => {
   const lengths = points.slice(1).map((p, i) => { const length = Math.hypot(p[0]-points[i][0], p[1]-points[i][1]); total += length; return length; });
   return [id, { points, lengths, total }];
 }));
+/** Absolute authored-route travel for wheel presentation; unrelated to odometer records. */
+export function routeDistance(routeId='delivery',progress=0){const route=prepared.get(routeId)||prepared.get('delivery');return Math.max(0,Math.min(1,Number.isFinite(progress)?progress:0))*route.total;}
 export function routePosition(routeId = 'delivery', progress = 0) {
   const r = prepared.get(routeId) || prepared.get('delivery');
   let distance = Math.max(0, Math.min(1, Number.isFinite(progress) ? progress : 0)) * r.total;

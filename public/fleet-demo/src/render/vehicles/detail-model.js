@@ -254,13 +254,13 @@ export function createDetailedVehicle({THREE:T,kind='truck'}={}) {
   const body=author(T); (kind==='truck'?truckBody:vanBody)(T,body);
   const resources=[];
   for(const [key,parts] of body.buckets) {
-    const geometry=mergeParts(T,parts),material=new T.MeshLambertMaterial({color:DETAIL_PALETTE[key],side:T.DoubleSide});
+    const geometry=mergeParts(T,parts),material=new T.MeshBasicMaterial({color:DETAIL_PALETTE[key],side:T.DoubleSide});
     const mesh=new T.Mesh(geometry,material);mesh.name=`${kind}-body-${key}`;
     group.add(mesh);resources.push(geometry,material);
   }
   const authoredWheels=wheelGeometry(T),layout=detailedWheelLayout(kind),batches=[];
   for(const [key,parts] of authoredWheels.buckets) {
-    const geometry=mergeParts(T,parts),material=new T.MeshLambertMaterial({color:DETAIL_PALETTE[key],side:T.DoubleSide});
+    const geometry=mergeParts(T,parts),material=new T.MeshBasicMaterial({color:DETAIL_PALETTE[key],side:T.DoubleSide});
     const mesh=new T.InstancedMesh(geometry,material,layout.length); mesh.name=`${kind}-wheels-${key}`;
     mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.frustumCulled=false;
     group.add(mesh);resources.push(geometry,material);batches.push(mesh);

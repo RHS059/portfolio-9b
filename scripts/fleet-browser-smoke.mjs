@@ -31,10 +31,20 @@ try{
  if(process.env.REQUIRE_MAPPED_PORT==='1')await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.portStatus==='mapped'&&m.portRowCount>0&&m.portContainerCount>0&&m.portCraneCount>0;},undefined,{timeout:15000});
  await page.waitForTimeout(800);
  await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:30000});
+ await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.vehicleDetailState==='ready'&&m.vehicleDetail.models.some(v=>v.id==='TRK-104');},undefined,{timeout:15000});
  phase='initial-scene';await page.screenshot({path:path.join(out,'01-desktop-initial.png'),fullPage:true});
  const state=()=>page.evaluate(()=>window.__fleetDemo.getState());
  for(const id of ['depot','oict','centerpoint']){
    phase=`facility-${id}`;await page.locator(`[data-focus="${id}"]`).click();await page.waitForTimeout(750);await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:20000});await page.screenshot({path:path.join(out,`facility-${id}.png`),fullPage:true});
+   if(id==='depot'){
+     await page.waitForFunction(()=>window.__fleetDemo.getMetrics().vehicleDetail.models.some(v=>v.id==='TRK-104'));
+     evidence.vehicleDetail=await page.evaluate(()=>window.__fleetDemo.getMetrics().vehicleDetail);assert.ok(evidence.vehicleDetail.visible<=3);assert.equal(evidence.vehicleDetail.models.find(v=>v.id==='TRK-104').kind,'truck');
+     await page.screenshot({path:path.join(out,'vehicle-detail-workshop.png'),fullPage:true});evidence.checks.push('Selected workshop truck uses the bounded detailed model pool');
+   }
+   if(id==='centerpoint'){
+     await page.waitForFunction(()=>window.__fleetDemo.getMetrics().factoryDetailLevel==='detail');evidence.factoryDetail=await page.evaluate(()=>window.__fleetDemo.getMetrics());assert.ok(evidence.factoryDetail.factoryAssemblyState.length>0);assert.ok(evidence.factoryDetail.factoryAssemblyState.every(cell=>cell.progress===0),'Assembly stays idle without an explicit process snapshot');
+     await page.screenshot({path:path.join(out,'factory-detail.png'),fullPage:true});evidence.checks.push('Factory detail is visible and assembly stays idle without process input');
+   }
    if(id==='oict'&&process.env.REQUIRE_MAPPED_PORT==='1'){
      evidence.portOverview=await page.evaluate(()=>window.__fleetDemo.getMetrics());assert.equal(evidence.portOverview.portStatus,'mapped');
      const box=await page.locator('.maplibregl-canvas').boundingBox();await page.mouse.move(box.x+box.width*.5,box.y+box.height*.5);for(let step=0;step<6;step++){if(await page.evaluate(()=>window.__fleetDemo.getMetrics().portDetailLevel==='detail'))break;await page.mouse.wheel(0,-600);await page.waitForTimeout(850);}

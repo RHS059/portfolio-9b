@@ -46,8 +46,8 @@ export function mountFleetDemo({root=document,theme={}}={}) {
       vehicles:[
         {id:'TRK-104',...(shop?(stage===0?{routeId:'depot-bay',progress:0,status:'workshop'}:servicePose):{progress:(timeSeconds*.008+.12)%1,routeId:'delivery',status:'moving'})},
         {id:'TRK-208',progress:(timeSeconds*.006+.59)%1,routeId:'delivery',status:'moving'},
-        {id:'VAN-311',model:'van',inspectable:false,progress:(timeSeconds*.012+.21)%1,routeId:'depot',status:'moving'},
-        ...Array.from({length:9},(_,i)=>({id:`TRAFFIC-${String(i+1).padStart(3,'0')}`,inspectable:false,progress:(timeSeconds*(.008+i*.0004)+i*.111)%1,routeId:i%2?'delivery':'depot',status:'moving'}))
+        {id:'VAN-311',model:'van',inspectable:false,progress:(timeSeconds*.012+.21)%1,routeId:'delivery',status:'moving'},
+        ...Array.from({length:9},(_,i)=>({id:`TRAFFIC-${String(i+1).padStart(3,'0')}`,inspectable:false,progress:(timeSeconds*(.008+i*.0004)+i*.111)%1,routeId:'delivery',status:'moving'}))
       ],facilities:[{id:'oict',label:'OICT container terminal'},{id:'centerpoint',label:'Drone factory'},{id:'depot',label:'Fleet workshop'}]};
   }
   function evaluate(){evaluation=domain.replayReadings(scenario,{asOf:scenario.asOf});}

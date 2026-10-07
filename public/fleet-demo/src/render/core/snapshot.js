@@ -1,4 +1,4 @@
-import { vehiclePosition } from '../map/world.js';
+import { vehiclePosition,routeDistance } from '../map/world.js';
 /** Copy the narrow read-only boundary. No renderer receives mutable domain objects. */
 export function normalizeSnapshot(input = {}) {
   const seen = new Set();
@@ -11,8 +11,9 @@ export function normalizeSnapshot(input = {}) {
     model:v.model==='van'?'van':'truck',inspectable:v.inspectable!==false,
     ...(Number.isFinite(v.x)&&Number.isFinite(v.y)?{x:v.x,y:v.y,heading:Number.isFinite(v.heading)?v.heading:0}:{}),
   }));
+  const assemblyIds=new Set();const assemblyCells=Array.isArray(input.factoryAssembly?.cells)?input.factoryAssembly.cells.filter(c=>{if(!c||typeof c.id!=='string'||!Number.isFinite(c.progress)||assemblyIds.has(c.id))return false;assemblyIds.add(c.id);return true;}).map(c=>Object.freeze({id:c.id,progress:Math.max(0,Math.min(1,c.progress))})):null;
   return Object.freeze({timeSeconds:Number.isFinite(input.timeSeconds)?input.timeSeconds:0,
-    paused:!!input.paused, selectedId:typeof input.selectedId==='string'?input.selectedId:null,
+    paused:!!input.paused,...(assemblyCells?{factoryAssembly:Object.freeze({cells:Object.freeze(assemblyCells)})}:{}), selectedId:typeof input.selectedId==='string'?input.selectedId:null,
     stage:String(input.stage||''), vehicles:Object.freeze(vehicles),
     facilities:Object.freeze((input.facilities||[]).map(f=>Object.freeze({id:String(f.id),label:String(f.label||f.id)}))),
     issueActive:!!input.issueActive, authorityResolved:!!input.authorityResolved });
@@ -25,7 +26,7 @@ export function interpolateSnapshots(previous, current, alpha = 1) {
     // A replay, route switch or wrapped route is a new pose, never a sweep across town.
     const smooth = before && before.routeId===v.routeId && Math.abs(before.progress-v.progress)<0.25;
     const sample = smooth ? {...v,progress:before.progress+(v.progress-before.progress)*t} : v;
-    return {...v,...vehiclePosition(sample)};
+    return {...v,...vehiclePosition(sample),presentationDistanceMeters:routeDistance(sample.routeId,sample.progress)};
   });
 }
 export class SnapshotBuffer {
