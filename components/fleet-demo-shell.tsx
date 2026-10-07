@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react"
 import PortfolioShell from "./portfolio-shell"
-import PortfolioLinks from "./portfolio-links"
 import AnimatedLink from "./animated-link"
 import portfolio from "./portfolio-home.module.css"
 import styles from "./fleet-demo-shell.module.css"
@@ -71,20 +70,38 @@ function FleetSidebar() {
       </div>
     </div>
     <div id="story-content" className={styles.storyContent} hidden>
-      <h1 className={portfolio.name}>Why the same trucks kept coming back to the shop.</h1>
-      <p className={`${portfolio.metric} ${styles.storyIntro}`}>Shop technicians noticed the same trucks returning for oil changes and tire rotations within one week.</p>
-      <div className={styles.modeSwitch} aria-label="Approach">
-        <button type="button" className={portfolio.control} data-mode="then" aria-pressed="true">Then <small>2021–22</small></button>
-        <button type="button" className={portfolio.control} data-mode="today" aria-pressed="false">Today <small>Agent review</small></button>
-      </div>
-      <p id="mode-description" className={styles.modeDescription} />
-      <nav id="story-steps" className="story-steps" aria-label="Story chapters" />
-      <section className={`${portfolio.bio} ${styles.chapter}`} aria-live="polite">
+      <div className={styles.chapterIntro} aria-live="polite" aria-atomic="true">
+        <p className={portfolio.eyebrow}>Fleet Management</p>
         <span id="chapter-number" className={portfolio.eyebrow} />
-        <h2 id="chapter-title" />
-        <p id="chapter-copy" />
-        <button id="next-chapter" className={portfolio.cta} type="button">Continue <span aria-hidden="true">↗</span></button>
+        <h1 id="chapter-title" className={portfolio.name} tabIndex={-1} />
+        <p id="chapter-copy" className={`${portfolio.metric} ${styles.chapterCopy}`} />
+      </div>
+      <section className={`inspector-panel ${styles.chapterContext}`} aria-label="This truck’s readings" hidden>
+        <div id="story-evidence" />
+        <div id="reading-context" className={styles.readingContext}>
+          <span className={portfolio.eyebrow}>Odometer used for maintenance</span>
+          <strong id="canonical-reading">Unresolved</strong>
+          <small id="canonical-source">Choose an odometer source</small>
+        </div>
+        <div id="source-inspector" hidden>
+          <div id="provenance" />
+          <div id="app-feedback" className={styles.feedback} role="status" aria-live="polite" />
+        </div>
       </section>
+      <div id="review-controls" className={styles.reviewControls} hidden>
+        <div className={styles.modeSwitch} aria-label="Approach">
+          <button type="button" className={portfolio.control} data-mode="then" aria-pressed="true">Then <small>2021–22</small></button>
+          <button type="button" className={portfolio.control} data-mode="today" aria-pressed="false">Today <small>Agent review</small></button>
+        </div>
+        <p id="mode-description" className={styles.modeDescription} />
+      </div>
+      <div className={`${portfolio.bio} ${styles.chapterNavigation}`}>
+        <p className={styles.exampleNote}>Vehicle IDs and the two-visit example are illustrative.</p>
+        <div className={styles.storyButtons}>
+          <button id="previous-chapter" className={portfolio.control} type="button">Back</button>
+          <button id="next-chapter" className={portfolio.cta} type="button">Next <span aria-hidden="true">↗</span></button>
+        </div>
+      </div>
     </div>
   </>
 }
@@ -120,13 +137,11 @@ export default function FleetDemoShell() {
 
   return <div ref={rootRef} className={`workspace ${styles.root}`} data-intro="true">
     <PortfolioShell sidebar={<FleetSidebar />} sidebarClassName={`story-panel ${styles.sidebar}`} sidebarLabel="Fleet case study" mainClassName={styles.main}>
-      <nav className={`${portfolio.links} ${styles.siteNavigation}`} aria-label="Portfolio navigation">
-        <PortfolioLinks workHref="/#work" />
-      </nav>
       <div className={styles.workspaceBody}>
         <section className={`world-panel ${portfolio.card} ${styles.worldPanel}`} aria-label="Oakland operations scene">
           <div id="world" className={`world ${styles.world}`}><div id="scene-loading" className={styles.sceneLoading}>Preparing operations scene…</div></div>
           <div id="scene-notice" className={styles.sceneNotice} role="status" hidden />
+          <div className={`story-dock ${styles.storyDock}`} aria-label="Vehicle context and scene controls">
           <div className={styles.worldToolbar}>
             <div className={styles.segmented} role="group" aria-label="Camera view">
               <button className={portfolio.control} data-view="2d" type="button" aria-pressed="false">2D</button>
@@ -146,8 +161,10 @@ export default function FleetDemoShell() {
             <button className={portfolio.control} data-focus="depot" type="button">Workshop</button>
           </div>
           <div className={`impact-strip ${styles.impactStrip}`}>
-            <div><span className={portfolio.eyebrow}>Selected asset</span><strong id="selected-asset">TRK-104</strong><small id="asset-role">Migrated vehicle</small></div>
-            <div><span className={portfolio.eyebrow}>Odometer used for maintenance</span><strong id="canonical-reading">Unresolved</strong><small id="canonical-source">Choose an odometer source</small></div>
+            <div><span className={portfolio.eyebrow}>Selected truck</span><strong id="selected-asset">TRK-208</strong><small id="asset-role">On delivery</small></div>
+            <div><span className={portfolio.eyebrow}>Visits this week</span><strong id="service-visits">—</strong><small id="service-summary">Illustrative service history</small></div>
+            <div><span className={portfolio.eyebrow}>Maintenance cost</span><strong id="maintenance-cost">Amount not provided</strong><small id="maintenance-cost-note">For the selected truck</small></div>
+          </div>
           </div>
           <div id="about-panel" className={styles.aboutPanel} hidden>
             <button id="about-close" className={`${portfolio.control} ${styles.close}`} type="button" aria-label="Close demo details">×</button>
@@ -160,17 +177,6 @@ export default function FleetDemoShell() {
             <AnimatedLink href="/projects/fleet-fuel-integration">Read the original case study ↗</AnimatedLink>
           </div>
         </section>
-        <aside className={`inspector-panel ${portfolio.card} ${styles.inspectorPanel}`} aria-label="Source controls" hidden>
-          <div id="source-inspector" hidden>
-            <div className={styles.inspectorHeading}><span className={portfolio.eyebrow}>Odometer sources</span><h2>Inspect the evidence</h2><p>Choose which source supplies each vehicle’s odometer.</p></div>
-            <div className={styles.vehicleTabs} role="group" aria-label="Inspect vehicle">
-              <button className={portfolio.control} type="button" data-vehicle="TRK-104" aria-pressed="true">TRK-104 <small>Migrated</small></button>
-              <button className={portfolio.control} type="button" data-vehicle="TRK-208" aria-pressed="false">TRK-208 <small>Still on A</small></button>
-            </div>
-            <div id="provenance" />
-            <div id="app-feedback" className={styles.feedback} role="status" aria-live="polite" />
-          </div>
-        </aside>
       </div>
       <noscript><p>JavaScript is needed to run this interactive demo. <a href="/projects/fleet-fuel-integration">Read the original case study.</a></p></noscript>
     </PortfolioShell>

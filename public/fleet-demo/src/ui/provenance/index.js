@@ -5,6 +5,15 @@ import {renderReadingHistory} from '../reading-history/index.js';
 
 let instanceCount = 0;
 
+// Keep the chapter decision small. Advanced tools and history stay available on demand.
+const compactStyles = `
+.fp-panel[data-presentation="compact"] .fp-review{margin:0 0 18px}
+.fp-panel[data-presentation="compact"] .fp-review-mode{border:0;padding:0;font-family:inherit;line-height:1.5;color:var(--fp-muted)}
+.fp-panel[data-presentation="compact"] .fp-review>h3{margin-top:0}
+.fp-panel[data-presentation="compact"] .fp-review>.fp-wide{margin-top:4px}
+.fp-panel[data-presentation="compact"]>.fp-error{margin-top:0}
+`;
+
 function renderReview(model) {
   if (model.mode !== 'today') return '';
   const state = reviewState(model), review = model.review;
@@ -16,8 +25,8 @@ function renderReview(model) {
     ? 'Provider A keeps importing the same old observation. Provider B has newer readings. Check which provider this truck uses before changing its source.'
     : current ? (findings[0]?.summary || review.summary || 'No findings were returned for this vehicle.') : '';
   const shortSummary = summary.length>260 ? `${summary.slice(0,257)}…` : summary;
-  return `<section class="fp-card" aria-label="Today advisory import review" data-review-state="${state.kind}">
-    <p class="fp-kicker">TODAY / REVIEW</p><h3>Review incoming readings</h3>
+  return `<section class="${model.compact?'fp-review':'fp-card'}" aria-label="Today advisory import review" data-review-state="${state.kind}">
+    ${model.compact?'':'<p class="fp-kicker">TODAY / REVIEW</p>'}<h3>Review incoming readings</h3>
     <span class="fp-review-mode">${esc(state.label)}</span>
     <button type="button" data-action="review-imports" data-ui-key="review-imports" class="fp-wide" ${model.reviewing?'disabled':''}>${model.reviewing?'Reviewing imports…':'Review imports ↗'}</button>
     ${state.kind==='stale' || state.kind==='unsupported' ? '<p class="fp-reason">Old findings are withheld. Run a new review for this vehicle and these settings.</p>' : ''}
@@ -34,18 +43,33 @@ function renderReview(model) {
   </section>`;
 }
 
+function renderServiceHistory(m) {
+  return `<section class="fp-card" aria-label="Preserved service history"><h3>Shop visits this week</h3><ol class="fp-service-list">${m.serviceHistory.map(s => `<li><strong>${esc(s.work)}</strong><br>${esc(timeLabel(s.recordedAt))}</li>`).join('')||'<li>No visits recorded for this vehicle.</li>'}</ol><details data-details-key="service-history"><summary>Service record details</summary><p>These are synthetic examples. Exact historical scheduling rules are unknown. A replay does not erase visits or reverse work orders.</p><p class="fp-meta">${m.serviceHistory.length} records for ${esc(m.selectedVehicleId)} · retained unchanged</p>${m.serviceHistory.map(s=>`<p class="fp-meta">${esc(s.id)} · ${esc(s.provenance||'Synthetic service example')}</p>`).join('')}</details></section>`;
+}
+
+function renderVehicleSelector(m, idPrefix) {
+  return `<label class="fp-label" for="${idPrefix}-vehicle">Inspect vehicle</label><select id="${idPrefix}-vehicle" data-vehicle-select data-ui-key="vehicle-select">${m.vehicleIds.map(id => `<option value="${esc(id)}" ${id===m.selectedVehicleId?'selected':''}>${esc(id)}</option>`).join('')}</select>`;
+}
+
 /** Pure renderer exported for dependency-free component tests and adapter previews. */
 export function renderProvenance(model, {idPrefix = 'fleet-provenance', scope = 'field', error = ''} = {}) {
   const m = normalizeModel(model), canonical = m.canonical;
   const resolved = m.authorityStatus === 'resolved';
+  if (m.compact) return `<style>${panelStyles}${compactStyles}</style>
+    <div class="fp-visually-hidden" role="status" aria-live="polite" tabindex="-1" data-ui-key="reading-status">${resolved?'Source chosen':'Odometer unresolved'}. ${esc(canonical?.reason?reasonLabel(canonical.reason):'Choose the provider installed on this vehicle.')}</div>
+    ${error?`<p class="fp-error" role="alert">${esc(error)}</p>`:''}
+    ${renderReview(m)}
+    ${renderSourceControls(m,{idPrefix,scope,compact:true})}
+    <details data-details-key="original-records"><summary>Original readings and service history</summary>${renderReadingHistory(m)}${renderServiceHistory(m)}</details>
+    ${m.showVehicleSelector===false?'':`<details data-details-key="other-vehicle"><summary>Check another truck</summary>${renderVehicleSelector(m,idPrefix)}</details>`}`;
   return `<style>${panelStyles}</style>
-    ${m.showVehicleSelector===false?'':`<label class="fp-label" for="${idPrefix}-vehicle">Inspect vehicle</label><select id="${idPrefix}-vehicle" data-vehicle-select data-ui-key="vehicle-select">${m.vehicleIds.map(id => `<option value="${esc(id)}" ${id===m.selectedVehicleId?'selected':''}>${esc(id)}</option>`).join('')}</select>`}
+    ${m.showVehicleSelector===false?'':renderVehicleSelector(m,idPrefix)}
     <div class="fp-state" role="status" aria-live="polite" tabindex="-1" data-ui-key="reading-status"><strong>${!resolved&&canonical?.reason==='missing-authority'?'No odometer source selected':'Odometer used for maintenance'}</strong><p>${resolved?'Source chosen':'Unresolved'} · ${esc(canonical?.reason ? reasonLabel(canonical.reason) : resolved ? 'The reading follows the source chosen for this vehicle.' : 'Choose a source with an eligible reading. There is no automatic fallback.')}</p></div>
     ${error?`<p class="fp-error" role="alert">${esc(error)}</p>`:''}
     ${renderReview(m)}
     ${renderSourceControls(m,{idPrefix,scope})}
     ${renderReadingHistory(m)}
-    <section class="fp-card" aria-label="Preserved service history"><h3>Shop visits this week</h3><ol class="fp-service-list">${m.serviceHistory.map(s => `<li><strong>${esc(s.work)}</strong><br>${esc(timeLabel(s.recordedAt))}</li>`).join('')||'<li>No visits recorded for this vehicle.</li>'}</ol><details data-details-key="service-history"><summary>Service record details</summary><p>These are synthetic examples. Exact historical scheduling rules are unknown. A replay does not erase visits or reverse work orders.</p><p class="fp-meta">${m.serviceHistory.length} records for ${esc(m.selectedVehicleId)} · retained unchanged</p>${m.serviceHistory.map(s=>`<p class="fp-meta">${esc(s.id)} · ${esc(s.provenance||'Synthetic service example')}</p>`).join('')}</details></section>`;
+    ${renderServiceHistory(m)}`;
 }
 
 /**
@@ -68,6 +92,7 @@ export function createProvenancePanel({container,onAction,theme} = {}) {
     const focusKey = root.contains(active) ? active?.dataset?.uiKey : null;
     const opened = [...root.querySelectorAll('details[open][data-details-key]')].map(el => el.dataset.detailsKey);
     const scrollTop = container.scrollTop;
+    root.setAttribute('data-presentation',model.compact?'compact':'full');
     root.innerHTML = renderProvenance(model,{idPrefix,scope,error});
     // The native portfolio supplies its real shared CSS module classes. Without
     // a theme this remains the original standalone component.

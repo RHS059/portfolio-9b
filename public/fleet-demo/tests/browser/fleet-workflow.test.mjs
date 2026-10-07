@@ -11,11 +11,23 @@ const url=process.env.FLEET_BROWSER_URL;
 const require=process.env.PLAYWRIGHT_PACKAGE?createRequire(join(resolve(process.env.PLAYWRIGHT_PACKAGE),'package.json')):createRequire(import.meta.url);
 const state=page=>page.evaluate(()=>window.__fleetDemo.getState());
 const canonical=(s,id='TRK-104')=>s.evaluation.vehicles.find(v=>v.vehicleId===id);
-const action=(page,name)=>page.locator(`#provenance [data-action="${name}"]`);
-const authority=(page,source)=>page.locator(`#provenance [data-action="set-authority"][data-source="${source}"]`);
-const openInspector=async page=>{
-  if(await page.locator('#source-inspector').count()&&!await page.locator('#source-inspector').isVisible())await page.locator('#start-story').click();
+const goToStage=async(page,target)=>{
+  if((await state(page)).intro)await page.locator('#start-story').click();
+  while((await state(page)).stage<target)await page.locator('#next-chapter').click();
+  while((await state(page)).stage>target)await page.locator('#previous-chapter').click();
 };
+const openInspector=async page=>{if(!await page.locator('#source-inspector').isVisible())await goToStage(page,3);};
+const revealControl=async(page,selector)=>{
+  await openInspector(page);const target=page.locator(`#provenance ${selector}`);
+  for(let depth=0;depth<4&&!await target.isVisible();depth++){
+    const disclosure=page.locator('#provenance details:not([open])').filter({has:page.locator(selector)}).first();
+    if(!await disclosure.count())break;await disclosure.locator(':scope > summary').click();
+  }
+  return target;
+};
+const action=(page,name)=>({click:async()=>{await(await revealControl(page,`[data-action="${name}"]`)).click();}});
+const authority=(page,source)=>({click:async()=>{await(await revealControl(page,`[data-action="set-authority"][data-source="${source}"]`)).click();}});
+const chooseVehicle=async(page,id)=>{await(await revealControl(page,'[data-vehicle-select]')).selectOption(id);};
 
 test('Fleet browser acceptance: interactive workflow and honest review boundary', {skip:!url,timeout:180000},async t=>{
   const revision=process.env.FLEET_SOURCE_REVISION;
@@ -51,7 +63,7 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
     await run('opening project details transition to source inspector',async()=>{
       assert.equal(await page.locator('#project-info').isVisible(),true);
       assert.equal(await page.locator('#source-inspector').isVisible(),false);
-      await page.locator('#start-story').click();assert.equal(await page.locator('#source-inspector').isVisible(),true);
+      await openInspector(page);assert.equal(await page.locator('#source-inspector').isVisible(),true);
     });
     await run('B authority fixes only migrated truck and retains raw/service evidence',async()=>{
       await authority(page,'B').click();const next=await state(page);
@@ -60,7 +72,7 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
       assert.equal(next.scenario.configVersion,2);
     });
     await run('field-scoped A exclusion preserves unmigrated A vehicle',async()=>{
-      await page.locator('#provenance [data-exclusion-scope]').selectOption('field');
+      await(await revealControl(page,'[data-exclusion-scope]')).selectOption('field');
       await page.locator('#provenance [data-action="add-exclusion"][data-scope="choose"][data-source="A"]').click();
       const next=await state(page);assert.equal(next.scenario.exclusions.length,1);
       assert.equal(next.scenario.exclusions[0].vehicleId,'TRK-104');assert.equal(next.scenario.exclusions[0].field,'odometer');
@@ -72,7 +84,7 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
       await action(page,'reimport').click();const imported=await state(page);unchanged(imported,prior);assert.equal(imported.scenario.readings.length,prior.scenario.readings.length);
     });
     await run('Today review is advisory, truthfully labeled, and notifies in app',async()=>{
-      await page.locator('[data-mode="today"]').click();const prior=await state(page);
+      await goToStage(page,4);await page.locator('[data-mode="today"]').click();const prior=await state(page);
       await action(page,'review-imports').click();await page.waitForFunction(()=>window.__fleetDemo.getState().review);
       const next=await state(page);assert.ok(['simulated','recorded'].includes(next.review.mode));assert.equal(next.review.live,false);
       assert.match(next.review.label,/simulated|recorded/i);assert.equal(next.review.notification.channel,'in-app only');
@@ -92,12 +104,12 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
       assert.equal(canonical(next,'TRK-208').status,'resolved');
     });
     await run('row exclusion of authoritative newest reading stays unresolved without older fallback',async()=>{
-      await authority(page,'B').click();await page.locator('#provenance [data-action="add-exclusion"][data-reading="v1-b-3"]').click();
+      await authority(page,'B').click();await(await revealControl(page,'[data-action="add-exclusion"][data-reading="v1-b-3"]')).click();
       const next=await state(page);assert.equal(canonical(next).reason,'authoritative-reading-excluded');assert.equal(canonical(next).readingId,null);
       assert.equal(canonical(next,'TRK-208').status,'resolved');unchanged(next,initial);
     });
     await run('vehicle selection and view/follow controls do not mutate domain',async()=>{
-      const prior=await state(page);await page.locator('[data-vehicle="TRK-208"]').click();
+      const prior=await state(page);await chooseVehicle(page,'TRK-208');
       for(const view of ['2d','3d','iso'])await page.locator(`[data-view="${view}"]`).click();
       await page.locator('#follow').click();await page.locator('#follow').click();
       const next=await state(page);assert.equal(next.selectedVehicleId,'TRK-208');assert.deepEqual(next.scenario,prior.scenario);
@@ -114,14 +126,14 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
     });
     await run('reset restores fixture, mode, selection and configuration',async()=>{
       await page.locator('#reset').click();const next=await state(page);
-      assert.deepEqual(next.scenario,initial.scenario);assert.equal(next.mode,'then');assert.equal(next.stage,0);assert.equal(next.selectedVehicleId,'TRK-104');assert.equal(next.review,null);assert.equal(next.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);
+      assert.deepEqual(next.scenario,initial.scenario);assert.equal(next.mode,'then');assert.equal(next.stage,0);assert.equal(next.selectedVehicleId,initial.selectedVehicleId);assert.equal(next.review,null);assert.equal(next.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);
     });
     await run('reload honestly restores this in-memory fixture',async()=>{
       await openInspector(page);await authority(page,'B').click();await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo);
       assert.deepEqual((await state(page)).scenario,initial.scenario);
     });
     await run('data limitations remain available in collapsed demo details',async()=>{
-      await openInspector(page);await page.locator('[data-stage="2"]').click();
+      await goToStage(page,2);
       await page.locator('#about-toggle').click();assert.match(await page.locator('#about-panel').innerText(),/not live telemetry|not live/i);
       assert.match(await page.locator('#about-panel').innerText(),/illustrative/i);assert.match(await page.locator('#about-panel').innerText(),/exact maintenance-trigger rule is unknown/i);
       await page.locator('#about-close').click();

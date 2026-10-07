@@ -21,7 +21,7 @@ export function createCameraController(getMap){
     setFollow(value){follow=!!value;},
     markManual(){manual=true;pendingOrientation=null;},
     resize(){if(!manual&&SITES.some(s=>s.id===focus))setFocus(focus,false);},
-    update(entities,now){if(!focus||!getMap())return;const v=entities.find(v=>v.id===focus);if(!v)return;if(pendingFocus){pendingFocus=false;getMap()?.easeTo({...pendingOrientation,center:toLngLat([v.x,v.y]),zoom:viewportZoom(18.3,getMap()?.getContainer?.().getBoundingClientRect().width,getMap()?.getContainer?.().getBoundingClientRect().height),duration:motionDuration(550)});pendingOrientation=null;}if(follow&&now-last>=80){last=now;getMap()?.jumpTo({center:toLngLat([v.x,v.y])});}},
+    update(entities,now){if(!focus||!getMap())return;const v=entities.find(v=>v.id===focus);if(!v)return;if(pendingFocus){pendingFocus=false;const target={...pendingOrientation,center:toLngLat([v.x,v.y]),zoom:viewportZoom(18.3,getMap()?.getContainer?.().getBoundingClientRect().width,getMap()?.getContainer?.().getBoundingClientRect().height)};if(follow){getMap()?.jumpTo(target);last=now;}else getMap()?.easeTo({...target,duration:motionDuration(550)});pendingOrientation=null;}if(follow&&now-last>=80){last=now;getMap()?.jumpTo({center:toLngLat([v.x,v.y])});}},
     get(){return {mode,focus,follow,manual};}
   };
 }

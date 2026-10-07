@@ -13,7 +13,7 @@ test('opening places project name, unchanged project information, teaser and Nex
  assert.match(html,/<div id="story-content" hidden>/);assert.match(html,/<main class="workspace" data-intro="true">/);
 });
 test('technical diagnostics and data limitations are inside the initially collapsed About panel',()=>{
- const about=html.slice(html.indexOf('<div id="about-panel"'),html.indexOf('<aside class="inspector-panel"'));
+ const start=html.indexOf('<div id="about-panel"');const about=html.slice(start,html.indexOf('</section>',start));
  assert.match(about,/hidden/);assert.match(about,/synthetic demo/);assert.match(about,/exact maintenance-trigger rule is unknown/);assert.match(about,/id="performance"/);assert.match(about,/id="run-status"/);
  assert.doesNotMatch(html,/<footer|story-footnote|Operations lab|Fictional drone assembly/);
  assert.equal((html.match(/Original Reno console/g)||[]).length,1);

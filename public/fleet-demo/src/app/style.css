@@ -9,4 +9,36 @@
 .world-subtitle{font-size:10px;line-height:1.5;color:var(--muted);margin:6px 0 0;max-width:360px}
 .world-heading{top:16px;left:16px;right:16px;background:rgba(248,247,242,.96);border:1px solid var(--line);padding:12px 14px}.world-heading h2{margin:3px 0}.world-heading .icon-button{flex:none;margin-left:12px}.world-subtitle{font-size:10px}@media(max-width:680px){.world-heading{top:10px;left:10px;right:10px;padding:10px 12px}.world-heading h2{font-size:18px}.world-subtitle{font-size:9px}}
 
-[hidden]{display:none!important}.workspace[data-intro=true]{grid-template-columns:minmax(340px,420px) minmax(0,1fr);min-height:calc(100dvh - 74px)}.workspace[data-intro=true] .world-heading,.workspace[data-intro=true] .impact-strip{display:none}.intro-panel{display:flex;flex-direction:column;min-height:100%;gap:22px}.intro-panel h1{font-size:32px;margin:0;line-height:1.13}.intro-panel .project-info dl{gap:17px}.intro-panel .project-info dd{font-size:12px;line-height:1.55}.intro-panel .project-outcome{padding-top:16px}.intro-panel .project-outcome dd{font-size:17px}.intro-cta{margin-top:auto;padding-top:18px}.intro-cta p{font-size:17px;line-height:1.45;margin:0 0 15px}.impact-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.inspector-panel{max-height:calc(100dvh - 74px)}.about-panel{top:24px;max-height:calc(100% - 48px);overflow:auto}.about-panel details{border-top:1px solid var(--line);padding-top:12px}.about-panel summary{cursor:pointer}.demo-badge{display:flex!important}.place-labels button{align-items:center}.world-toolbar{flex-wrap:wrap}@media(max-width:1120px){.workspace[data-intro=true]{grid-template-columns:minmax(300px,38%) minmax(0,1fr)}.intro-panel .project-info dl{grid-template-columns:1fr}.inspector-panel{max-height:none}}@media(max-width:680px){.workspace[data-intro=true]{display:flex;min-height:0}.intro-panel{gap:22px}.intro-panel h1{font-size:34px}.intro-panel .project-info dd{font-size:13px}.intro-panel .project-info dl{gap:21px}.intro-cta{padding-top:10px}.about-panel{left:10px;right:10px;top:10px;max-height:calc(100% - 20px);padding:18px}.world-toolbar{gap:4px}.demo-badge{font-size:8px}}
+[hidden]{display:none!important}.workspace[data-intro=true]{grid-template-columns:minmax(340px,420px) minmax(0,1fr);min-height:calc(100dvh - 74px)}.workspace[data-intro=true] .world-heading{display:none}.intro-panel{display:flex;flex-direction:column;min-height:100%;gap:22px}.intro-panel h1{font-size:32px;margin:0;line-height:1.13}.intro-panel .project-info dl{gap:17px}.intro-panel .project-info dd{font-size:12px;line-height:1.55}.intro-panel .project-outcome{padding-top:16px}.intro-panel .project-outcome dd{font-size:17px}.intro-cta{margin-top:auto;padding-top:18px}.intro-cta p{font-size:17px;line-height:1.45;margin:0 0 15px}.impact-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.inspector-panel{max-height:calc(100dvh - 74px)}.about-panel{top:24px;max-height:calc(100% - 48px);overflow:auto}.about-panel details{border-top:1px solid var(--line);padding-top:12px}.about-panel summary{cursor:pointer}.demo-badge{display:flex!important}.place-labels button{align-items:center}.world-toolbar{flex-wrap:wrap}@media(max-width:1120px){.workspace[data-intro=true]{grid-template-columns:minmax(300px,38%) minmax(0,1fr)}.intro-panel .project-info dl{grid-template-columns:1fr}.inspector-panel{max-height:none}}@media(max-width:680px){.workspace[data-intro=true]{display:flex;min-height:0}.intro-panel{gap:22px}.intro-panel h1{font-size:34px}.intro-panel .project-info dd{font-size:13px}.intro-panel .project-info dl{gap:21px}.intro-cta{padding-top:10px}.about-panel{left:10px;right:10px;top:10px;max-height:calc(100% - 20px);padding:18px}.world-toolbar{gap:4px}.demo-badge{font-size:8px}}
+
+/* Click-through case study: one persistent scene and bottom dock on every beat. */
+.workspace,.workspace[data-intro=true]{grid-template-columns:minmax(300px,25%) minmax(0,1fr);min-height:calc(100dvh - 74px)}
+.story-panel{display:flex;flex-direction:column}
+#story-content{display:flex;flex-direction:column;flex:1;min-width:0;gap:24px}
+.chapter-intro>.eyebrow:first-child{margin:0 0 28px}
+.chapter-intro>span{display:block;margin-bottom:12px}
+.chapter-intro h1{margin:0;font-size:32px;line-height:1.16}
+#chapter-copy{font-size:13px;line-height:1.7;color:var(--muted);margin:20px 0 0}
+.story-panel .chapter-context{min-width:0;padding:20px 0 0;border:0;border-top:1px solid var(--line);max-height:none;overflow:visible;background:transparent}
+.reading-context{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.reading-context strong{font-size:20px;font-weight:500}
+.reading-context small{color:var(--muted);font-size:11px;line-height:1.5}
+.chapter-navigation{margin-top:auto;border-top:1px solid var(--line);padding-top:18px}
+.example-note{font-size:10px;line-height:1.6;color:var(--muted);margin:0 0 12px}
+.story-buttons{display:grid;grid-template-columns:minmax(64px,1fr) minmax(0,2fr);gap:8px}
+.secondary-button{padding:12px 14px;border:1px solid var(--ink);border-radius:3px;background:transparent;font-size:11px}
+.story-dock{flex:none;width:100%;background:var(--paper)}
+.world{min-height:520px}
+.world-toolbar{min-height:64px}
+#pause{min-width:68px}
+.workspace[data-intro=true] .impact-strip,.impact-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;padding:18px;min-height:144px}
+.impact-strip>div{display:grid;grid-template-rows:28px 44px 32px;gap:2px;min-width:0}
+.impact-strip .eyebrow{font-size:9px;line-height:1.4}
+.impact-strip strong{font-size:19px;line-height:1.2}
+.impact-strip small{font-size:11px;line-height:1.3}
+#app-feedback:empty{display:none}
+@media(min-width:1600px){.workspace,.workspace[data-intro=true]{grid-template-columns:390px minmax(0,1fr)}}
+@media(max-width:1120px){.workspace,.workspace[data-intro=true]{grid-template-columns:minmax(280px,30%) minmax(0,1fr)}}
+@media(max-width:680px){.workspace,.workspace[data-intro=true]{display:flex;min-height:0}.story-panel{padding:24px 20px}#story-content{min-height:510px}.world{min-height:460px}.workspace[data-intro=true] .impact-strip,.impact-strip{gap:10px;padding:16px 12px;min-height:158px}.impact-strip>div{grid-template-rows:34px 46px 40px}.impact-strip strong{font-size:16px}.impact-strip small{font-size:10px}.impact-strip .eyebrow{font-size:8px}.mode-description{min-height:0}}
+
+@media(min-width:681px){.story-panel{height:calc(100dvh - 74px);overflow-y:auto}}

@@ -367,9 +367,23 @@ test('dispatch rolls cargo off the stationary AMR before empty return and forkli
 test('paired roller and bypass segment boundaries have no semantic position jumps',()=>{
   const eps=1e-7;
   const endpoint=m=>m.progress<eps?m.fromAnchorId:m.progress>1-eps?m.toAnchorId:null;
-  for(const slot of CARGO_SLOTS)for(const [field,times] of [['cargo',[77,78]],['products',[130,132,136,138,146,148,152]],['floorRobots',[77,78,130,132,136,138,146,148,158]]]){
+  for(const slot of CARGO_SLOTS)for(const [field,times] of [['cargo',[77,78,87,88]],['products',[130,132,136,138,146,148,152]],['floorRobots',[77,78,87,88,130,132,136,138,146,148,158]]]){
     for(const t of times){const before=sampleCargoProcess(slot.offsetSeconds+t-eps)[field][slot.index].motion,after=sampleCargoProcess(slot.offsetSeconds+t)[field][slot.index].motion;
       assert.equal(endpoint(before),endpoint(after),`${field} slot${slot.index} discontinuity at${t}`);
     }
   }
+});
+
+test('AMR stops outside the workcell before custody transfers into the jig',()=>{
+  const a=CARGO_SLOTS[0].anchors,before=sampleCargoProcess(87-1e-7),receiving=sampleCargoProcess(87),rolling=sampleCargoProcess(87.25),opening=sampleCargoProcess(88);
+  assert.equal(before.cargo[0].owner.kind,'floor-robot');assert.equal(before.cargo[0].motion.toAnchorId,a.cellReceivingDock);
+  assert.equal(receiving.cargo[0].owner.kind,'workcell');assert.equal(receiving.cargo[0].stage,'robot-transport');
+  assert.equal(receiving.floorRobots[0].stage,'cell-transfer');assert.equal(receiving.floorRobots[0].motion.toAnchorId,a.cellReceivingDock);assert.equal(receiving.floorRobots[0].motion.progress,1);
+  assert.equal(receiving.floorRobots[0].cargoId,null);assert.equal(receiving.factoryAssembly.cells[0].cargoId,receiving.cargo[0].id);
+  assert.equal(receiving.factoryAssembly.cells[0].stage,'receiving');assert.equal(receiving.factoryAssembly.cells[0].active,false);assert.equal(receiving.factoryAssembly.cells[0].progress,0);
+  assert.deepEqual(rolling.cargo[0].motion,{fromAnchorId:a.cellReceivingDock,toAnchorId:a.cellInput,progress:.15625});
+  assert.equal(rolling.factoryAssembly.cells[0].receivingProgress,.15625);assert.equal(rolling.cargo[0].boxOpen,0);
+  assert.equal(opening.cargo[0].stage,'box-opening');assert.equal(opening.floorRobots[0].motion.fromAnchorId,a.cellReceivingDock);
+  const event=cargoEventsBetween(86,88).events.find(e=>e.type==='cargo-handed-to-workcell');
+  assert.equal(event.timeSeconds,87);assert.equal(event.stage,'robot-transport');assert.equal(event.cargoId,receiving.cargo[0].id);assert.deepEqual(event.owner,receiving.cargo[0].owner);
 });

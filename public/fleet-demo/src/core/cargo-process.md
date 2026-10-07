@@ -98,7 +98,7 @@ slot's first start its kit is waiting aboard its ship. Its relative phases are:
 | 58–62 | bay-arrival | trailer |
 | 62–72 | forklift-unloading | forklift |
 | 72–78 | storage | storage |
-| 78–88 | robot-transport | floor robot |
+| 78–88 | robot-transport | floor robot until87; workcell during87–88 intake transfer |
 | 88–94 | box-opening | workcell |
 | 94–118 | drone-assembly | workcell |
 | 118–128 | complete | consumed; finished product continues in its output lifecycle |
@@ -133,8 +133,9 @@ finished drone identity. The narrow existing assembly normalizer may forward onl
 
 ## Finished-product QA, sorting and outgoing fleet flow
 
-The incoming 128-second stages, IDs, warm-start options and `cargoEventsBetween`
-remain unchanged. A separate bounded product lifecycle retains each finished
+The incoming 128-second stage durations, IDs and warm-start options remain
+unchanged. The inbound event API also includes the explicit87-second workcell
+custody handoff described below. A separate bounded product lifecycle retains each finished
 `DRONE-CARGO-<slot>-B<batch>` and `sourceCargoId` across the next incoming kit's
 rollover. The product slot is replaced only when its next assembly begins, never
 at the 128-second kit reset. No production or service records are created.
@@ -195,7 +196,8 @@ inventories are accumulated.
 All new physical mounts are semantic `CARGO_SLOTS[].anchors`: `cellDispatchPickup`,
 `qaInput`, `qaTest`, `qaOutput`, `qaBypassIn`, `qaBypassOut`, `dispatchInput`,
 `dispatchStaging`, `dispatchVehicle`, `outboundLoad`, `fleetHandoff`, and
-`forkliftStowed`. Incoming storage also has a separate `storageRobotPickup` mount. The ready phase explicitly transfers the product from the cell
+`forkliftStowed`. Incoming storage also has a separate `storageRobotPickup` mount; each cell has
+an exterior `cellReceivingDock` mount. The ready phase explicitly transfers the product from the cell
 output to the AMR-height pickup; it must not jump vertically when ownership
 changes. QA/staging supports and the outgoing carrier load mount must likewise
 match the renderer's actual assets. Carrier model/bed support and geographic
@@ -210,6 +212,12 @@ transfers explicitly rather than making an AMR occupy a solid table:
 - Storage: AMR approaches `storageRobotPickup` during 72–77, then holds. Cargo
   stays at `storage` until 77 and rolls to `storageRobotPickup` during 77–78,
   retaining storage ownership until the AMR transport begins at 78.
+- Workcell intake: AMR travels `storageRobotPickup`→`cellReceivingDock` during
+  78–87 and holds outside the jig during87–88. At87, custody switches to the
+  workcell and cargo rolls `cellReceivingDock`→`cellInput` with smoothstep during
+  87–88. The cell reports `stage:'receiving'`, `cargoId` and `receivingProgress`
+  while its assembly `active` remains false. Box opening still starts at88.
+  The empty AMR returns from `cellReceivingDock` during88–98.
 - QA: product rolls `qaInput`→`qaTest` during 130–132, is tested at that mount
   during 132–136, then rolls `qaTest`→`qaOutput` during 136–138. The empty AMR
   travels `qaInput`→`qaBypassIn` during 130–132, across to `qaBypassOut` during
@@ -238,7 +246,10 @@ in the half-open interval `(from, to]`, without stored history. With an offset,
 input times and each event's `timeSeconds` remain in the app clock; the event's
 `processTimeSeconds` exposes its phase time. Earlier warm-up events are not emitted.
 Pass the same offset used for snapshots; each event's cargo identity, stage and
-owner then match the snapshot at that event's app time. `drone-completed`
+owner then match the snapshot at that event's app time. The additional
+`cargo-handed-to-workcell` event occurs at relative87 seconds within the existing
+`robot-transport` stage, naming the new workcell owner; stage-entry events retain
+their original times. `drone-completed`
 includes the product ID. Reset/reverse intervals produce no stale events. At most
 128 events are returned; a large seek returns recent events and `omittedCount`.
 Do not replay omitted events into a second source of process state; sample the
