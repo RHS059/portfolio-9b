@@ -16,8 +16,13 @@ test('mileage loops from stale30k to50k/50.5k/51k without creating data records'
  for(let cycle=0;cycle<3;cycle++){const stale=sampleMileage(cycle*3),current=sampleMileage(cycle*3+2);assert.equal(stale.display,30000);assert.equal(stale.maintenanceDue,false);assert.equal(current.display,50000+cycle*500);assert.equal(current.maintenanceDue,true);assert.equal(current.illustrative,true);}
  assert.deepEqual(sampleMileage(0),sampleMileage(9));assert.deepEqual(sampleMileage(2),sampleMileage(11));
 });
-test('two-week illustration keeps counts separate from unknown real costs',()=>{
- assert.deepEqual(sampleCost(0),{day:1,visitDays:[1,4,8,12],visits:1,repeatVisits:0,unitCost:null,totalCost:null,repeatCost:null,illustrative:true});
- const last=sampleCost(1);assert.equal(last.day,14);assert.equal(last.visits,4);assert.equal(last.repeatVisits,3);assert.equal(last.repeatCost,null);
- assert.equal(sampleCost(1,200).repeatCost,600);assert.equal(sampleCost(1,200).totalCost,800);assert.equal(sampleCost(1,'').repeatCost,null);assert.equal(sampleCost(1,-2).repeatCost,null);assert.equal(sampleCost(1,0).repeatCost,0);
+test('two visits use one fixed example price without inventing historical invoices',()=>{
+ const first=sampleCost(0),second=sampleCost(1);
+ assert.equal(first.visits,1);assert.equal(first.unitCost,350);assert.equal(first.totalCost,350);assert.equal(first.repeatCost,0);
+ assert.equal(second.visits,2);assert.equal(second.unitCost,350);assert.equal(second.totalCost,700);assert.equal(second.repeatCost,350);assert.equal(second.illustrative,true);
+ assert.deepEqual(first.visitDays,[1,4]);assert.equal(sampleCost(.49).visits,1);assert.equal(sampleCost(.5).visits,2);
+});
+
+test('mileage explanation belongs to scene4 and is not repeated in scene5',()=>{
+ assert.match(STORY_SCENES[3].copy,/stale mileage/);assert.equal(STORY_SCENES[4].copy,'');
 });

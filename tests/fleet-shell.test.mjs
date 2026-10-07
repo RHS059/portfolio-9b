@@ -35,9 +35,13 @@ test('source controls are an optional modal, with human approval and preserved h
  assert.ok(app.includes('Original readings and service records are preserved.'));
  assert.match(app,/event.key==='Tab'/);assert.match(app,/event.key==='Escape'/);
 });
-test('the UI distinguishes fuel data, telematics, illustrative costs and hypothetical AI',()=>{
- for(const text of ['Telematics: mileage and vehicle activity.','USD, illustrative','Actual costs weren’t provided.','exact maintenance-trigger rule is unknown','no historical dollar amount or savings is claimed','no live model','not maintenance savings'])assert.ok((shell+app).includes(text),text);
- assert.doesNotMatch(shell,/\$\d/);assert.match(shell,/id="maintenance-cost">Amount not provided/);
+test('story copy removes redundant captions and uses one compact fixed-cost label',()=>{
+ assert.doesNotMatch(shell,/illustrative|reported provider overlap|Try a service cost|Oil change #2|service-unit-cost|cost-days/i);
+ assert.equal((app.match(/'Example cost'/g)||[]).length,1);assert.match(shell,/id="cost-total">\$350/);assert.match(shell,/id="cost-duplicate">\$0/);
+ const solution=shell.slice(shell.indexOf('data-story-overlay="solution"'),shell.indexOf('data-story-overlay="agents"'));
+ const agents=shell.slice(shell.indexOf('data-story-overlay="agents"'),shell.indexOf('data-story-overlay="learning"'));
+ assert.match(solution,/<h2>The change I designed<\/h2>/);assert.match(agents,/<h2>How I’d approach it today<\/h2>/);
+ assert.ok(app.includes("$('#chapter-title').hidden=stage===6||stage===7"));
 });
 test('single-clock story has a reduced-motion pause, manual override and route cleanup',()=>{
  assert.equal((app.match(/createSimulation\(\{/g)||[]).length,1);

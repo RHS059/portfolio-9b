@@ -81,7 +81,6 @@ function FleetSidebar() {
       </div>
       <div id="chapter-takeaway" className={`${portfolio.bio} ${styles.chapterTakeaway}`} />
       <div className={`${portfolio.bio} ${styles.chapterNavigation}`}>
-        <p className={styles.exampleNote}>A real integration problem, retold with illustrative vehicles, mileage and service visits.</p>
         <p>Pause, scrub or step through at any time.</p>
         <button id="open-source-controls" className={portfolio.control} type="button" hidden>Try the source controls ↗</button>
         <button id="run-story-review" className={portfolio.control} type="button" hidden>Run an example review ↗</button>
@@ -139,11 +138,7 @@ export default function FleetDemoShell() {
                 <p>Fuel: purchases and consumption.<br />Telematics: mileage and vehicle activity.</p>
                 <small>Teams use this data to budget, schedule service and keep trucks on the road.</small>
               </div>
-              <div data-story-overlay="repeat-service" className={styles.serviceCard} hidden>
-                <span className={portfolio.eyebrow}>Back in the workshop</span>
-                <strong>Oil change #2</strong><span>Same truck. Same week.</span>
-                <small>The technicians knew something was wrong.</small>
-              </div>
+              <div data-story-overlay="repeat-service" hidden />
               <div data-story-overlay="provider-switch" className={styles.providerOverlay} hidden>
                 <div className={styles.devicePair}>
                   <div className={styles.device} data-provider="verizon"><span className={styles.deviceLight} /><div className={styles.deviceBrand}><strong>Verizon</strong><span>Networkfleet</span></div><small>DAILY IMPORT · ACTIVE</small></div>
@@ -153,37 +148,34 @@ export default function FleetDemoShell() {
                 <h2>The customer switched providers</h2>
                 <p>but didn’t inform us, so we were importing from both, daily</p>
                 <strong className={styles.months}>FOR MONTHS</strong>
-                <small className={styles.providerNote}>Illustrative devices · reported provider overlap</small>
               </div>
               <div data-story-overlay="mileage-loop" className={styles.mileageOverlay} hidden>
-                <span className={portfolio.eyebrow}>Illustrative reading loop · Day <span id="mileage-day">1</span></span>
+                <span className={portfolio.eyebrow}>Day <span id="mileage-day">1</span></span>
                 <div className={styles.mileageValues}><span><small>OLD SOURCE</small>30,000</span><b aria-hidden="true">→</b><span><small>CURRENT SOURCE</small><span id="mileage-current">50,000</span></span></div>
                 <div className={styles.odometer}><span id="mileage-value">30,000</span><small>miles in the system</small></div>
                 <div id="mileage-alert" className={styles.mileageAlert}>Stale reading imported again</div>
                 <p>The reading resets. The next jump looks like more driving.</p>
-                <small>This illustrates the consequence, not the original maintenance algorithm.</small>
               </div>
               <div data-story-overlay="cost" className={styles.costCard} hidden>
-                <span className={portfolio.eyebrow}>An illustrative two weeks</span>
-                <h2>A repeat visit is a real expense.</h2>
-                <div id="cost-days" className={styles.costDays} aria-label="Four illustrative visits across fourteen days" />
-                <p id="cost-caption">Day 1 · The first service</p>
-                <label htmlFor="service-unit-cost">Try a service cost <span>(USD, illustrative)</span></label>
-                <input id="service-unit-cost" type="number" inputMode="decimal" min="0" max="100000" step="1" placeholder="Enter an amount" />
-                <small>Actual costs weren’t provided. Your amount changes only this illustration.</small>
+                <span className={portfolio.eyebrow}>Twice in one week</span>
+                <h2>The same service.<br />Paid for twice.</h2>
+                <div className={styles.costVisits}><div data-cost-visit="1"><span>Visit 1</span><strong>$350</strong></div><div data-cost-visit="2"><span>Visit 2</span><strong>$350</strong></div></div>
+                <p id="cost-caption">First visit</p>
+                <div className={styles.costTotal}><span>Total paid</span><strong id="cost-total">$350</strong></div>
+                <div className={styles.costRepeat}><span>Duplicate cost</span><strong id="cost-duplicate">$0</strong></div>
               </div>
               <div data-story-overlay="solution" className={styles.solutionCard} hidden>
-                <span className={portfolio.eyebrow}>The change I designed</span>
+                <h2>The change I designed</h2>
+                <p className={styles.dialogueCopy}>I traced the import workflow with support and developers, then designed per-vehicle odometer sources and reading exclusions.</p>
                 <div className={styles.decisionRow}><span>TRK-104</span><strong>Choose its odometer source</strong></div>
                 <div className={styles.decisionRow}><span>OLD READINGS</span><strong>Exclude them from decisions</strong></div>
                 <div className={styles.decisionRow}><span>ORIGINAL HISTORY</span><strong>Keep it intact</strong></div>
-                <p>One vehicle’s migration shouldn’t break the rest of the fleet.</p>
+                <p>Each vehicle keeps its own source.</p>
               </div>
               <div data-story-overlay="agents" className={styles.agentCard} hidden>
-                <span className={portfolio.eyebrow}>How I’d approach it today · Concept</span>
-                <h2>Catch it before the next shop visit.</h2>
+                <h2>How I’d approach it today</h2>
+                <p className={styles.dialogueCopy}>Agents would flag conflicting readings and notify the fleet manager. A person would approve the source change.</p>
                 <ol className={styles.agentSteps}><li data-agent-step="0"><span>01</span><div><strong>Check incoming data</strong><small>Agent compares sources and reading patterns</small></div></li><li data-agent-step="1"><span>02</span><div><strong>Flag &amp; notify</strong><small>Show the conflict and supporting evidence</small></div></li><li data-agent-step="2"><span>03</span><div><strong>A person decides</strong><small>Approve the source; preserve the history</small></div></li></ol>
-                <small>A proposed workflow. No live AI is making decisions here.</small>
               </div>
               <div data-story-overlay="learning" className={styles.learningCard} hidden>
                 <span className={portfolio.eyebrow}>What I learned</span><h2>Good data needs<br />a clear owner.</h2><p>Make the source visible.<br />Make the decision deliberate.<br />Keep the history.</p>
@@ -205,15 +197,15 @@ export default function FleetDemoShell() {
             </div>
             <div id="explore-controls" hidden className={styles.worldToolbar} role="group" aria-label="Explore the scene"><button className={portfolio.control} data-view="2d" type="button" aria-pressed="false">2D</button><button className={portfolio.control} data-view="3d" type="button" aria-pressed="false">3D</button><button className={portfolio.control} data-view="iso" type="button" aria-pressed="true">ISO</button><button id="overview" type="button" className={portfolio.control}>Overview</button><button id="follow" type="button" className={portfolio.control} aria-pressed="true">Follow truck</button><button className={portfolio.control} data-focus="depot" type="button">Workshop</button><button className={portfolio.control} data-focus="oict" type="button">OICT</button><button className={portfolio.control} data-focus="centerpoint" type="button">Factory</button></div>
             <div className={`impact-strip ${styles.impactStrip}`}>
-              <div><span className={portfolio.eyebrow}>Following one truck</span><strong id="selected-asset">TRK-104</strong><small id="asset-role">Illustrative vehicle</small></div>
-              <div><span className={portfolio.eyebrow}>Service visits</span><strong id="service-visits">—</strong><small id="service-summary">Illustrative service history</small></div>
-              <div><span className={portfolio.eyebrow}>Repeat service cost</span><strong id="maintenance-cost">Amount not provided</strong><small id="maintenance-cost-note">Labor, parts and downtime</small></div>
+              <div><span className={portfolio.eyebrow}>Following one truck</span><strong id="selected-asset">TRK-104</strong><small id="asset-role"></small></div>
+              <div><span className={portfolio.eyebrow}>Service visits</span><strong id="service-visits">—</strong><small id="service-summary"></small></div>
+              <div><span className={portfolio.eyebrow}>Repeat service cost</span><strong id="maintenance-cost">—</strong><small id="maintenance-cost-note">Labor, parts and downtime</small></div>
             </div>
           </div>
           <div id="source-dialog" className={styles.sourceDialog} role="dialog" aria-modal="true" aria-labelledby="source-dialog-title" hidden>
             <button id="source-close" className={`${portfolio.control} ${styles.close}`} type="button" aria-label="Close source controls">×</button>
             <h2 id="source-dialog-title">Choose the source. Keep the history.</h2>
-            <p>Try the controls with synthetic Provider A/B data. These sample values are separate from the story’s mileage animation.</p>
+            <p>Choose which provider supplies this vehicle’s odometer.</p>
             <div id="reading-context" className={styles.readingContext}><span className={portfolio.eyebrow}>Odometer used for maintenance</span><strong id="canonical-reading">Unresolved</strong><small id="canonical-source">Choose an odometer source</small></div>
             <div id="source-inspector"><div id="provenance" /><div id="app-feedback" className={styles.feedback} role="status" aria-live="polite" /></div>
             <p id="mode-description" className={styles.modeDescription} />
@@ -221,11 +213,8 @@ export default function FleetDemoShell() {
           <div id="about-panel" className={styles.aboutPanel} role="dialog" aria-modal="true" aria-labelledby="about-heading" hidden>
             <button id="about-close" className={`${portfolio.control} ${styles.close}`} type="button" aria-label="Close demo details">×</button>
             <h2 id="about-heading">About this story</h2>
-            <p>The incident and provider overlap were reported by the designer. Vehicle IDs, readings, dates and shop visits in this synthetic demo are examples, not live telemetry. The Oakland map provides geographic context; the workshop, factory activity and routes are illustrative.</p>
-            <p>The exact maintenance-trigger rule is unknown. The mileage loop explains the reported consequence without reconstructing that rule. The four-visit, two-week cost animation is illustrative; no historical dollar amount or savings is claimed.</p>
-            <p>Fuel integrations provide fuel-related operational data; the odometer conflict concerns telematics data. Named providers illustrate the reported change without assigning a migration direction. The optional source controls use anonymous synthetic Provider A/B records.</p>
-            <p>The 90% improvement, from weeks to hours, refers to data issue resolution. The AI workflow is a proposed approach for today, not part of the original work or a live model.</p>
-            <p id="cargo-capability-note">This preview runs incoming kits through assembly. The activity in the background is an illustration of fleet operations.</p>
+            <p>This case study follows the provider-overlap incident. The source controls use sample records so you can try the workflow.</p>
+            <p id="cargo-capability-note">Follow the trucks, incoming kits and assembly work in the scene.</p>
 
             <details><summary>Data and performance</summary><p id="integrity-count" /><p>Original readings and service history are preserved. Settings are versioned and recalculated results are derived views.</p><p><span id="run-status">Scene paused</span> · One 20 Hz simulation clock with interpolated rendering.</p><p id="performance">Performance measurement pending</p><p>Browser frame cadence is not a physical-GPU benchmark.</p></details>
             <p><a href="/fleet-demo/reno.html">Original Reno console ↗</a></p><AnimatedLink href="/projects/fleet-fuel-integration">Read the original case study ↗</AnimatedLink>

@@ -41,8 +41,8 @@ try{
  for(let index=0;index<9;index++){
   phase=`scene-${index+1}`;await page.locator(`#scene-steps [data-scene-index="${index}"]`).click();
   const current=await state();assert.equal(current.story.id,ids[index]);assert.equal(current.story.index,index);assert.equal(current.story.paused,true);
-  assert.equal(await page.locator(`[data-story-overlay="${ids[index]}"]`).isVisible(),true);
-  assert.equal(await page.locator('[data-story-overlay]:visible').count(),1);
+  assert.equal(await page.locator(`[data-story-overlay="${ids[index]}"]`).isVisible(),index!==2);
+  assert.equal(await page.locator('[data-story-overlay]:visible').count(),index===2?0:1);
   assert.equal(await page.locator('#story-content').isVisible(),index!==0);
   const geometry=await dockGeometry();assert.ok(Math.abs(geometry.width-initialDock.width)<=1);assert.ok(Math.abs(geometry.height-initialDock.height)<=1);assert.deepEqual(geometry.controls,initialDock.controls);
   await noOverflow(`Scene ${index+1} has no horizontal overflow`);await capture(`${String(index+2).padStart(2,'0')}-${ids[index]}-desktop.png`);
@@ -57,10 +57,9 @@ try{
  phase='mileage';
  for(const [elapsed,value] of [[0,'30,000'],[2,'50,000'],[3,'30,000'],[5,'50,500'],[6,'30,000'],[8,'51,000'],[9,'30,000']]){await seek(4,elapsed/18);assert.equal(await page.locator('#mileage-value').innerText(),value);}
  check('Provider devices retain requested order and the blurred/dimmed background; mileage loop repeats exact illustrative values');
- phase='cost';await seek(5,0);assert.equal(await page.locator('#service-visits').innerText(),'1');await seek(5,.95);assert.equal(await page.locator('#service-visits').innerText(),'4');assert.equal(await page.locator('#maintenance-cost').innerText(),'3 × service cost');
- await page.locator('#service-unit-cost').fill('200');assert.equal(await page.locator('#maintenance-cost').innerText(),'$600');assert.match(await page.locator('#maintenance-cost-note').innerText(),/Illustrative/);
- await page.locator('#service-unit-cost').fill('');assert.equal(await page.locator('#maintenance-cost').innerText(),'3 × service cost');
- check('Four illustrative visits across two weeks show three repeat costs; unknown dollars stay unknown until the visitor enters an amount');
+ phase='cost';await seek(5,0);assert.equal(await page.locator('#service-visits').innerText(),'1');assert.equal(await page.locator('#cost-total').innerText(),'$350');assert.equal(await page.locator('#maintenance-cost').innerText(),'$0');
+ await seek(5,.75);assert.equal(await page.locator('#service-visits').innerText(),'2');assert.equal(await page.locator('#cost-total').innerText(),'$700');assert.equal(await page.locator('#cost-duplicate').innerText(),'$350');assert.equal(await page.locator('#maintenance-cost').innerText(),'$350');assert.equal(await page.locator('#maintenance-cost-note').innerText(),'Example cost');assert.equal(await page.locator('#service-unit-cost').count(),0);
+ check('Two visits in one week animate a fixed $350 service, $700 total and $350 duplicate cost');
  phase='source-controls';await seek(6,.3);const truth=await page.evaluate(()=>{const value=window.__fleetDemo.getState().scenario;return{readings:JSON.stringify(value.readings),services:JSON.stringify(value.serviceFacts)};});
  await page.locator('#open-source-controls').click();assert.equal(await page.locator('#source-dialog').isVisible(),true);
  await page.locator('#provenance [data-action="set-authority"][data-source="B"]').click();

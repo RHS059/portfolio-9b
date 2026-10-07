@@ -19,7 +19,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   let disposed=false,debugAPI,scenario,evaluation,domain,scene,panel,sim,ready=false;
   let story=sampleStory(0),stage=0,intro=true,mode='then',selectedVehicleId='TRK-104',view='iso',follow=true;
   let review=null,notifications=[],commandSequence=0,reviewing=false,reviewSequence=0,lastMetricUpdate=0;
-  let exploring=false,serviceCost=null,activeDialog=null,dialogReturnFocus=null,visibilityPauseState=null;
+  let exploring=false,activeDialog=null,dialogReturnFocus=null,visibilityPauseState=null;
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   function on(target,type,listener,options){if(!target)throw new Error(`Missing Fleet control for ${type}`);target.addEventListener(type,listener,options);cleanups.push(()=>target.removeEventListener(type,listener,options));}
   function dispose(){if(disposed)return;disposed=true;ready=false;reviewSequence++;for(const remove of cleanups.splice(0))remove();sim?.dispose();scene?.dispose();panel?.dispose();if(window.__fleetDemo===debugAPI)delete window.__fleetDemo;if(mountedControllers.get(root)?.dispose===dispose)mountedControllers.delete(root);}
@@ -58,11 +58,12 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     $('#intro-panel').hidden=!intro;$('#story-content').hidden=intro;$('#project-info').hidden=!intro;
     $('#chapter-number').textContent=`SCENE ${String(stage+1).padStart(2,'0')} / 09`;
     $('#chapter-title').textContent=story.title;$('#chapter-copy').textContent=story.copy;
+    $('#chapter-title').hidden=stage===6||stage===7;$('#chapter-copy').hidden=stage===6||stage===7||!story.copy;
     $('#story-position').textContent=`${String(stage+1).padStart(2,'0')} / 09 · ${story.label}`;
     $('#previous-chapter').disabled=stage===0;
     $('#next-chapter').textContent=stage===8?'Replay ↺':'Next →';$('#next-chapter').setAttribute('aria-label',stage===8?'Replay story':'Next scene');
     $('#open-source-controls').hidden=stage!==6;$('#run-story-review').hidden=stage!==7;$('#story-replay').hidden=stage!==8;
-    const takeaways={1:'Fuel data and odometer data support different parts of fleet operations.',2:'A maintenance alert had become a real shop visit.',3:'A provider switch needs an explicit handover.',4:'Import time isn’t the same as observation time.',5:'The cost extends beyond the invoice.',6:'<strong>90% faster</strong><p>Data issue resolution improved from weeks to hours. This measures issue resolution, not maintenance savings.</p>',7:'Advisory agents. Human approval. An intact audit trail.',8:'Source selection is a product decision, with operational consequences.'};
+    const takeaways={6:'<strong>90% faster</strong><p>Data issue resolution went from weeks to hours.</p>'};
     $('#chapter-takeaway').innerHTML=takeaways[stage]||'';
     $$('[data-story-overlay]').forEach(element=>{element.hidden=exploring||element.dataset.storyOverlay!==story.id;});
     $$('[data-scene-index]').forEach(button=>{const index=Number(button.dataset.sceneIndex);button.setAttribute('aria-current',index===stage?'step':'false');button.dataset.complete=String(index<stage);});
@@ -70,15 +71,16 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   }
   function renderPresentation(){
     $('#story-progress').value=String(story.timeSeconds);$('#story-progress').setAttribute('aria-valuetext',`Scene ${stage+1} of 9: ${story.label}, ${Math.round(story.progress*100)} percent`);
-    $('#selected-asset').textContent=selectedVehicleId;$('#asset-role').textContent=stage<2?'On the road · illustrative':stage<6?'Repeat maintenance · illustrative':'Source decision · illustrative';
+    $('#selected-asset').textContent=selectedVehicleId;$('#asset-role').textContent=stage<2?'On the road':stage<6?'Back in the workshop':'Odometer source';
     if(stage===4){const mileage=sampleMileage(story.elapsedSeconds);$('#mileage-day').textContent=String(mileage.day);$('#mileage-current').textContent=mileage.current.toLocaleString('en-US');$('#mileage-value').textContent=mileage.display.toLocaleString('en-US');$('#mileage-alert').textContent=mileage.maintenanceDue?'Preventive maintenance appears due. Again.':mileage.atCurrent?'Current reading imported':'Stale reading imported again';$('#mileage-alert').dataset.due=String(mileage.maintenanceDue);}
-    const cost=sampleCost(stage===5?story.progress:stage>5?1:0,serviceCost);
+    const cost=sampleCost(stage===5?story.progress:stage>5?1:0);
     const visits=stage<2?0:stage<5?2:cost.visits,repeatVisits=stage<2?0:stage<5?1:cost.repeatVisits;
     $('#service-visits').textContent=stage<2?'—':String(visits);
-    $('#service-summary').textContent=stage<2?'Following the same truck':stage<5?'Two visits in one week':`${repeatVisits} repeat ${repeatVisits===1?'visit':'visits'} · 14-day illustration`;
-    $('#maintenance-cost').textContent=stage<5?'Amount not provided':cost.repeatCost===null?`${cost.repeatVisits} × service cost`:money(cost.repeatCost);
-    $('#maintenance-cost-note').textContent=stage<5?'Labor, parts and downtime':cost.repeatCost===null?'Enter an illustrative cost above':'Illustrative repeat-service cost';
-    if(stage===5){$('#cost-caption').textContent=`Day ${cost.day} of 14 · ${cost.visits} ${cost.visits===1?'service':'services'} · ${cost.repeatVisits} repeated`;$$('[data-cost-day]').forEach(cell=>cell.dataset.past=String(Number(cell.dataset.costDay)<=cost.day));}
+    $('#service-summary').textContent=stage<2?'Following the same truck':stage<5?'Two visits in one week':`${visits} ${visits===1?'visit':'visits'} this week`;
+    $('#maintenance-cost').textContent=stage<5?'—':money(cost.repeatCost);
+    $('#maintenance-cost-note').textContent=stage<5?'Labor, parts and downtime':'Example cost';
+    if(stage===5){$('#cost-caption').textContent=cost.visits===1?'First visit':'Second visit. Same week.';$('#cost-total').textContent=money(cost.totalCost);$('#cost-duplicate').textContent=money(cost.repeatCost);$$('[data-cost-visit]').forEach(item=>item.dataset.active=String(Number(item.dataset.costVisit)<=cost.visits));}
+
     if(stage===7){const active=Math.min(2,Math.floor((story.elapsedSeconds%9)/3));$$('[data-agent-step]').forEach(row=>row.dataset.active=String(Number(row.dataset.agentStep)<=active));}
   }
   function render(){
@@ -86,7 +88,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     const canonical=evaluation?.vehicles.find(v=>v.vehicleId===selectedVehicleId);
     $('#canonical-reading').textContent=canonical?.status==='resolved'?`${Math.round(canonical.valueKm/1.609344).toLocaleString('en-US')} mi`:'Unresolved';
     $('#canonical-source').textContent=canonical?.status==='resolved'?`Provider ${canonical.sourceId}`:'No usable reading from the chosen source';
-    $('#mode-description').textContent=mode==='then'?'These controls choose one vehicle’s odometer source and exclude readings without deleting history.':'This deterministic example review is advisory. A person must approve any source change; no live model is running.';
+    $('#mode-description').textContent=mode==='then'?'These controls choose one vehicle’s odometer source and exclude readings without deleting history.':'Review the flagged readings, then choose the source.';
     $('#integrity-count').textContent=scenario?`${scenario.readings.length} readings kept`:'Raw records kept';
     if(panel&&scenario)panel.update({mode,compact:true,showVehicleSelector:true,selectedVehicleId,readings:scenario.readings,policies:scenario.policies,exclusions:scenario.exclusions,decisions:evaluation.decisions,serviceHistory:scenario.serviceFacts||[],review:review?.vehicleId===selectedVehicleId?review:null,configurationVersion:scenario.configVersion,authorityStatus:canonical?.status||'unresolved',canonical,vehicles:scenario.vehicles,notifications,asOf:scenario.asOf,reviewing,assumptions:scenario.fixture?.assumptions||[]});
     if(scene&&sim){const current=sim.getState();scene.update(snapshot(current.timeSeconds,current.paused));}
@@ -106,7 +108,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   function togglePlayback(){if(!sim)return;if(story.complete&&!exploring)sim.seek(0);setPaused(!sim.getState().paused);}
   function replay(){
     closeDialog(false);exploring=false;if(domain){scenario=domain.createScenario({authorityApplied:false});evaluate();}
-    reviewSequence++;reviewing=false;review=null;notifications=[];commandSequence=0;selectedVehicleId='TRK-104';mode='then';view='iso';follow=true;serviceCost=null;$('#service-unit-cost').value='';
+    reviewSequence++;reviewing=false;review=null;notifications=[];commandSequence=0;selectedVehicleId='TRK-104';mode='then';view='iso';follow=true;
     $$('[data-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.view===view)));
     sim?.seek(0);setPaused(reducedMotion.matches);render();applySceneCamera();scene?.resize();focusStoryText();
   }
@@ -147,14 +149,12 @@ export function mountFleetDemo({root=document,theme={}}={}) {
       observer.observe($('#pause'));cleanups.push(()=>observer.disconnect());
     }
     $('#scene-steps').innerHTML=STORY_SCENES.map(item=>`<button type="button" data-scene-index="${item.index}" aria-label="Scene ${item.index+1}: ${item.label}" title="${item.label}">${String(item.index+1).padStart(2,'0')}</button>`).join('');
-    $('#cost-days').innerHTML=Array.from({length:14},(_,index)=>`<span data-cost-day="${index+1}" data-visit="${[1,4,8,12].includes(index+1)}">${index+1}</span>`).join('');
     $('#story-progress').max=String(STORY_DURATION);
     on($('#start-story'),'click',()=>setChapter(1));on($('#previous-chapter'),'click',()=>setChapter(stage-1));on($('#next-chapter'),'click',()=>setChapter(stage+1));
     $$('[data-scene-index]').forEach(button=>on(button,'click',()=>setChapter(Number(button.dataset.sceneIndex))));
     on($('#story-progress'),'input',event=>{setPaused(true);sim?.seek(Number(event.target.value));});
     on($('#explore-scene'),'click',()=>{closeDialog(false);setPaused(true);exploring=!exploring;render();if(!exploring)applySceneCamera();});
     on($('#mobile-pause'),'click',togglePlayback);on($('#pause'),'click',togglePlayback);on($('#reset'),'click',replay);on($('#story-replay'),'click',replay);
-    on($('#service-unit-cost'),'focus',()=>setPaused(true));on($('#service-unit-cost'),'input',event=>{const value=event.target.value;serviceCost=value===''?null:Math.max(0,Math.min(100000,Number(value)));renderPresentation();});
     on($('#open-source-controls'),'click',()=>{mode='then';openDialog('#source-dialog');render();});
     on($('#run-story-review'),'click',()=>{mode='today';openDialog('#source-dialog');render();void handleAction({type:'review-imports'});});
     on($('#source-close'),'click',()=>closeDialog());

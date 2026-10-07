@@ -166,3 +166,17 @@
   .aboutPanel,.sourceDialog { inset: 8px; max-height: calc(100% - 16px); padding: 18px; }
 }
 @media (prefers-reduced-motion: reduce) { .world,.agentSteps li { transition: none; } }
+
+/* Story copy stays in the dialogue; the cost is a fixed two-visit example. */
+.storyOverlays .dialogueCopy { margin: 12px 0; font-size: 13px; line-height: 1.55; }
+.solutionCard .decisionRow { padding: 14px 0; }
+.agentCard .agentSteps li { padding: 9px 8px; }
+.costVisits { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 26px; }
+.costVisits > div { display: grid; gap: 8px; padding: 18px; border: 1px solid var(--sidebar-rule); opacity: .35; }
+.costVisits > div[data-active="true"] { opacity: 1; border-color: var(--ink); }
+.costVisits span { font-size: 12px; color: var(--muted); }
+.costVisits strong { font-size: 28px; font-weight: 600; letter-spacing: -.025em; }
+.costTotal, .costRepeat { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 17px 0; border-top: 1px solid var(--sidebar-rule); }
+.costTotal span, .costRepeat span { font-size: 13px; }
+.costTotal strong { font-size: 28px; font-weight: 600; }
+.costRepeat strong { font-size: 36px; color: var(--accent); font-weight: 600; letter-spacing: -.035em; }
