@@ -1,6 +1,6 @@
 # Illustrative cargo process contract
 
-`sampleCargoProcess(timeSeconds, {paused, presentationOffsetSeconds})` is the primary API. Feed it the existing
+`sampleCargoProcess(timeSeconds, {paused, presentationOffsetSeconds, outgoingEnabled})` is the primary API. Feed it the existing
 simulation clock, then give the renderer `cargoProcess: process` and
 `factoryAssembly: process.factoryAssembly`. It creates no timer and reads no
 odometer, source-authority or maintenance data. Changing a source setting cannot
@@ -29,6 +29,43 @@ option is a seek, so a renderer should discard interpolation across the change.
 The optional adapter also accepts
 `createCargoProcess({presentationOffsetSeconds})`; a `snapshotAt` call can override
 that offset explicitly without mutating its clock.
+
+## Explicit inbound-only preview
+
+`outgoingEnabled` defaults to true, preserving the complete repeating process.
+An explicit `outgoingEnabled:false` selects a coherent, bounded one-pass preview.
+It is not a visual-only mesh toggle: each slot performs its first incoming cycle
+through assembly completion at relative118 seconds, then holds that completed
+product at the actual workcell output mount. No replacement kit enters that
+occupied fixture. The incoming truck has already completed its normal return at
+106 seconds and remains empty at port with `travelCycle:1`.
+
+The frozen snapshot reports exactly:
+
+- `outgoingEnabled:false`
+- `capabilities:{outgoing:false, onePassHold:true}`
+- Each completed product has `stage:'ready'`, `held:true`,
+  `holdReason:'outgoing-disabled'`, `visible:true`, workcell ownership and a resting
+  motion at its `cellOutput` anchor
+- Its input kit remains consumed/hidden with the original batch1 identity; the
+  cell keeps `outputProductId`, `cargoId:null`, `active:false`, `armAction:'park'`
+  and `outputTransferProgress:0`
+- `outboundVehicles`, `qaStations` and `dispatchStaging` are empty arrays; no
+  outgoing AMR/forklift phase or product transfer runs
+
+App `timeSeconds` and derived `processTimeSeconds` still advance normally, so the
+shared clock and unrelated road traffic continue. Only each material slot stops
+at its first completed output. No source readings, maintenance decisions or
+service facts are changed. Pause, seek, warm start and reset remain deterministic;
+Reset replays the same bounded first pass.
+
+The optional `createCargoProcess` adapter and both event APIs accept the same
+`outgoingEnabled` flag. In inbound-only mode, cargo events contain first-batch
+transitions only; product events contain assembly and ready transitions only.
+There are no later batch, QA, dispatch or fleet-receipt events. The renderer must
+preserve this option when resampling an interpolated clock, and must keep all
+four held products visibly at their output mounts after completion. The complete
+default process remains available by omitting the flag or setting it to true.
 
 ## Identities and limits
 
@@ -85,7 +122,8 @@ only then lower to 0.55 m over 15–30%, travel at 0.55 m through 85%, and raise
 
 ## Timeline
 
-Each slot repeats every 128 seconds, starting at offsets 0, 32, 64 and 96. Before a
+With outgoing enabled, each slot repeats every 128 seconds, starting at offsets
+0, 32, 64 and 96. The inbound-only preview uses those same starts once. Before a
 slot's first start its kit is waiting aboard its ship. Its relative phases are:
 
 | Seconds | Stage | Material owner |
@@ -126,7 +164,8 @@ explicit progress zero, never an independent free-running animation clock.
 `armAction` is `open-box`, `assemble-drone`, `handoff-output`, or `park`.
 `outputProductId` is present only while that cell owns its visible product;
 `outputTransferProgress` controls the completed-product transfer to the AMR pickup.
-During the explicit ready-product handoff at118–122, `active:true` enables that
+With outgoing enabled, the explicit ready-product handoff at118–122 sets
+`active:true` to enable that
 mechanism while `cargoId` remains null: the input kit is consumed, and only the
 identified `outputProductId` is being handled. At122, the product moves into AMR
 custody, the arm returns to park, and this output activity gate turns off.
@@ -245,7 +284,7 @@ travel at a cargo batch boundary. Pause and reset still use the single app clock
 
 ## Events and tests
 
-`cargoEventsBetween(fromSeconds, toSeconds, {limit, presentationOffsetSeconds})` derives stage-entry events
+`cargoEventsBetween(fromSeconds, toSeconds, {limit, presentationOffsetSeconds, outgoingEnabled})` derives stage-entry events
 in the half-open interval `(from, to]`, without stored history. With an offset,
 input times and each event's `timeSeconds` remain in the app clock; the event's
 `processTimeSeconds` exposes its phase time. Earlier warm-up events are not emitted.
@@ -267,4 +306,4 @@ the original inbound event stream.
 Run `node --test tests/core/cargo-process.test.js`. It verifies custody, handoffs,
 loading, forward pull-through and secure access, empty return, two-bay exclusion over eight cycles,
 box-before-drone ordering, snapshot immutability, pause/reset/seek, invalid inputs,
-bounded counts, nonduplicating transition events, populated-start snapshot/event agreement, and measured fork support heights, product conservation across rollover, QA-before-dispatch, output capacity, explicit machine returns, outgoing event/snapshot agreement, wheel-cycle endpoint continuity, measured pocket extraction, paired roller transfers, and no semantic jumps at their boundaries.
+bounded counts, nonduplicating transition events, populated-start snapshot/event agreement, and measured fork support heights, product conservation across rollover, QA-before-dispatch, output capacity, explicit machine returns, outgoing event/snapshot agreement, wheel-cycle endpoint continuity, measured pocket extraction, paired roller transfers, no semantic jumps at their boundaries, and inbound-only boundary/long-session/pause/reset/custody/event behavior.

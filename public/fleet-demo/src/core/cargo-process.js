@@ -72,8 +72,10 @@ function phaseAt(slot, timeSeconds) {
   return {cycle,localTime,waiting,stage:definition.id,progress:waiting ? 0 : clamp((localTime-definition.start)/definition.duration)};
 }
 
-function sampleSlot(slot, timeSeconds) {
-  const {cycle,localTime,waiting,stage,progress} = phaseAt(slot,timeSeconds), a = slot.anchors;
+function sampleSlot(slot, timeSeconds, outgoingEnabled=true) {
+  // An inbound preview completes once, then holds this fixture's real output.
+  const sampleTime=outgoingEnabled?timeSeconds:Math.min(timeSeconds,slot.offsetSeconds+phases['drone-assembly'].end);
+  const {cycle,localTime,waiting,stage,progress} = phaseAt(slot,sampleTime), a = slot.anchors;
   const cargoId = cargoIdFor(slot,cycle), productId = `DRONE-${cargoId}`;
   let materialOwner = owner('ship',slot.shipId,a.ship), materialMotion = resting(a.ship);
   if (stage === 'ship-unloading') {materialOwner=owner('crane',slot.craneId,a.quay);materialMotion=motion(a.ship,a.quay,progress);}
@@ -155,12 +157,17 @@ function sampleSlot(slot, timeSeconds) {
     progress:active?clamp((localTime-phases['box-opening'].start)/(phases['drone-assembly'].end-phases['box-opening'].start)):stage==='complete'?1:0,
     boxOpen,assemblyProgress,armAction:stage==='box-opening'?'open-box':stage==='drone-assembly'?'assemble-drone':'park',
   };
-  const product=sampleProduct(slot,timeSeconds);
+  const product=sampleProduct(slot,sampleTime);
+  if(!outgoingEnabled&&product.completed){
+    product.stage='ready';product.stageProgress=0;product.held=true;product.holdReason='outgoing-disabled';
+    product.owner=owner('workcell',slot.cellId,a.cellOutput);product.carrierId=slot.cellId;
+    product.attachment={parentId:slot.cellId,anchorId:a.cellOutput};product.motion=resting(a.cellOutput);
+  }
   cell.outputProductId=product.visible&&product.owner.kind==='workcell'?product.id:null;
   cell.outputTransferProgress=product.stage==='ready'?product.stageProgress:0;
   // Finished-output activity is independent of already-consumed input custody.
-  if(product.stage==='ready'){cell.armAction='handoff-output';cell.active=true;}
-  return {cargo,truck,forklift:outgoingForklift(slot,forklift,product),floorRobot:outgoingRobot(slot,floorRobot,product),crane,cell,product};
+  if(outgoingEnabled&&product.stage==='ready'){cell.armAction='handoff-output';cell.active=true;}
+  return {cargo,truck,forklift:outgoingEnabled?outgoingForklift(slot,forklift,product):forklift,floorRobot:outgoingEnabled?outgoingRobot(slot,floorRobot,product):floorRobot,crane,cell,product};
 }
 
 /** Retain an outgoing product across kit rollover; replace it only at next assembly. */
@@ -250,17 +257,18 @@ function sampleOutboundVehicles(products,timeSeconds) {
  * Optional presentationOffsetSeconds populates the pipeline without another clock.
  * timeSeconds remains the caller's time; processTimeSeconds is the sampled phase.
  */
-export function sampleCargoProcess(timeSeconds=0, {paused=false,presentationOffsetSeconds=0}={}) {
+export function sampleCargoProcess(timeSeconds=0, {paused=false,presentationOffsetSeconds=0,outgoingEnabled=true}={}) {
   const time=seconds(timeSeconds),offset=seconds(presentationOffsetSeconds),processTime=seconds(time+offset);
-  const slots=CARGO_SLOTS.map(slot=>sampleSlot(slot,processTime));
+  const outgoing=outgoingEnabled!==false;
+  const slots=CARGO_SLOTS.map(slot=>sampleSlot(slot,processTime,outgoing));
   const cargo=slots.map(slot=>slot.cargo),products=slots.map(slot=>slot.product);
   const qaStations=[{id:'QA-01',capacity:1,productIds:products.filter(p=>p.owner.kind==='qa-station').map(p=>p.id)}];
   const dispatchStaging=[0,1].map(i=>({id:CARGO_SLOTS[i].dispatchStagingId,bayId:CARGO_SLOTS[i].dispatchBayId,capacity:1,sortKey:'destination-fleet',productIds:products.filter(p=>p.owner.kind==='dispatch-staging'&&p.dispatchStagingId===CARGO_SLOTS[i].dispatchStagingId).map(p=>p.id)}));
   const ships=['SHIP-01','SHIP-02'].map(id=>({id,stage:'berthed',cargoIds:cargo.filter(c=>c.owner.kind==='ship'&&c.owner.id===id).map(c=>c.id)}));
-  return freeze({version:CARGO_PROCESS_VERSION,illustrative:true,label:'Illustrative cargo and drone assembly; not dispatch or production records',
+  return freeze({version:CARGO_PROCESS_VERSION,illustrative:true,outgoingEnabled:outgoing,capabilities:{outgoing,onePassHold:!outgoing},label:'Illustrative cargo and drone assembly; not dispatch or production records',
     timeSeconds:time,processTimeSeconds:processTime,presentationOffsetSeconds:offset,paused:!!paused,cycleSeconds:CARGO_CYCLE_SECONDS,cargo,ships,
     trucks:slots.map(slot=>slot.truck),cranes:slots.map(slot=>slot.crane),forklifts:slots.map(slot=>slot.forklift),
-    floorRobots:slots.map(slot=>slot.floorRobot),products,qaStations,dispatchStaging,outboundVehicles:sampleOutboundVehicles(products,processTime),
+    floorRobots:slots.map(slot=>slot.floorRobot),products,qaStations:outgoing?qaStations:[],dispatchStaging:outgoing?dispatchStaging:[],outboundVehicles:outgoing?sampleOutboundVehicles(products,processTime):[],
     factoryAssembly:{cells:slots.map(slot=>slot.cell)},
   });
 }
@@ -272,7 +280,7 @@ export function sampleCargoProcess(timeSeconds=0, {paused=false,presentationOffs
  * With a presentation offset, inputs/event.timeSeconds stay in the caller's clock;
  * event.processTimeSeconds records the phase clock. Earlier warm-up is not replayed.
  */
-export function cargoEventsBetween(fromSeconds, toSeconds, {limit=CARGO_PROCESS_LIMITS.events,presentationOffsetSeconds=0}={}) {
+export function cargoEventsBetween(fromSeconds, toSeconds, {limit=CARGO_PROCESS_LIMITS.events,presentationOffsetSeconds=0,outgoingEnabled=true}={}) {
   const offset=seconds(presentationOffsetSeconds);
   const from=seconds(seconds(fromSeconds)+offset),to=seconds(seconds(toSeconds)+offset);
   const capacity=Number.isFinite(limit)?Math.max(0,Math.min(CARGO_PROCESS_LIMITS.events,Math.floor(limit))):CARGO_PROCESS_LIMITS.events;
@@ -281,7 +289,7 @@ export function cargoEventsBetween(fromSeconds, toSeconds, {limit=CARGO_PROCESS_
   for(const slot of CARGO_SLOTS)for(const phase of [...CARGO_STAGES,{id:'workcell-received',stage:'robot-transport',start:87,type:'cargo-handed-to-workcell'}]){
     const firstTime=slot.offsetSeconds+phase.start;
     const firstCycle=Math.max(0,Math.floor((from-firstTime)/CARGO_CYCLE_SECONDS)+1);
-    const lastCycle=Math.floor((to-firstTime)/CARGO_CYCLE_SECONDS);
+    const lastCycle=Math.min(outgoingEnabled===false?0:Infinity,Math.floor((to-firstTime)/CARGO_CYCLE_SECONDS));
     if(lastCycle<firstCycle)continue;
     total+=lastCycle-firstCycle+1;
     for(let cycle=Math.max(firstCycle,lastCycle-capacity+1);cycle<=lastCycle;cycle++){
@@ -298,14 +306,14 @@ export function cargoEventsBetween(fromSeconds, toSeconds, {limit=CARGO_PROCESS_
 }
 
 /** Additive finished-product events; same bounded app-clock semantics as cargo events. */
-export function productEventsBetween(fromSeconds,toSeconds,{limit=CARGO_PROCESS_LIMITS.events,presentationOffsetSeconds=0}={}) {
+export function productEventsBetween(fromSeconds,toSeconds,{limit=CARGO_PROCESS_LIMITS.events,presentationOffsetSeconds=0,outgoingEnabled=true}={}) {
   const offset=seconds(presentationOffsetSeconds),from=seconds(seconds(fromSeconds)+offset),to=seconds(seconds(toSeconds)+offset);
   const capacity=Number.isFinite(limit)?Math.max(0,Math.min(CARGO_PROCESS_LIMITS.events,Math.floor(limit))):CARGO_PROCESS_LIMITS.events;
   if(to<=from)return freeze({events:[],omittedCount:0});
   const latest=[];let total=0;
-  for(const slot of CARGO_SLOTS)for(const phase of PRODUCT_STAGES){
+  for(const slot of CARGO_SLOTS)for(const phase of outgoingEnabled===false?PRODUCT_STAGES.filter(p=>['assembling','ready'].includes(p.id)):PRODUCT_STAGES){
     const firstTime=slot.offsetSeconds+phase.start;
-    const firstCycle=Math.max(0,Math.floor((from-firstTime)/CARGO_CYCLE_SECONDS)+1),lastCycle=Math.floor((to-firstTime)/CARGO_CYCLE_SECONDS);
+    const firstCycle=Math.max(0,Math.floor((from-firstTime)/CARGO_CYCLE_SECONDS)+1),lastCycle=Math.min(outgoingEnabled===false?0:Infinity,Math.floor((to-firstTime)/CARGO_CYCLE_SECONDS));
     if(lastCycle<firstCycle)continue;
     total+=lastCycle-firstCycle+1;
     for(let cycle=Math.max(firstCycle,lastCycle-capacity+1);cycle<=lastCycle;cycle++){
@@ -322,12 +330,13 @@ export function productEventsBetween(fromSeconds,toSeconds,{limit=CARGO_PROCESS_
 }
 
 /** Optional seekable adapter for standalone consumers. It never creates a timer. */
-export function createCargoProcess({presentationOffsetSeconds=0}={}) {
+export function createCargoProcess({presentationOffsetSeconds=0,outgoingEnabled=true}={}) {
   let timeSeconds=0,paused=false;
   const offset=seconds(presentationOffsetSeconds);
-  const sample=()=>sampleCargoProcess(timeSeconds,{paused,presentationOffsetSeconds:offset});
+  const outgoing=outgoingEnabled!==false;
+  const sample=()=>sampleCargoProcess(timeSeconds,{paused,presentationOffsetSeconds:offset,outgoingEnabled:outgoing});
   return Object.freeze({
-    snapshotAt:(time,options={})=>sampleCargoProcess(time,{paused,presentationOffsetSeconds:offset,...options}),
+    snapshotAt:(time,options={})=>sampleCargoProcess(time,{paused,presentationOffsetSeconds:offset,outgoingEnabled:outgoing,...options}),
     getSnapshot:sample,
     tick(deltaSeconds=0){if(!paused)timeSeconds=seconds(timeSeconds+seconds(deltaSeconds));return sample();},
     setPaused(value){paused=!!value;return sample();},

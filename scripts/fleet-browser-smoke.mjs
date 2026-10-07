@@ -33,6 +33,7 @@ try{
  await page.waitForTimeout(800);
  await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:30000});
  await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.vehicleDetailState==='ready'&&m.vehicleDetail.models.some(v=>v.id==='TRK-208');},undefined,{timeout:15000});
+ const projectedTarget=await page.evaluate(()=>{const m=window.__fleetDemo.getMetrics(),v=m.cameraTarget;return{point:window.__fleetDemo.projectScenePoint([v.x,v.y,0]),width:m.width,height:m.height};});assert.ok(projectedTarget.point&&projectedTarget.point.x>=0&&projectedTarget.point.x<=projectedTarget.width&&projectedTarget.point.y>=0&&projectedTarget.point.y<=projectedTarget.height,'Read-only scene projection must locate the followed truck inside the actual viewport');evidence.projectedTarget=projectedTarget;
  phase='initial-scene';await page.screenshot({path:path.join(out,'01-desktop-initial.png'),fullPage:true});
  const state=()=>page.evaluate(()=>window.__fleetDemo.getState());
  const advanceToStage=async target=>{if((await state()).intro)await page.locator('#start-story').click();while((await state()).stage<target)await page.locator('#next-chapter').click();while((await state()).stage>target)await page.locator('#previous-chapter').click();};

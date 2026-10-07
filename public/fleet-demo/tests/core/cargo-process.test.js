@@ -412,3 +412,68 @@ test('output activity gate stops exactly at QA pickup and never enables unrelate
     assert.equal(after.products[slot.index].owner.kind,'floor-robot');assert.equal(after.cargo[slot.index].owner.kind,'consumed');
   }
 });
+
+test('inbound preview is explicit and leaves the enabled default contract available',()=>{
+  const full=sampleCargoProcess(512),preview=sampleCargoProcess(512,{outgoingEnabled:false});
+  assert.equal(full.outgoingEnabled,true);assert.deepEqual(full.capabilities,{outgoing:true,onePassHold:false});
+  assert.equal(preview.outgoingEnabled,false);assert.deepEqual(preview.capabilities,{outgoing:false,onePassHold:true});
+  assert.ok(full.cargo.some(c=>c.batch>1));assert.equal(full.outboundVehicles.length,2);
+  assert.deepEqual(preview.outboundVehicles,[]);assert.deepEqual(preview.qaStations,[]);assert.deepEqual(preview.dispatchStaging,[]);
+  assertFrozen(preview);
+});
+
+test('inbound preview preserves first-pass transport, custody, intake and assembly before completion',()=>{
+  for(const slot of CARGO_SLOTS)for(const local of [0,6,22,26,58,61,62,72,77.5,78,87,87.5,88,94,106,117.999]){
+    const t=slot.offsetSeconds+local,full=sampleCargoProcess(t),preview=sampleCargoProcess(t,{outgoingEnabled:false});
+    for(const key of ['cargo','trucks','cranes','forklifts','floorRobots','products'])assert.deepEqual(preview[key][slot.index],full[key][slot.index],`${key} altered before first completion at${t}`);
+    assert.deepEqual(preview.factoryAssembly.cells[slot.index],full.factoryAssembly.cells[slot.index]);
+  }
+});
+
+test('disabled outgoing holds each completed product visibly at its workcell without replacement kits',()=>{
+  for(const slot of CARGO_SLOTS)for(const local of [118,118.001,120,122,128,222,512,1e9]){
+    const s=sampleCargoProcess(slot.offsetSeconds+local,{outgoingEnabled:false}),cargo=s.cargo[slot.index],product=s.products[slot.index],cell=s.factoryAssembly.cells[slot.index];
+    assert.equal(cargo.id,`${slot.id}-B0001`);assert.equal(cargo.batch,1);assert.equal(cargo.cycleIndex,0);assert.equal(cargo.stage,'complete');assert.equal(cargo.owner.kind,'consumed');assert.equal(cargo.visible,false);
+    assert.equal(product.id,`DRONE-${cargo.id}`);assert.equal(product.sourceCargoId,cargo.id);assert.equal(product.visible,true);assert.equal(product.completed,true);assert.equal(product.progress,1);
+    assert.equal(product.stage,'ready');assert.equal(product.held,true);assert.equal(product.holdReason,'outgoing-disabled');assert.equal(product.qaPassed,false);
+    assert.deepEqual(product.owner,{kind:'workcell',id:slot.cellId,anchorId:slot.anchors.cellOutput});
+    assert.deepEqual(product.motion,{fromAnchorId:slot.anchors.cellOutput,toAnchorId:slot.anchors.cellOutput,progress:0});
+    assert.equal(cell.active,false);assert.equal(cell.armAction,'park');assert.equal(cell.cargoId,null);assert.equal(cell.outputProductId,product.id);assert.equal(cell.outputTransferProgress,0);
+    assert.equal(s.trucks[slot.index].routeId,'cargo-port');assert.equal(s.trucks[slot.index].travelCycle,1);assert.equal(s.trucks[slot.index].loaded,false);
+    assert.equal(s.forklifts[slot.index].flow,undefined);assert.equal(s.floorRobots[slot.index].flow,undefined);
+  }
+});
+
+test('one-pass holds stay bounded while the shared clock and unrelated inputs keep advancing',()=>{
+  const options={outgoingEnabled:false,presentationOffsetSeconds:CARGO_PRESENTATION_OFFSET_SECONDS};
+  const start=sampleCargoProcess(512,options),later=sampleCargoProcess(1e9,{...options,odometerKm:123456,issueActive:true});
+  assert.equal(start.timeSeconds,512);assert.equal(later.timeSeconds,1e9);assert.equal(later.processTimeSeconds,1e9+CARGO_PRESENTATION_OFFSET_SECONDS);
+  for(const key of ['cargo','trucks','ships','cranes','forklifts','floorRobots','products','factoryAssembly'])assert.deepEqual(later[key],start[key]);
+  assert.equal(start.products.filter(p=>p.visible&&p.owner.kind==='workcell').length,4);
+  assert.equal(new Set(start.products.map(p=>p.id)).size,4);
+  for(let t=0;t<400;t+=.5){const s=sampleCargoProcess(t,options);
+    assert.equal(s.cargo.length,4);assert.equal(s.products.length,4);assert.ok(s.cargo.every(c=>c.batch===1));assert.equal(s.outboundVehicles.length,0);
+    for(const actor of [...s.forklifts,...s.floorRobots]){assert.equal(actor.productId,undefined);assert.notEqual(actor.flow,'outgoing');}
+  }
+});
+
+test('inbound-only event streams stop after the first completion and agree with held snapshots',()=>{
+  for(const offset of [0,CARGO_PRESENTATION_OFFSET_SECONDS]){
+    const options={outgoingEnabled:false,presentationOffsetSeconds:offset};
+    const cargo=cargoEventsBetween(0,1e9,options),products=productEventsBetween(0,1e9,options);
+    assert.equal(cargo.omittedCount,0);assert.equal(products.omittedCount,0);
+    for(const event of cargo.events){assert.ok(event.cargoId.endsWith('-B0001'));const c=sampleCargoProcess(event.timeSeconds,options).cargo.find(c=>c.slotId===event.slotId);assert.equal(event.cargoId,c.id);assert.equal(event.stage,c.stage);assert.deepEqual(event.owner,c.owner);}
+    for(const event of products.events){assert.ok(['assembling','ready'].includes(event.stage));assert.ok(event.productId.endsWith('-B0001'));assert.equal(event.qaPassed,false);const p=sampleCargoProcess(event.timeSeconds,options).products.find(p=>p.slotId===event.slotId);assert.equal(event.productId,p.id);assert.equal(event.stage,p.stage);assert.deepEqual(event.owner,p.owner);}
+    assert.deepEqual(cargoEventsBetween(512,1e9,options),{events:[],omittedCount:0});assert.deepEqual(productEventsBetween(512,1e9,options),{events:[],omittedCount:0});
+    assert.deepEqual(cargo.events,[...cargoEventsBetween(0,100,options).events,...cargoEventsBetween(100,1e9,options).events]);
+    assert.deepEqual(products.events,[...productEventsBetween(0,100,options).events,...productEventsBetween(100,1e9,options).events]);
+  }
+});
+
+test('inbound-only adapter keeps one clock, preserves paused holds and resets the same bounded run',()=>{
+  const options={outgoingEnabled:false,presentationOffsetSeconds:CARGO_PRESENTATION_OFFSET_SECONDS},process=createCargoProcess(options),initial=process.getSnapshot();
+  process.tick(512);const complete=process.pause();process.tick(500);assert.deepEqual(process.getSnapshot(),complete);
+  assert.deepEqual(process.snapshotAt(512),complete);assert.equal(process.snapshotAt(512,{outgoingEnabled:true}).outgoingEnabled,true);
+  process.reset();process.resume();assert.deepEqual(process.getSnapshot(),initial);
+  process.tick(512);assert.deepEqual(process.getSnapshot().products,complete.products);assert.equal(process.getSnapshot().timeSeconds,512);
+});
