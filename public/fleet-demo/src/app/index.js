@@ -10,6 +10,7 @@ import {createProvenancePanel as createFallbackPanel} from './fallback-provenanc
 const sampleProcess=(timeSeconds,paused)=>sampleCargoProcess(timeSeconds,{paused,presentationOffsetSeconds:CARGO_PRESENTATION_OFFSET_SECONDS,outgoingEnabled:false});
 const mountedControllers=new WeakMap();
 const freezeScene=value=>{if(value&&typeof value==='object'&&!Object.isFrozen(value)){Object.values(value).forEach(freezeScene);Object.freeze(value);}return value;};
+const receiptMoney=value=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(value);
 const money=value=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(value);
 /** One clock controls the story and renderer. Editorial overlays never mutate domain records. */
 export function mountFleetDemo({root=document,theme={}}={}) {
@@ -43,7 +44,8 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     $('#mobile-pause').textContent=paused?'▶ Play story':'Ⅱ Pause story';$('#mobile-pause').setAttribute('aria-label',paused?'Play story':'Pause story');$('#mobile-pause').setAttribute('aria-pressed',String(!paused));$('#mobile-pause').disabled=!ready;
     $('#pause').textContent=paused?'▶ Play':'Ⅱ Pause';$('#pause').setAttribute('aria-label',paused?'Play story':'Pause story');$('#pause').setAttribute('aria-pressed',String(!paused));
     $('#run-status').textContent=paused?'Story and scene paused':'Story and scene playing';
-    $('#playback-status').textContent=exploring?(paused?'Exploring scene · paused':'Exploring scene · playing'):story.complete?'End of story':paused?(reducedMotion.matches?'Paused · reduced motion':'Paused · explore at your pace'):'Autoplay · pause anytime';
+    $('#camera-controls').hidden=!paused&&!exploring;
+    $('#playback-status').textContent=exploring?(paused?'Manual view · paused':'Manual view · playing'):story.complete?'End of story':paused?(reducedMotion.matches?'Paused · reduced motion':'Paused · explore at your pace'):'Autoplay · pause anytime';
   }
   function applySceneCamera(){
     if(exploring)return;
@@ -56,20 +58,21 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   }
   function renderStory(){
     const workspace=$('.workspace');workspace.dataset.intro=String(intro);workspace.dataset.scene=story.id;workspace.dataset.exploring=String(exploring);
-    $('#explore-scene').setAttribute('aria-pressed',String(exploring));$('#explore-scene').textContent=exploring?'Return to story':'Explore scene';$('#explore-controls').hidden=!exploring;
     const beat=story,beatIndex=stage,isIntro=intro;
     sidebarTransition.update(beat.id,()=>{
     $('#intro-panel').hidden=!isIntro;$('#story-content').hidden=isIntro;$('#project-info').hidden=!isIntro;
-    $('#chapter-number').textContent=`SCENE ${String(beatIndex+1).padStart(2,'0')} / 09`;
+    $('#chapter-number').textContent=`SCENE ${String(beatIndex+1).padStart(2,'0')} / 09`;$('#chapter-number').hidden=beatIndex===6;
+    $('#sidebar-scenes').hidden=![1,4,6,7].includes(beatIndex);
+    $$('[data-story-sidebar]').forEach(element=>{element.hidden=element.dataset.storySidebar!==beat.id;});
     $('#chapter-title').textContent=beat.title;$('#chapter-copy').textContent=beat.copy;
-    $('#chapter-title').hidden=beatIndex===6||beatIndex===7;$('#chapter-copy').hidden=beatIndex===6||beatIndex===7||!beat.copy;
-    $('#open-source-controls').hidden=beatIndex!==6;$('#run-story-review').hidden=beatIndex!==7;$('#story-replay').hidden=beatIndex!==8;
+    $('#chapter-title').hidden=[1,6,7].includes(beatIndex);$('#chapter-copy').hidden=[1,6,7].includes(beatIndex)||!beat.copy;
+    $('#open-source-controls').hidden=beatIndex!==6;$('#run-story-review').hidden=beatIndex!==7;
     const takeaways={6:'<strong>90% faster</strong><p>Data issue resolution went from weeks to hours.</p>'};
     $('#chapter-takeaway').innerHTML=takeaways[beatIndex]||'';
     });
     $('#story-position').textContent=`${String(stage+1).padStart(2,'0')} / 09 · ${story.label}`;
     $('#previous-chapter').disabled=stage===0;
-    $('#next-chapter').textContent=stage===8?'Replay ↺':'Next →';$('#next-chapter').setAttribute('aria-label',stage===8?'Replay story':'Next scene');
+    $('#next-chapter').textContent='Next →';$('#next-chapter').disabled=stage===8;$('#next-chapter').setAttribute('aria-label','Next scene');
     $$('[data-story-overlay]').forEach(element=>{element.hidden=exploring||element.dataset.storyOverlay!==story.id;});
     $$('[data-scene-index]').forEach(button=>{const index=Number(button.dataset.sceneIndex);button.setAttribute('aria-current',index===stage?'step':'false');button.dataset.complete=String(index<stage);});
     renderPlayback();
@@ -84,7 +87,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     $('#service-summary').textContent=stage<2?'Following the same truck':stage<5?'Two visits in one week':`${visits} ${visits===1?'visit':'visits'} this week`;
     $('#maintenance-cost').textContent=stage<5?'—':money(cost.repeatCost);
     $('#maintenance-cost-note').textContent=stage<5?'Labor, parts and downtime':'Example cost';
-    if(stage===5){$('#cost-caption').textContent=cost.visits===1?'First visit':'Second visit. Same week.';$('#cost-total').textContent=money(cost.totalCost);$('#cost-duplicate').textContent=money(cost.repeatCost);$$('[data-cost-visit]').forEach(item=>item.dataset.active=String(Number(item.dataset.costVisit)<=cost.visits));}
+    if(stage===5){$('#cost-caption').textContent=cost.visits===1?'1 service':'2 services in one week';$('#cost-total').textContent=receiptMoney(cost.totalCost);$('#cost-duplicate').textContent=receiptMoney(cost.repeatCost);$$('[data-cost-visit]').forEach(item=>item.dataset.active=String(Number(item.dataset.costVisit)<=cost.visits));}
 
     if(stage===7){const active=Math.min(2,Math.floor((story.elapsedSeconds%9)/3));$$('[data-agent-step]').forEach(row=>row.dataset.active=String(Number(row.dataset.agentStep)<=active));}
   }
@@ -104,21 +107,16 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     if(completionChanged)renderPlayback();if(story.complete&&!paused&&!exploring)setPaused(true);
     renderPresentation();scene?.update(snapshot(timeSeconds,sim?.getState().paused??paused));updateMetrics(performance.now());
   }
-  function focusStoryText(){sidebarTransition.afterCommit(()=>{const title=stage===6||stage===7?$(`[data-story-overlay="${story.id}"] h2`):intro?$('#intro-panel h1'):$('#chapter-title');title?.setAttribute('tabindex','-1');title?.focus?.({preventScroll:true});});}
+  function focusStoryText(){sidebarTransition.afterCommit(()=>{const title=[1,6,7].includes(stage)?$(`[data-story-sidebar="${story.id}"] h2`):intro?$('#intro-panel h1'):$('#chapter-title');title?.setAttribute('tabindex','-1');title?.focus?.({preventScroll:true});});}
 
   function setChapter(index){
-    closeDialog(false);exploring=false;setPaused(true);const target=index>=STORY_SCENES.length?0:Math.max(0,index);
+    closeDialog(false);exploring=false;setPaused(true);const target=Math.min(STORY_SCENES.length-1,Math.max(0,index));
     if(sim)sim.seek(sceneTime(target));else{story=sampleStory(sceneTime(target));stage=story.index;intro=stage===0;render();}
     render();applySceneCamera();focusStoryText();
   }
   function togglePlayback(){if(!sim)return;if(story.complete&&!exploring)sim.seek(0);setPaused(!sim.getState().paused);}
-  function replay(){
-    closeDialog(false);exploring=false;if(domain){scenario=domain.createScenario({authorityApplied:false});evaluate();}
-    reviewSequence++;reviewing=false;review=null;notifications=[];commandSequence=0;selectedVehicleId='TRK-104';mode='then';view='iso';follow=true;
-    $$('[data-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.view===view)));
-    sim?.seek(0);setPaused(reducedMotion.matches);render();applySceneCamera();scene?.resize();focusStoryText();
-  }
-  function focusFacility(id){follow=false;scene?.setFollow(false);scene?.setFocus(id);$('#follow').setAttribute('aria-pressed','false');}
+  function enterManualView(){setPaused(true);exploring=true;renderStory();}
+  function focusFacility(id){enterManualView();follow=false;scene?.setFollow(false);scene?.setFocus(id);$('#follow').setAttribute('aria-pressed','false');}
   function selectEntity(id){setPaused(true);if(['oict','centerpoint','depot'].includes(id)){focusFacility(id);return;}selectVehicle(id);}
   function selectVehicle(id){if(!['TRK-104','TRK-208'].includes(id))return;selectedVehicleId=id;scene?.setFocus(id);render();}
   function openDialog(id){
@@ -156,21 +154,20 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     }
     $('#scene-steps').innerHTML=STORY_SCENES.map(item=>`<button type="button" data-scene-index="${item.index}" aria-label="Scene ${item.index+1}: ${item.label}" title="${item.label}">${String(item.index+1).padStart(2,'0')}</button>`).join('');
     $('#story-progress').max=String(STORY_DURATION);
-    on($('#start-story'),'click',()=>setChapter(1));on($('#previous-chapter'),'click',()=>setChapter(stage-1));on($('#next-chapter'),'click',()=>setChapter(stage+1));
+    on($('#start-story'),'click',()=>{setChapter(1);setPaused(false);});on($('#start-story-manual'),'click',()=>setChapter(1));on($('#previous-chapter'),'click',()=>setChapter(stage-1));on($('#next-chapter'),'click',()=>setChapter(stage+1));
     $$('[data-scene-index]').forEach(button=>on(button,'click',()=>setChapter(Number(button.dataset.sceneIndex))));
-    on($('#story-progress'),'input',event=>{setPaused(true);sim?.seek(Number(event.target.value));});
-    on($('#explore-scene'),'click',()=>{closeDialog(false);setPaused(true);exploring=!exploring;render();if(!exploring)applySceneCamera();});
-    on($('#mobile-pause'),'click',togglePlayback);on($('#pause'),'click',togglePlayback);on($('#reset'),'click',replay);on($('#story-replay'),'click',replay);
+    on($('#story-progress'),'input',event=>{exploring=false;setPaused(true);sim?.seek(Number(event.target.value));render();applySceneCamera();});
+    on($('#mobile-pause'),'click',togglePlayback);on($('#pause'),'click',togglePlayback);
     on($('#open-source-controls'),'click',()=>{mode='then';openDialog('#source-dialog');render();});
     on($('#run-story-review'),'click',()=>{mode='today';openDialog('#source-dialog');render();void handleAction({type:'review-imports'});});
     on($('#source-close'),'click',()=>closeDialog());
     on($('#about-toggle'),'click',()=>activeDialog===$('#about-panel')?closeDialog():openDialog('#about-panel'));on($('#about-close'),'click',()=>closeDialog());
-    $$('[data-view]').forEach(button=>on(button,'click',()=>{view=button.dataset.view;$$('[data-view]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));scene?.setView(view);}));
+    $$('[data-view]').forEach(button=>on(button,'click',()=>{enterManualView();view=button.dataset.view;$$('[data-view]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));scene?.setView(view);}));
     $$('[data-focus]').forEach(button=>on(button,'click',()=>focusFacility(button.dataset.focus)));
     on($('#overview'),'click',()=>focusFacility(null));
-    on($('#follow'),'click',()=>{follow=!follow;scene?.setFollow(follow);if(follow)scene?.setFocus(selectedVehicleId);$('#follow').setAttribute('aria-pressed',String(follow));});
-    on($('#world'),'pointerdown',()=>{setPaused(true);follow=false;scene?.setFollow(false);$('#follow').setAttribute('aria-pressed','false');});
-    on($('#world'),'wheel',event=>{setPaused(true);forwardSceneLabelWheel(event,$('#world .maplibregl-canvas-container'));},{passive:false});
+    on($('#follow'),'click',()=>{enterManualView();follow=!follow;scene?.setFollow(follow);if(follow)scene?.setFocus(selectedVehicleId);$('#follow').setAttribute('aria-pressed',String(follow));});
+    on($('#world'),'pointerdown',()=>{enterManualView();follow=false;scene?.setFollow(false);$('#follow').setAttribute('aria-pressed','false');});
+    on($('#world'),'wheel',event=>{enterManualView();forwardSceneLabelWheel(event,$('#world .maplibregl-canvas-container'));},{passive:false});
     on(doc,'keydown',event=>{
       if(activeDialog){
         if(event.key==='Escape'){event.preventDefault();closeDialog();}
@@ -197,7 +194,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
       applySceneCamera();$('#scene-loading')?.remove();
     }catch(error){if(disposed)return;if($('#scene-loading'))$('#scene-loading').textContent=`Scene unavailable: ${error.message}. Story playback and source controls are still usable.`;}
     if(disposed)return;ready=true;
-    sim=createSimulation({onTick:syncClock});sim.setPaused(reducedMotion.matches);render();
+    sim=createSimulation({onTick:syncClock});sim.setPaused(true);render();
     on(window,'resize',()=>scene?.resize());
     let suspendedPauseState=null;
     on(window,'pagehide',event=>{if(event.persisted){suspendedPauseState=sim?.getState().paused??true;setPaused(true);}else dispose();});

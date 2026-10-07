@@ -125,7 +125,6 @@
 .world { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; transition: filter 600ms ease; }
 .world canvas { display: block; }
 .root[data-scene="provider-switch"] .world { filter: blur(7px) brightness(.36); }
-.root[data-scene="mileage-loop"] .world { filter: blur(5px) brightness(.50); }
 .root[data-scene="learning"] .world { filter: blur(3px); }
 .root[data-exploring="true"] .world { filter: none; }
 .root[data-exploring="true"] .storyOverlays { display: none; }
@@ -284,3 +283,49 @@
 .costVisits strong, .costTotal strong, .costRepeat strong { line-height: 1; }
 .costCard #cost-caption { margin: 12px 0; font-size: 12px; }
 .costTotal, .costRepeat { padding: 12px 0; }
+
+/* Screenshot-directed layout: explanatory content belongs in the left column. */
+.sidebarScenes { min-width: 0; }
+.sidebar .sidebarScene { width: 100%; max-width: none; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; color: var(--ink); text-align: left; }
+.sidebarScene h2 { margin: 0 0 20px; }
+.sidebarScene > p { margin: 16px 0; font-size: 13.5px; line-height: 1.6; color: var(--body); }
+.sidebarScene small { color: var(--muted); font-size: 11px; line-height: 1.55; }
+.sidebarScene > small { display: block; }
+.sidebarScene .dataRoute { margin: 18px 0; }
+.sidebarScene .decisionRow { padding: 16px 0; }
+.sidebarScene .decisionRow strong { font-size: 17px; }
+.sidebarScene .dialogueCopy { margin: 0 0 12px; font-size: 13px; line-height: 1.6; }
+.sidebarScene .agentSteps { margin: 22px 0 0; }
+.sidebarScene .agentSteps li { padding: 12px 8px; }
+.sidebar .mileageOverlay :is(small,span[class]) { color: var(--muted); }
+.sidebar .mileageValues { gap: 10px; margin: 20px 0; justify-content: space-between; font-size: clamp(21px,1.65vw,28px); color: var(--ink); }
+.sidebar .mileageValues small { font-size: 8px; letter-spacing: .04em; }
+.sidebar .odometer { padding: 22px 0; border-color: var(--sidebar-rule); }
+.sidebar .odometer > span { font-size: clamp(42px,4.1vw,62px); color: var(--ink); }
+.sidebar .odometer > small { margin-top: 7px; }
+.sidebar .mileageAlert { color: var(--body); font-size: 12px; line-height: 1.5; margin-top: 20px; min-height: 36px; }
+.sidebar .mileageAlert[data-due="true"] { color: var(--accent); }
+.root[data-scene="solution"] .chapterIntro > p { margin-bottom: 0; }
+.receipt { position: relative; justify-self: center; width: min(410px,100%); padding: 24px 26px 28px; background: var(--page); color: var(--ink); box-shadow: 0 12px 32px color-mix(in srgb,var(--ink) 18%,transparent); font-family: ui-monospace,SFMono-Regular,Consolas,monospace; font-size: 12px; line-height: 1.5; }
+.receipt::after { content: ''; position: absolute; left: 0; right: 0; bottom: -7px; height: 8px; background: linear-gradient(135deg,var(--page) 25%,transparent 25%) -6px 0,linear-gradient(225deg,var(--page) 25%,transparent 25%) -6px 0; background-size: 12px 12px; }
+.receiptHeader { text-align: center; border-bottom: 1px dashed var(--muted); padding-bottom: 16px; }
+.storyOverlays .receiptHeader h2 { margin: 0 0 8px; font-family: inherit; font-size: 22px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.storyOverlays .receiptHeader p { margin: 0; font: inherit; }
+.receiptColumns { display: flex; justify-content: space-between; gap: 14px; padding: 12px 0 6px; font-size: 10px; letter-spacing: .04em; }
+.receiptLines > div { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 14px; padding: 9px 0; opacity: .25; }
+.receiptLines > div[data-active="true"] { opacity: 1; }
+.receiptLines > div > div { display: grid; gap: 2px; }
+.receiptLines strong { font-weight: 500; font-size: 13px; }
+.receiptLines span { color: var(--muted); font-size: 10px; }
+.storyOverlays .receiptCount { margin: 8px 0 12px; font: inherit; font-size: 10px; color: var(--muted); }
+.receiptTotal, .receiptDuplicate { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-variant-numeric: tabular-nums; }
+.receiptTotal { border-top: 1px dashed var(--muted); padding: 13px 0; }
+.receiptTotal > strong { line-height: 1; font-size: 24px; letter-spacing: -.03em; }
+.receiptDuplicate { border-top: 3px double var(--ink); padding-top: 14px; }
+.receiptDuplicate > span { font-size: 10px; }
+.receiptDuplicate > strong { line-height: 1; font-size: 22px; letter-spacing: -.03em; }
+@media (max-width: 900px) { .sidebar .sidebarScene { max-width: 520px; } .sidebar .mileageValues { justify-content: flex-start; gap: 28px; } .sidebar .odometer > span { font-size: 62px; } }
+@media (max-width: 480px) { .receipt { padding: 24px 20px 28px; } .storyOverlays .receiptHeader h2 { font-size: 20px; } .receiptDuplicate > strong { font-size: 21px; } }
+
+/* The paused opening already has its two explicit playback choices. */
+.root[data-intro="true"][data-playing="false"] button.mobilePlayback { display: none; }

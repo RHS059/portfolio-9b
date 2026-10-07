@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {navigateStory,enterCameraView,pauseScene} from './fleet-browser-controls.mjs';
 
 const counters=['Timestamp','TaskDuration','ScriptDuration','LayoutDuration','RecalcStyleDuration','LayoutCount','RecalcStyleCount','JSHeapUsedSize'];
 const difference=(before,after)=>Object.fromEntries(counters.map(name=>[name,Number.isFinite(before[name])&&Number.isFinite(after[name])?after[name]-before[name]:null]));
@@ -31,12 +32,9 @@ export async function profileRenderingWindows({page,out}){
   await session.send('Profiler.enable');await session.send('Profiler.setSamplingInterval',{interval:1000});
   try{
     for(const [index,follow]of [true,false,true].entries()){
-      await page.locator('#reset').click();
-      await page.locator('#pause').click();
-      await page.evaluate(()=>window.__fleetDemo.seekScene(0));
-      if(await page.locator('#explore-scene').count())await page.locator('#explore-scene').click();
+      await navigateStory(page,0);await enterCameraView(page);
+      if((await page.evaluate(()=>window.__fleetDemo.getState().follow))!==follow)await page.locator('#follow').click();
       await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;});
-      if(!follow)await page.locator('#follow').click();
       await page.waitForTimeout(750);
       await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;});
       const before=await probe.capture();
@@ -53,7 +51,7 @@ export async function profileRenderingWindows({page,out}){
     }
   }finally{
     await session.send('Profiler.disable');await session.detach();await probe.dispose();
-    await page.locator('#reset').click();
+    await navigateStory(page,0);await pauseScene(page,false);
     await page.waitForFunction(()=>window.__fleetDemo.getMetrics().ready);
   }
   const afterFacts=await page.evaluate(()=>{const s=window.__fleetDemo.getState().scenario;return{readings:s.readings,services:s.serviceFacts,policies:s.policies};});

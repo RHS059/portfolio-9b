@@ -12,7 +12,7 @@ const require=process.env.PLAYWRIGHT_PACKAGE?createRequire(join(resolve(process.
 const state=page=>page.evaluate(()=>window.__fleetDemo.getState());
 const textSettled=page=>page.waitForFunction(()=>{const t=window.__fleetDemo.getState().textTransition;return !t||t.phase==='idle';});
 const closeDialogs=async page=>{for(const [dialog,close]of [['#source-dialog','#source-close'],['#about-panel','#about-close']])if(await page.locator(dialog).isVisible())await page.locator(close).click();};
-const reset=async page=>{await closeDialogs(page);await page.locator('#reset').click();await textSettled(page);};
+const freshFixture=async page=>{await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo);await textSettled(page);};
 const canonical=(s,id='TRK-104')=>s.evaluation.vehicles.find(v=>v.vehicleId===id);
 const goToStage=async(page,target)=>{await closeDialogs(page);await page.locator(`[data-scene-index="${target}"]`).click();await textSettled(page);};
 const openInspector=async page=>{if(!await page.locator('#source-inspector').isVisible()){await goToStage(page,6);await page.locator('#open-source-controls').click();}};
@@ -48,7 +48,7 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
     page.on('requestfailed',request=>report.failedRequests.push({url:request.url(),error:request.failure()?.errorText}));
     await page.goto(url,{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>window.__fleetDemo,{timeout:45000});
-    await reset(page);if(!(await state(page)).simulation.paused)await page.locator('#pause').click();
+    await freshFixture(page);if(!(await state(page)).simulation.paused)await page.locator('#pause').click();
     const initial=await state(page);
     report.panel=await page.locator('#provenance .fp-panel').count()?'source-panel':'built-in fallback';
     const unchanged=(next,prior)=>{assert.deepEqual(next.scenario.readings,prior.scenario.readings);assert.deepEqual(next.scenario.serviceFacts,prior.scenario.serviceFacts);};
@@ -98,8 +98,8 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
       assert.equal(canonical(next).valueKm,null);assert.equal(canonical(next,'TRK-208').status,'resolved');
       assert.equal(await page.locator('#provenance .fp-notification').count(),0);
     });
-    await run('fresh reset plus stale A authority stays unresolved despite available B readings',async()=>{
-      await reset(page);await openInspector(page);await authority(page,'A').click();const next=await state(page);
+    await run('fresh fixture plus stale A authority stays unresolved despite available B readings',async()=>{
+      await freshFixture(page);await openInspector(page);await authority(page,'A').click();const next=await state(page);
       assert.equal(canonical(next).reason,'stale-authoritative-reading');assert.equal(canonical(next).valueKm,null);
       assert.equal(canonical(next,'TRK-208').status,'resolved');
     });
@@ -109,7 +109,7 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
       assert.equal(canonical(next,'TRK-208').status,'resolved');unchanged(next,initial);
     });
     await run('vehicle selection and view/follow controls do not mutate domain',async()=>{
-      const prior=await state(page);await chooseVehicle(page,'TRK-208');await page.locator('#explore-scene').click();
+      const prior=await state(page);await chooseVehicle(page,'TRK-208');if(!(await state(page)).simulation.paused)await page.locator('#pause').click();await page.locator('[data-view="iso"]').click();
       for(const view of ['2d','3d','iso'])await page.locator(`[data-view="${view}"]`).click();
       await page.locator('#follow').click();await page.locator('#follow').click();
       const next=await state(page);assert.equal(next.selectedVehicleId,'TRK-208');assert.deepEqual(next.scenario,prior.scenario);
@@ -124,9 +124,9 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
       await page.keyboard.press('Escape');assert.equal(await page.locator('#about-panel').isVisible(),false);
       assert.equal(await page.locator('#about-toggle').getAttribute('aria-expanded'),'false');
     });
-    await run('reset restores fixture, mode, selection and configuration',async()=>{
-      await reset(page);const next=await state(page);
-      assert.deepEqual(next.scenario,initial.scenario);assert.equal(next.mode,'then');assert.equal(next.stage,0);assert.equal(next.selectedVehicleId,initial.selectedVehicleId);assert.equal(next.review,null);assert.equal(next.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);
+    await run('returning to the opening preserves chosen source settings and history',async()=>{
+      const prior=await state(page);await goToStage(page,0);const next=await state(page);
+      assert.deepEqual(next.scenario,prior.scenario);assert.equal(next.mode,'then');assert.equal(next.stage,0);assert.equal(next.selectedVehicleId,initial.selectedVehicleId);assert.equal(next.intro,true);assert.equal(next.simulation.paused,true);assert.equal(await page.locator('#story-content').isVisible(),false);
     });
     await run('reload honestly restores this in-memory fixture',async()=>{
       await openInspector(page);await authority(page,'B').click();await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo);

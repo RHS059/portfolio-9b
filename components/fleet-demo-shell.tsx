@@ -67,7 +67,8 @@ function FleetSidebar() {
       </section>
       <div className={`${portfolio.bio} ${styles.introCta}`}>
         <p>Why were the same trucks getting serviced more than once in a week?</p>
-        <button id="start-story" className={portfolio.cta} type="button">Follow one truck <span aria-hidden="true">↗</span></button>
+        <button id="start-story" className={portfolio.cta} type="button">Next Slide: Auto</button>
+        <button id="start-story-manual" className={portfolio.control} type="button">Next Slide: Manual</button>
       </div>
     </div>
     <div id="story-content" className={styles.storyContent} hidden>
@@ -79,12 +80,40 @@ function FleetSidebar() {
           <p id="chapter-copy" className={`${portfolio.metric} ${styles.chapterCopy}`} />
         </div>
       </div>
+      <div id="sidebar-scenes" className={styles.sidebarScenes} hidden>
+              <div data-story-sidebar="integration" className={`${styles.integrationCard} ${styles.sidebarScene}`} hidden>
+                <span className={portfolio.eyebrow}>What is an integration?</span>
+                <h2 className={portfolio.name}>A connection that keeps work moving.</h2>
+                <div className={styles.dataRoute}><span>Fuel &amp; telematics providers</span><b aria-hidden="true">↓</b><span>API · automated data exchange</span><b aria-hidden="true">↓</b><span>Fleet operations software</span></div>
+                <p>Fuel: purchases and consumption.<br />Telematics: mileage and vehicle activity.</p>
+                <small>Teams use this data to budget, schedule service and keep trucks on the road.</small>
+              </div>
+              <div data-story-sidebar="mileage-loop" className={`${styles.mileageOverlay} ${styles.sidebarScene}`} hidden>
+                <span className={portfolio.eyebrow}>Day <span id="mileage-day">1</span></span>
+                <div className={styles.mileageValues}><span><small>OLD SOURCE</small>30,000</span><b aria-hidden="true">→</b><span><small>CURRENT SOURCE</small><span id="mileage-current">50,000</span></span></div>
+                <div className={styles.odometer}><span id="mileage-value">30,000</span><small>miles in the system</small></div>
+                <div id="mileage-alert" className={styles.mileageAlert}>Stale reading imported again</div>
+                <p>The reading resets. The next jump looks like more driving.</p>
+              </div>
+              <div data-story-sidebar="solution" className={`${styles.solutionCard} ${styles.sidebarScene}`} hidden>
+                <h2 className={portfolio.name}>The change I designed</h2>
+                <p className={styles.dialogueCopy}>I traced the import workflow with support and developers, then designed per-vehicle odometer sources and reading exclusions.</p>
+                <div className={styles.decisionRow}><span>TRK-104</span><strong>Choose its odometer source</strong></div>
+                <div className={styles.decisionRow}><span>OLD READINGS</span><strong>Exclude them from decisions</strong></div>
+                <div className={styles.decisionRow}><span>ORIGINAL HISTORY</span><strong>Keep it intact</strong></div>
+                <p>Each vehicle keeps its own source.</p>
+              </div>
+              <div data-story-sidebar="agents" className={`${styles.agentCard} ${styles.sidebarScene}`} hidden>
+                <h2 className={portfolio.name}>How I’d approach it today</h2>
+                <p className={styles.dialogueCopy}>Agents would flag conflicting readings and notify the fleet manager. A person would approve the source change.</p>
+                <ol className={styles.agentSteps}><li data-agent-step="0"><span>01</span><div><strong>Check incoming data</strong><small>Agent compares sources and reading patterns</small></div></li><li data-agent-step="1"><span>02</span><div><strong>Flag &amp; notify</strong><small>Show the conflict and supporting evidence</small></div></li><li data-agent-step="2"><span>03</span><div><strong>A person decides</strong><small>Approve the source; preserve the history</small></div></li></ol>
+              </div>
+      </div>
       <div id="chapter-takeaway" className={`${portfolio.bio} ${styles.chapterTakeaway}`} />
       <div className={`${portfolio.bio} ${styles.chapterNavigation}`}>
         <p>Pause, scrub or step through at any time.</p>
         <button id="open-source-controls" className={portfolio.control} type="button" hidden>Try the source controls ↗</button>
         <button id="run-story-review" className={portfolio.control} type="button" hidden>Run an example review ↗</button>
-        <button id="story-replay" className={portfolio.cta} type="button" hidden>Replay the story ↺</button>
       </div>
     </div>
   </>
@@ -127,18 +156,9 @@ export default function FleetDemoShell() {
             <div id="world" className={`world ${styles.world}`}><div id="scene-loading" className={styles.sceneLoading}>Preparing operations scene…</div></div>
             <div id="scene-notice" className={styles.sceneNotice} role="status" hidden />
             <div id="story-overlays" className={styles.storyOverlays}>
-              <div data-story-overlay="question" className={styles.openingCaption}>
-                <span className={portfolio.eyebrow}>One truck. Two oil changes. One week.</span>
-                <p>Why did it keep<br />coming back?</p>
-              </div>
-              <div data-story-overlay="integration" className={styles.integrationCard} hidden>
-                <span className={portfolio.eyebrow}>What is an integration?</span>
-                <h2>A connection that keeps work moving.</h2>
-                <div className={styles.dataRoute}><span>Fuel &amp; telematics providers</span><b aria-hidden="true">↓</b><span>API · automated data exchange</span><b aria-hidden="true">↓</b><span>Fleet operations software</span></div>
-                <p>Fuel: purchases and consumption.<br />Telematics: mileage and vehicle activity.</p>
-                <small>Teams use this data to budget, schedule service and keep trucks on the road.</small>
-              </div>
-              <div data-story-overlay="repeat-service" hidden />
+
+
+
               <div data-story-overlay="provider-switch" className={styles.providerOverlay} hidden>
                 <div className={styles.devicePair}>
                   <div className={styles.device} data-provider="verizon"><span className={styles.deviceLight} /><div className={styles.deviceBrand}><strong>Verizon</strong><span>Networkfleet</span></div><small>DAILY IMPORT · ACTIVE</small></div>
@@ -149,34 +169,19 @@ export default function FleetDemoShell() {
                 <p>but didn’t inform us, so we were importing from both, daily</p>
                 <strong className={styles.months}>FOR MONTHS</strong>
               </div>
-              <div data-story-overlay="mileage-loop" className={styles.mileageOverlay} hidden>
-                <span className={portfolio.eyebrow}>Day <span id="mileage-day">1</span></span>
-                <div className={styles.mileageValues}><span><small>OLD SOURCE</small>30,000</span><b aria-hidden="true">→</b><span><small>CURRENT SOURCE</small><span id="mileage-current">50,000</span></span></div>
-                <div className={styles.odometer}><span id="mileage-value">30,000</span><small>miles in the system</small></div>
-                <div id="mileage-alert" className={styles.mileageAlert}>Stale reading imported again</div>
-                <p>The reading resets. The next jump looks like more driving.</p>
-              </div>
-              <div data-story-overlay="cost" className={styles.costCard} hidden>
-                <span className={portfolio.eyebrow}>Twice in one week</span>
-                <h2>The same service.<br />Paid for twice.</h2>
-                <div className={styles.costVisits}><div data-cost-visit="1"><span>Visit 1</span><strong>$350</strong></div><div data-cost-visit="2"><span>Visit 2</span><strong>$350</strong></div></div>
-                <p id="cost-caption">First visit</p>
-                <div className={styles.costTotal}><span>Total paid</span><strong id="cost-total">$350</strong></div>
-                <div className={styles.costRepeat}><span>Duplicate cost</span><strong id="cost-duplicate">$0</strong></div>
-              </div>
-              <div data-story-overlay="solution" className={styles.solutionCard} hidden>
-                <h2>The change I designed</h2>
-                <p className={styles.dialogueCopy}>I traced the import workflow with support and developers, then designed per-vehicle odometer sources and reading exclusions.</p>
-                <div className={styles.decisionRow}><span>TRK-104</span><strong>Choose its odometer source</strong></div>
-                <div className={styles.decisionRow}><span>OLD READINGS</span><strong>Exclude them from decisions</strong></div>
-                <div className={styles.decisionRow}><span>ORIGINAL HISTORY</span><strong>Keep it intact</strong></div>
-                <p>Each vehicle keeps its own source.</p>
-              </div>
-              <div data-story-overlay="agents" className={styles.agentCard} hidden>
-                <h2>How I’d approach it today</h2>
-                <p className={styles.dialogueCopy}>Agents would flag conflicting readings and notify the fleet manager. A person would approve the source change.</p>
-                <ol className={styles.agentSteps}><li data-agent-step="0"><span>01</span><div><strong>Check incoming data</strong><small>Agent compares sources and reading patterns</small></div></li><li data-agent-step="1"><span>02</span><div><strong>Flag &amp; notify</strong><small>Show the conflict and supporting evidence</small></div></li><li data-agent-step="2"><span>03</span><div><strong>A person decides</strong><small>Approve the source; preserve the history</small></div></li></ol>
-              </div>
+
+              <article data-story-overlay="cost" className={styles.receipt} hidden aria-label="Service receipt">
+                <header className={styles.receiptHeader}><h2>Service receipt</h2><p>TRK-104</p></header>
+                <div className={styles.receiptColumns}><span>SERVICE</span><span>AMOUNT</span></div>
+                <div className={styles.receiptLines}>
+                  <div data-cost-visit="1"><div><strong>Oil change</strong><span>Visit 1</span></div><strong>$350.00</strong></div>
+                  <div data-cost-visit="2"><div><strong>Oil change</strong><span>Visit 2 · same week</span></div><strong>$350.00</strong></div>
+                </div>
+                <p id="cost-caption" className={styles.receiptCount}>1 service</p>
+                <div className={styles.receiptTotal}><span>TOTAL</span><strong id="cost-total">$350.00</strong></div>
+                <div className={styles.receiptDuplicate}><span>DUPLICATE SERVICE</span><strong id="cost-duplicate">$0.00</strong></div>
+              </article>
+
               <div data-story-overlay="learning" className={styles.learningCard} hidden>
                 <span className={portfolio.eyebrow}>What I learned</span><h2>Good data needs<br />a clear owner.</h2><p>Make the source visible.<br />Make the decision deliberate.<br />Keep the history.</p>
               </div>
@@ -191,11 +196,9 @@ export default function FleetDemoShell() {
               <button id="previous-chapter" className={portfolio.control} type="button" aria-label="Previous scene" aria-keyshortcuts="ArrowLeft">← Back</button>
               <button id="pause" className={portfolio.cta} type="button" aria-label="Play story" aria-keyshortcuts="Space">▶ Play</button>
               <button id="next-chapter" className={portfolio.control} type="button" aria-label="Next scene" aria-keyshortcuts="ArrowRight">Next →</button>
-              <button id="reset" className={portfolio.control} type="button" aria-label="Replay story from the beginning">↺ Replay</button>
-              <button id="explore-scene" className={portfolio.control} type="button" aria-pressed="false">Explore scene</button>
               <button id="about-toggle" className={portfolio.control} type="button" aria-label="About this demo" aria-expanded="false">Details</button>
             </div>
-            <div id="explore-controls" hidden className={styles.worldToolbar} role="group" aria-label="Explore the scene"><button className={portfolio.control} data-view="2d" type="button" aria-pressed="false">2D</button><button className={portfolio.control} data-view="3d" type="button" aria-pressed="false">3D</button><button className={portfolio.control} data-view="iso" type="button" aria-pressed="true">ISO</button><button id="overview" type="button" className={portfolio.control}>Overview</button><button id="follow" type="button" className={portfolio.control} aria-pressed="true">Follow truck</button><button className={portfolio.control} data-focus="depot" type="button">Workshop</button><button className={portfolio.control} data-focus="oict" type="button">OICT</button><button className={portfolio.control} data-focus="centerpoint" type="button">Factory</button></div>
+            <div id="camera-controls" hidden className={styles.worldToolbar} role="group" aria-label="Camera controls"><button className={portfolio.control} data-view="2d" type="button" aria-pressed="false">2D</button><button className={portfolio.control} data-view="3d" type="button" aria-pressed="false">3D</button><button className={portfolio.control} data-view="iso" type="button" aria-pressed="true">ISO</button><button id="overview" type="button" className={portfolio.control}>Overview</button><button id="follow" type="button" className={portfolio.control} aria-pressed="true">Follow truck</button><button className={portfolio.control} data-focus="depot" type="button">Workshop</button><button className={portfolio.control} data-focus="oict" type="button">OICT</button><button className={portfolio.control} data-focus="centerpoint" type="button">Factory</button></div>
             <div className={`impact-strip ${styles.impactStrip}`}>
               <div><span className={portfolio.eyebrow}>Following one truck</span><strong id="selected-asset">TRK-104</strong><small id="asset-role"></small></div>
               <div><span className={portfolio.eyebrow}>Service visits</span><strong id="service-visits">—</strong><small id="service-summary"></small></div>

@@ -8,7 +8,8 @@
       </section>
       <div class="bio introCta">
         <p>Why were the same trucks getting serviced more than once in a week?</p>
-        <button id="start-story" class="cta" type="button">Follow one truck <span aria-hidden="true">↗</span></button>
+        <button id="start-story" class="cta" type="button">Next Slide: Auto</button>
+        <button id="start-story-manual" class="control" type="button">Next Slide: Manual</button>
       </div>
     </div>
     <div id="story-content" class="storyContent" hidden>
@@ -20,12 +21,40 @@
           <p id="chapter-copy" class="metric chapterCopy"></p>
         </div>
       </div>
+      <div id="sidebar-scenes" class="sidebarScenes" hidden>
+              <div data-story-sidebar="integration" class="integrationCard sidebarScene" hidden>
+                <span class="eyebrow">What is an integration?</span>
+                <h2 class="name">A connection that keeps work moving.</h2>
+                <div class="dataRoute"><span>Fuel &amp; telematics providers</span><b aria-hidden="true">↓</b><span>API · automated data exchange</span><b aria-hidden="true">↓</b><span>Fleet operations software</span></div>
+                <p>Fuel: purchases and consumption.<br />Telematics: mileage and vehicle activity.</p>
+                <small>Teams use this data to budget, schedule service and keep trucks on the road.</small>
+              </div>
+              <div data-story-sidebar="mileage-loop" class="mileageOverlay sidebarScene" hidden>
+                <span class="eyebrow">Day <span id="mileage-day">1</span></span>
+                <div class="mileageValues"><span><small>OLD SOURCE</small>30,000</span><b aria-hidden="true">→</b><span><small>CURRENT SOURCE</small><span id="mileage-current">50,000</span></span></div>
+                <div class="odometer"><span id="mileage-value">30,000</span><small>miles in the system</small></div>
+                <div id="mileage-alert" class="mileageAlert">Stale reading imported again</div>
+                <p>The reading resets. The next jump looks like more driving.</p>
+              </div>
+              <div data-story-sidebar="solution" class="solutionCard sidebarScene" hidden>
+                <h2 class="name">The change I designed</h2>
+                <p class="dialogueCopy">I traced the import workflow with support and developers, then designed per-vehicle odometer sources and reading exclusions.</p>
+                <div class="decisionRow"><span>TRK-104</span><strong>Choose its odometer source</strong></div>
+                <div class="decisionRow"><span>OLD READINGS</span><strong>Exclude them from decisions</strong></div>
+                <div class="decisionRow"><span>ORIGINAL HISTORY</span><strong>Keep it intact</strong></div>
+                <p>Each vehicle keeps its own source.</p>
+              </div>
+              <div data-story-sidebar="agents" class="agentCard sidebarScene" hidden>
+                <h2 class="name">How I’d approach it today</h2>
+                <p class="dialogueCopy">Agents would flag conflicting readings and notify the fleet manager. A person would approve the source change.</p>
+                <ol class="agentSteps"><li data-agent-step="0"><span>01</span><div><strong>Check incoming data</strong><small>Agent compares sources and reading patterns</small></div></li><li data-agent-step="1"><span>02</span><div><strong>Flag &amp; notify</strong><small>Show the conflict and supporting evidence</small></div></li><li data-agent-step="2"><span>03</span><div><strong>A person decides</strong><small>Approve the source; preserve the history</small></div></li></ol>
+              </div>
+      </div>
       <div id="chapter-takeaway" class="bio chapterTakeaway"></div>
       <div class="bio chapterNavigation">
         <p>Pause, scrub or step through at any time.</p>
         <button id="open-source-controls" class="control" type="button" hidden>Try the source controls ↗</button>
         <button id="run-story-review" class="control" type="button" hidden>Run an example review ↗</button>
-        <button id="story-replay" class="cta" type="button" hidden>Replay the story ↺</button>
       </div>
     </div></aside></div><main id="work" class="stack route-panel main">
       <button id="mobile-pause" class="cta mobilePlayback" type="button" aria-label="Play story" aria-pressed="false" disabled>▶ Play story</button>
@@ -35,18 +64,9 @@
             <div id="world" class="world world"><div id="scene-loading" class="sceneLoading">Preparing operations scene…</div></div>
             <div id="scene-notice" class="sceneNotice" role="status" hidden></div>
             <div id="story-overlays" class="storyOverlays">
-              <div data-story-overlay="question" class="openingCaption">
-                <span class="eyebrow">One truck. Two oil changes. One week.</span>
-                <p>Why did it keep<br />coming back?</p>
-              </div>
-              <div data-story-overlay="integration" class="integrationCard" hidden>
-                <span class="eyebrow">What is an integration?</span>
-                <h2>A connection that keeps work moving.</h2>
-                <div class="dataRoute"><span>Fuel &amp; telematics providers</span><b aria-hidden="true">↓</b><span>API · automated data exchange</span><b aria-hidden="true">↓</b><span>Fleet operations software</span></div>
-                <p>Fuel: purchases and consumption.<br />Telematics: mileage and vehicle activity.</p>
-                <small>Teams use this data to budget, schedule service and keep trucks on the road.</small>
-              </div>
-              <div data-story-overlay="repeat-service" hidden></div>
+
+
+
               <div data-story-overlay="provider-switch" class="providerOverlay" hidden>
                 <div class="devicePair">
                   <div class="device" data-provider="verizon"><span class="deviceLight"></span><div class="deviceBrand"><strong>Verizon</strong><span>Networkfleet</span></div><small>DAILY IMPORT · ACTIVE</small></div>
@@ -57,34 +77,19 @@
                 <p>but didn’t inform us, so we were importing from both, daily</p>
                 <strong class="months">FOR MONTHS</strong>
               </div>
-              <div data-story-overlay="mileage-loop" class="mileageOverlay" hidden>
-                <span class="eyebrow">Day <span id="mileage-day">1</span></span>
-                <div class="mileageValues"><span><small>OLD SOURCE</small>30,000</span><b aria-hidden="true">→</b><span><small>CURRENT SOURCE</small><span id="mileage-current">50,000</span></span></div>
-                <div class="odometer"><span id="mileage-value">30,000</span><small>miles in the system</small></div>
-                <div id="mileage-alert" class="mileageAlert">Stale reading imported again</div>
-                <p>The reading resets. The next jump looks like more driving.</p>
-              </div>
-              <div data-story-overlay="cost" class="costCard" hidden>
-                <span class="eyebrow">Twice in one week</span>
-                <h2>The same service.<br />Paid for twice.</h2>
-                <div class="costVisits"><div data-cost-visit="1"><span>Visit 1</span><strong>$350</strong></div><div data-cost-visit="2"><span>Visit 2</span><strong>$350</strong></div></div>
-                <p id="cost-caption">First visit</p>
-                <div class="costTotal"><span>Total paid</span><strong id="cost-total">$350</strong></div>
-                <div class="costRepeat"><span>Duplicate cost</span><strong id="cost-duplicate">$0</strong></div>
-              </div>
-              <div data-story-overlay="solution" class="solutionCard" hidden>
-                <h2>The change I designed</h2>
-                <p class="dialogueCopy">I traced the import workflow with support and developers, then designed per-vehicle odometer sources and reading exclusions.</p>
-                <div class="decisionRow"><span>TRK-104</span><strong>Choose its odometer source</strong></div>
-                <div class="decisionRow"><span>OLD READINGS</span><strong>Exclude them from decisions</strong></div>
-                <div class="decisionRow"><span>ORIGINAL HISTORY</span><strong>Keep it intact</strong></div>
-                <p>Each vehicle keeps its own source.</p>
-              </div>
-              <div data-story-overlay="agents" class="agentCard" hidden>
-                <h2>How I’d approach it today</h2>
-                <p class="dialogueCopy">Agents would flag conflicting readings and notify the fleet manager. A person would approve the source change.</p>
-                <ol class="agentSteps"><li data-agent-step="0"><span>01</span><div><strong>Check incoming data</strong><small>Agent compares sources and reading patterns</small></div></li><li data-agent-step="1"><span>02</span><div><strong>Flag &amp; notify</strong><small>Show the conflict and supporting evidence</small></div></li><li data-agent-step="2"><span>03</span><div><strong>A person decides</strong><small>Approve the source; preserve the history</small></div></li></ol>
-              </div>
+
+              <article data-story-overlay="cost" class="receipt" hidden aria-label="Service receipt">
+                <header class="receiptHeader"><h2>Service receipt</h2><p>TRK-104</p></header>
+                <div class="receiptColumns"><span>SERVICE</span><span>AMOUNT</span></div>
+                <div class="receiptLines">
+                  <div data-cost-visit="1"><div><strong>Oil change</strong><span>Visit 1</span></div><strong>$350.00</strong></div>
+                  <div data-cost-visit="2"><div><strong>Oil change</strong><span>Visit 2 · same week</span></div><strong>$350.00</strong></div>
+                </div>
+                <p id="cost-caption" class="receiptCount">1 service</p>
+                <div class="receiptTotal"><span>TOTAL</span><strong id="cost-total">$350.00</strong></div>
+                <div class="receiptDuplicate"><span>DUPLICATE SERVICE</span><strong id="cost-duplicate">$0.00</strong></div>
+              </article>
+
               <div data-story-overlay="learning" class="learningCard" hidden>
                 <span class="eyebrow">What I learned</span><h2>Good data needs<br />a clear owner.</h2><p>Make the source visible.<br />Make the decision deliberate.<br />Keep the history.</p>
               </div>
@@ -99,11 +104,9 @@
               <button id="previous-chapter" class="control" type="button" aria-label="Previous scene" aria-keyshortcuts="ArrowLeft">← Back</button>
               <button id="pause" class="cta" type="button" aria-label="Play story" aria-keyshortcuts="Space">▶ Play</button>
               <button id="next-chapter" class="control" type="button" aria-label="Next scene" aria-keyshortcuts="ArrowRight">Next →</button>
-              <button id="reset" class="control" type="button" aria-label="Replay story from the beginning">↺ Replay</button>
-              <button id="explore-scene" class="control" type="button" aria-pressed="false">Explore scene</button>
               <button id="about-toggle" class="control" type="button" aria-label="About this demo" aria-expanded="false">Details</button>
             </div>
-            <div id="explore-controls" hidden class="worldToolbar" role="group" aria-label="Explore the scene"><button class="control" data-view="2d" type="button" aria-pressed="false">2D</button><button class="control" data-view="3d" type="button" aria-pressed="false">3D</button><button class="control" data-view="iso" type="button" aria-pressed="true">ISO</button><button id="overview" type="button" class="control">Overview</button><button id="follow" type="button" class="control" aria-pressed="true">Follow truck</button><button class="control" data-focus="depot" type="button">Workshop</button><button class="control" data-focus="oict" type="button">OICT</button><button class="control" data-focus="centerpoint" type="button">Factory</button></div>
+            <div id="camera-controls" hidden class="worldToolbar" role="group" aria-label="Camera controls"><button class="control" data-view="2d" type="button" aria-pressed="false">2D</button><button class="control" data-view="3d" type="button" aria-pressed="false">3D</button><button class="control" data-view="iso" type="button" aria-pressed="true">ISO</button><button id="overview" type="button" class="control">Overview</button><button id="follow" type="button" class="control" aria-pressed="true">Follow truck</button><button class="control" data-focus="depot" type="button">Workshop</button><button class="control" data-focus="oict" type="button">OICT</button><button class="control" data-focus="centerpoint" type="button">Factory</button></div>
             <div class="impact-strip impactStrip">
               <div><span class="eyebrow">Following one truck</span><strong id="selected-asset">TRK-104</strong><small id="asset-role"></small></div>
               <div><span class="eyebrow">Service visits</span><strong id="service-visits">—</strong><small id="service-summary"></small></div>
