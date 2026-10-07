@@ -4,7 +4,7 @@ export const FACILITY_THEME = Object.freeze({
   ground: 0xe9ebe5, dark: 0x525b55,
 });
 
-// Stroke letters keep the fictional-interior disclosure visible without fonts or textures.
+// Bay and process markings use strokes without fonts or textures.
 const GLYPHS = {
   A: ['040110203134','0232'], B: ['0004','002031312202','022233332404'],
   C: ['3020100103142434'], D: ['0004','00203133342404'], E: ['3000000434','0232'],

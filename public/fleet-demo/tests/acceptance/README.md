@@ -44,7 +44,7 @@ The suite uses user-visible controls. `window.__fleetDemo.getState/getMetrics` a
 - Exact row-exclusion scope mismatches reject with `EXCLUSION_SCOPE_MISMATCH`
 - `src/domain/readings/index.js` remains the real module entrypoint
 - The app owns command adaptation, version stamps and review invalidation; tests exercise that boundary without replacing it
-- App opening metadata uses `#project-info`; `#source-inspector` appears after the opening chapter; the component still mounts inside `#provenance`
+- The opening left panel uses `#project-info` followed by `#start-story`; `#source-inspector` and story controls appear after Next. The component mounts inside `#provenance`
 - UI buttons expose stable `data-action`, `data-source`, `data-reading` and `data-exclusion-scope` selectors, including `reimport`
 - Browser fixture IDs remain v1-b-3 / TRK-104 / TRK-208; native acceptance fixtures use their own IDs to avoid simply replaying implementation-owned expected values
 - Missing/stale scenarios use the declared demo freshness policy, never an inferred customer threshold

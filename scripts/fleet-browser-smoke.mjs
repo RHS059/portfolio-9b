@@ -60,15 +60,15 @@ try{
  await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;});
 
  phase='source-workflow';const initial=await state();
- const initialView=await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState);assert.ok(initialView.zoom>17,'Opening must actually frame the workshop');
+ const initialView=await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState);assert.ok(initialView.zoom>17,'Opening must actually frame the workshop');assert.ok(Math.abs(initialView.pitch-52)<.01,'Reset restores ISO pitch');assert.ok(Math.abs(initialView.bearing+28)<.01,'Reset restores ISO bearing');
  assert.equal(initial.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').status,'unresolved');
  assert.equal(initial.evaluation.vehicles.find(v=>v.vehicleId==='TRK-208').sourceId,'A');
  const raw=JSON.stringify(initial.scenario.readings),services=JSON.stringify(initial.scenario.serviceFacts);
  evidence.checks.push('guided initial state: migrated vehicle unresolved, unmigrated vehicle A');
- assert.equal(await page.locator('#project-info').isVisible(),true);assert.ok((await page.locator('#project-info').innerText()).includes('UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager'));
- assert.equal(await page.evaluate(()=>{const info=document.querySelector('#project-info').getBoundingClientRect(),world=document.querySelector('.world-panel').getBoundingClientRect();return info.left>=world.right;}),true);
- await page.locator('#next-chapter').click();assert.equal(await page.locator('#source-inspector').isVisible(),true);
- evidence.checks.push('opening project metadata transitions to source inspector on next chapter');
+ assert.equal(await page.locator('#project-info').isVisible(),true);assert.equal(await page.locator('#story-content').isVisible(),false);assert.equal(initial.intro,true);assert.equal(await page.locator('#intro-panel h1').innerText(),'Fleet Management');assert.ok((await page.locator('#project-info').innerText()).includes('UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager'));
+ assert.equal(await page.evaluate(()=>{const info=document.querySelector('#project-info').getBoundingClientRect(),world=document.querySelector('.world-panel').getBoundingClientRect();return info.right<=world.left;}),true);
+ await page.locator('#start-story').click();assert.equal(await page.locator('#source-inspector').isVisible(),true);
+ evidence.checks.push('left opening metadata and teaser transition into the story and source inspector');
  await page.locator('[data-mode="today"]').click();
  await page.locator('[data-action="review-imports"]').click();
  await page.waitForFunction(()=>window.__fleetDemo.getState().review!==null);
@@ -89,7 +89,7 @@ try{
  evidence.checks.push('camera modes/follow/pause controls operate without data mutation');
  await page.locator('[data-vehicle="TRK-208"]').click();assert.equal((await state()).selectedVehicleId,'TRK-208');
  await page.locator('#about-toggle').click();assert.equal(await page.locator('#about-panel').isVisible(),true);await page.keyboard.press('Escape');assert.equal(await page.locator('#about-panel').isVisible(),false);
- await page.locator('#reset').click();const reset=await state();assert.equal(reset.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').status,'unresolved');assert.equal(reset.follow,false);assert.equal(reset.simulation.paused,false);
+ await page.locator('#reset').click();const reset=await state();assert.equal(reset.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').status,'unresolved');assert.equal(reset.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);assert.equal(reset.follow,false);assert.equal(reset.simulation.paused,false);
  evidence.checks.push('selection, about dismissal and reset restore expected state');
  phase='steady-1080p';evidence.interactionMetrics=await page.evaluate(()=>window.__fleetDemo.getMetrics());
  await page.setViewportSize({width:1920,height:1080});
@@ -100,10 +100,10 @@ try{
  phase='responsive-390';await page.setViewportSize({width:390,height:844});
  await page.screenshot({path:path.join(out,'03-mobile.png'),fullPage:true});
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
-assert.equal(await page.evaluate(()=>document.querySelector('#project-info').getBoundingClientRect().top>=document.querySelector('.world-panel').getBoundingClientRect().bottom),true);
- evidence.checks.push('390px responsive layout stacks metadata below scene without overlap or horizontal overflow');
+assert.equal(await page.evaluate(()=>document.querySelector('#start-story').getBoundingClientRect().bottom<=document.querySelector('.world-panel').getBoundingClientRect().top),true);
+ evidence.checks.push('390px opening places project metadata and Next before the scene without overflow');
  await page.setViewportSize({width:1600,height:1000});
- await page.locator('#next-chapter').click();
+ await page.locator('#start-story').click();
  await page.locator('[data-action="set-authority"][data-source="B"]').click();
  await page.locator('[data-vehicle="TRK-208"]').click();await page.locator('#pause').click();
  for(const selector of ['.fleet-three-overlay','.maplibregl-canvas','.maplibregl-canvas']){
@@ -113,7 +113,7 @@ assert.equal(await page.evaluate(()=>document.querySelector('#project-info').get
    const viewBefore=await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState);
    const available=await page.evaluate(selector=>{const canvas=document.querySelector(selector);if(!canvas)return false;const gl=canvas.getContext('webgl2')||canvas.getContext('webgl');const ext=gl?.getExtension('WEBGL_lose_context');if(!ext)return false;window.__fleetTestContextExtension=ext;window.__fleetTestContext=gl;window.__fleetTestCanvas=canvas;window.__fleetTestContextSelector=selector;window.__fleetTestLossSnapshot=null;canvas.addEventListener('webglcontextlost',()=>{const fallback=document.querySelector('svg[aria-label="Oakland fleet map, 2D fallback"]');window.__fleetTestLossSnapshot={metrics:window.__fleetDemo.getMetrics(),fallbackVisible:!!fallback&&getComputedStyle(fallback).display!=='none',status:document.querySelector('.fleet-scene-status')?.textContent,resetEnabled:!document.querySelector('#reset').disabled};},{once:true});ext.loseContext();return true;},selector);
    assert.equal(available,true,`Context-loss extension required for ${selector}`);
-   await page.waitForFunction(()=>window.__fleetTestLossSnapshot!==null,undefined,{timeout:10000});
+   await page.waitForFunction(()=>window.__fleetTestLossSnapshot!==null,undefined,{timeout:10000,polling:50});
    assert.equal(JSON.stringify((await state()).scenario.readings),JSON.stringify(beforeLoss.scenario.readings));
    assert.equal(await page.locator('#reset').isEnabled(),true);
    assert.equal(await page.evaluate(()=>window.__fleetTestContext.isContextLost()),true);
@@ -131,18 +131,18 @@ assert.equal(await page.evaluate(()=>document.querySelector('#project-info').get
    assert.ok(Math.abs(viewAfter.zoom-viewBefore.zoom)<.01);assert.ok(Math.abs(viewAfter.pitch-viewBefore.pitch)<.01);assert.ok(Math.abs(viewAfter.bearing-viewBefore.bearing)<.01);for(let i=0;i<2;i++)assert.ok(Math.abs(viewAfter.center[i]-viewBefore.center[i])<.00001);
    const recovered=await state();
    assert.equal(JSON.stringify(recovered.scenario),JSON.stringify(beforeLoss.scenario),'Recovery preserves readings, services and configuration');
-   assert.equal(recovered.selectedVehicleId,beforeLoss.selectedVehicleId);assert.equal(recovered.mode,beforeLoss.mode);assert.equal(recovered.view,beforeLoss.view);assert.equal(recovered.follow,beforeLoss.follow);assert.equal(recovered.simulation.paused,beforeLoss.simulation.paused);
+   assert.equal(recovered.intro,beforeLoss.intro);assert.equal(recovered.selectedVehicleId,beforeLoss.selectedVehicleId);assert.equal(recovered.mode,beforeLoss.mode);assert.equal(recovered.view,beforeLoss.view);assert.equal(recovered.follow,beforeLoss.follow);assert.equal(recovered.simulation.paused,beforeLoss.simulation.paused);
    if(beforeLoss.simulation.paused)assert.equal(recovered.simulation.timeSeconds,beforeLoss.simulation.timeSeconds);
    else assert.ok(recovered.simulation.timeSeconds>beforeLoss.simulation.timeSeconds,'Live simulation continues through recovery');
    evidence.checks.push(`${selector} actual context loss and recovery preserve records, source policy, selection and pause state`);
    if(selector.includes('three')){await page.locator('#reset').click();assert.equal((await state()).simulation.paused,false);}
 
  }
- phase='legacy-reno';await page.getByRole('link',{name:'Original Reno console ↗'}).click();await page.waitForLoadState('domcontentloaded');await page.getByRole('button',{name:'Live',exact:true}).click();
+ phase='legacy-reno';await page.locator('#about-toggle').click();await page.getByRole('link',{name:'Original Reno console ↗'}).click();await page.waitForLoadState('domcontentloaded');await page.getByRole('button',{name:'Live',exact:true}).click();
  for(const mode of ['2D','3D','Isometric'])await page.getByRole('button',{name:mode,exact:true}).click();
  await page.getByRole('button',{name:'Follow vehicle',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Following',exact:true}).isVisible(),true);await page.getByRole('button',{name:'Following',exact:true}).click();
  evidence.checks.push('original Reno Live, 2D, 3D, Isometric and follow controls remain usable');
- await page.goBack({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo?.getMetrics?.());phase='back-navigation';const backTime=(await state()).simulation.timeSeconds;await page.waitForTimeout(150);assert.ok((await state()).simulation.timeSeconds>backTime);await page.locator('[data-mode="today"]').click();assert.equal((await state()).mode,'today');
+ await page.goBack({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo?.getMetrics?.());phase='back-navigation';const backTime=(await state()).simulation.timeSeconds;await page.waitForTimeout(150);assert.ok((await state()).simulation.timeSeconds>backTime);if((await state()).intro)await page.locator('#start-story').click();await page.locator('[data-mode="today"]').click();assert.equal((await state()).mode,'today');
  evidence.checks.push('Back navigation restores an operating scene and controls');
  phase='reduced-motion';await page.emulateMedia({reducedMotion:'reduce'});await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo?.getState?.());assert.equal((await state()).simulation.paused,true);await page.locator('#reset').click();assert.equal((await state()).simulation.paused,true);
  evidence.checks.push('reduced-motion preference pauses initial scene and reset');

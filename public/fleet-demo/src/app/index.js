@@ -8,11 +8,12 @@ const $$ = selector => [...document.querySelectorAll(selector)];
 const chapters = [
   {title:'The shop noticed the repeats',short:'Back in the shop',copy:'The customer paid for unnecessary repeat oil changes and tire rotations. Each extra visit meant more shop work and less time with the vehicle available.'},
   {title:'Two providers still connected',short:'A partial migration',copy:'The customer was switching providers. TRK-104 had moved to B, while TRK-208 still used A. Both accounts stayed open. Each vehicle needed its own source setting.'},
-  {title:'The old reading came back nightly',short:'Conflicting readings',copy:'Provider A’s odometer froze before its device was removed. Provider B had current readings. Each night, the system switched between old and current readings. The exact maintenance-trigger rule is unknown.'},
+  {title:'The old reading came back nightly',short:'Conflicting readings',copy:'Provider A’s odometer froze before its device was removed. Provider B had current readings. Each night, the system switched between old and current readings.'},
   {title:'Choose the source',short:'Stop using the old reading',copy:'Choose Provider B for TRK-104’s odometer. Keep TRK-208 on A. Exclude old readings at the integration, vehicle, field or individual-record level. Recalculate without changing the original readings or completed service records.'},
   {title:'Check before another visit',short:'Verify the readings',copy:'Check that TRK-104 uses B and TRK-208 still uses A. If the selected source has no usable reading, leave it unresolved. Importing the same records again must not duplicate them or create another service entry.'}
 ];
 let scenario, evaluation, domain, scene, panel, sim;
+let intro=true;
 let mode='then', stage=0, selectedVehicleId='TRK-104', view='iso', follow=false;
 let review=null, notifications=[], commandSequence=0, reviewing=false, reviewSequence=0;
 let lastMetricUpdate=0;
@@ -32,12 +33,12 @@ function snapshot(timeSeconds=0,paused=false){
       {id:'TRK-208',progress:(timeSeconds*.006+.59)%1,routeId:'delivery',status:'moving'},
       {id:'VAN-311',model:'van',inspectable:false,progress:(timeSeconds*.012+.21)%1,routeId:'depot',status:'moving'},
       ...Array.from({length:9},(_,i)=>({id:`TRAFFIC-${String(i+1).padStart(3,'0')}`,inspectable:false,progress:(timeSeconds*(.008+i*.0004)+i*.111)%1,routeId:i%2?'delivery':'depot',status:'moving'}))
-    ],facilities:[{id:'oict',label:'OICT container terminal'},{id:'centerpoint',label:'CenterPoint fictional drone assembly'},{id:'depot',label:'Fleet workshop'}]};
+    ],facilities:[{id:'oict',label:'OICT container terminal'},{id:'centerpoint',label:'Drone factory'},{id:'depot',label:'Fleet workshop'}]};
 }
 function evaluate(){evaluation=domain.replayReadings(scenario,{asOf:scenario.asOf});}
 function render(){
   const chapter=chapters[stage];
-  $('#project-info').hidden=stage!==0;$('#source-inspector').hidden=stage===0;
+  $('.workspace').dataset.intro=String(intro);$('#intro-panel').hidden=!intro;$('#story-content').hidden=intro;$('#project-info').hidden=!intro;$('.inspector-panel').hidden=intro;$('#source-inspector').hidden=intro;
   $('#mode-description').textContent=mode==='then'?'I added controls to choose the odometer source for each vehicle and exclude readings from its old provider.':'An agent would check incoming readings, flag suspicious records and notify the fleet manager.';
   $$('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));
   $('#story-steps').innerHTML=chapters.slice(0,4).map((c,i)=>`<button type="button" class="story-step" data-stage="${i}" ${stage===i||stage===4&&i===3?'aria-current="step"':''}><span class="step-number">0${i+1}</span>${c.short}</button>`).join('');
@@ -50,13 +51,13 @@ function render(){
   $('#selected-asset').textContent=selectedVehicleId;
   $('#asset-role').textContent=selectedVehicleId==='TRK-104'?'Migrated to Provider B':'Still uses Provider A';
   $('#canonical-reading').textContent=canonical?.status==='resolved'?`${Math.round(canonical.valueKm/1.609344).toLocaleString('en-US')} mi`:'Unresolved';
-  $('#canonical-source').textContent=canonical?.status==='resolved'?`${canonical.sourceId} · derived replay`:'No usable reading from the chosen source';
+  $('#canonical-source').textContent=canonical?.status==='resolved'?`Provider ${canonical.sourceId}`:'No usable reading from the chosen source';
   $('#integrity-count').textContent=scenario?`${scenario.readings.length} readings kept`:'Raw records kept';
   if(panel&&scenario)panel.update({mode,showVehicleSelector:false,selectedVehicleId,readings:scenario.readings,policies:scenario.policies,exclusions:scenario.exclusions,decisions:evaluation.decisions,serviceHistory:scenario.serviceFacts||[],review:review?.vehicleId===selectedVehicleId?review:null,configurationVersion:scenario.configVersion,authorityStatus:canonical?.status||'unresolved',canonical,vehicles:scenario.vehicles,notifications,asOf:scenario.asOf,reviewing,assumptions:scenario.fixture?.assumptions||[]});
   if(scene&&sim){const s=sim.getState();scene.update(snapshot(s.timeSeconds,s.paused));}
 }
 function focusChapter(){if(!follow)scene?.setFocus(chapterSites[stage]);}
-function setChapter(next){stage=next;render();focusChapter();}
+function setChapter(next){intro=false;stage=next;render();focusChapter();}
 function focusFacility(id){manualCameraUsed=true;follow=false;$('#follow').setAttribute('aria-pressed','false');scene?.setFollow(false);scene?.setFocus(id);}
 function selectEntity(id){if(['oict','centerpoint','depot'].includes(id)){focusFacility(id);return;}selectVehicle(id);}
 function selectVehicle(id){if(!['TRK-104','TRK-208'].includes(id))return;selectedVehicleId=id;scene?.setFocus(id);render();}
@@ -83,6 +84,7 @@ async function handleAction(action){
   }catch(error){reviewing=false;feedback(`${error.code||'Unable to apply change'}: ${error.message}`);render();}
 }
 function bind(){
+  $('#start-story').addEventListener('click',()=>{intro=false;stage=0;render();focusChapter();});
   $$('[data-mode]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;render();}));
   $('#story-steps').addEventListener('click',event=>{const b=event.target.closest('[data-stage]');if(b)setChapter(Number(b.dataset.stage));});
   $('#next-chapter').addEventListener('click',()=>setChapter((stage+1)%chapters.length));
@@ -94,7 +96,17 @@ function bind(){
   $('#world').addEventListener('wheel',()=>{manualCameraUsed=true;},{passive:true});
   $('#follow').addEventListener('click',()=>{manualCameraUsed=true;follow=!follow;$('#follow').setAttribute('aria-pressed',String(follow));scene?.setFollow(follow);if(follow)scene?.setFocus(selectedVehicleId);});
   $('#pause').addEventListener('click',()=>{if(!sim)return;const paused=!sim.getState().paused;sim.setPaused(paused);$('#pause').textContent=paused?'▶ Play':'Ⅱ Pause';$('#run-status').textContent=paused?'Scene paused':'Scene running';render();});
-  $('#reset').addEventListener('click',()=>{if(!domain)return;scenario=domain.createScenario({authorityApplied:false});evaluate();stage=0;reviewSequence++;reviewing=false;review=null;notifications=[];commandSequence=0;selectedVehicleId='TRK-104';mode='then';view='iso';follow=false;scene?.setFollow(false);scene?.setView(view);manualCameraUsed=false;initialCameraHandled=true;scene?.setFocus(chapterSites[0]);$$('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));$('#follow').setAttribute('aria-pressed','false');sim?.reset();const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;sim?.setPaused(reduce);$('#pause').textContent=reduce?'▶ Play':'Ⅱ Pause';$('#run-status').textContent=reduce?'Scene paused · reduced motion':'Scene running';feedback('Demo reset. Original fixture restored.');render();});
+  $('#reset').addEventListener('click',()=>{
+    if(!domain)return;
+    scenario=domain.createScenario({authorityApplied:false});evaluate();intro=true;stage=0;
+    reviewSequence++;reviewing=false;review=null;notifications=[];commandSequence=0;
+    selectedVehicleId='TRK-104';mode='then';view='iso';follow=false;scene?.setFollow(false);
+    manualCameraUsed=false;initialCameraHandled=true;
+    $$('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));$('#follow').setAttribute('aria-pressed','false');
+    sim?.reset();const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;sim?.setPaused(reduce);
+    $('#pause').textContent=reduce?'▶ Play':'Ⅱ Pause';$('#run-status').textContent=reduce?'Scene paused · reduced motion':'Scene running';
+    feedback('Demo reset.');render();scene?.resize();scene?.setView(view,{focusId:chapterSites[0]});
+  });
   const about=visible=>{$('#about-panel').hidden=!visible;$('#about-toggle').setAttribute('aria-expanded',String(visible));};
   $('#about-toggle').addEventListener('click',()=>about($('#about-panel').hidden));$('#about-close').addEventListener('click',()=>about(false));document.addEventListener('keydown',event=>{if(event.key==='Escape')about(false);});
 }
@@ -114,7 +126,7 @@ async function main(){
   catch(error){console.warn('Provenance panel failed; using built-in controls',error.message);panel=createFallbackPanel({container:$('#provenance'),onAction:handleAction});}
   try{
     const {createFleetScene}=await import('../render/core/index.js');
-    scene=await createFleetScene({container:$('#world'),onSelect:selectEntity,onStatus(status){$('#scene-notice').hidden=['ready','loading'].includes(status.kind);$('#scene-notice').textContent=status.message;}});
+    scene=await createFleetScene({container:$('#world'),onSelect:selectEntity,onStatus(status){$('#scene-notice').hidden=['ready','loading','fallback'].includes(status.kind);$('#scene-notice').textContent=status.message;}});
     scene.setView(view);$('#scene-loading')?.remove();
   }catch(error){$('#scene-loading').textContent=`Scene unavailable: ${error.message}. Source controls are still usable.`;console.error(error);}
   ready=true;render();
@@ -127,6 +139,6 @@ async function main(){
     else{sim?.dispose();scene?.dispose();panel?.dispose();}
   });
   window.addEventListener('pageshow',event=>{if(event.persisted&&suspendedPauseState!==null){sim?.setPaused(suspendedPauseState);suspendedPauseState=null;scene?.resize();render();}});
-  window.__fleetDemo={getState:()=>({mode,stage,selectedVehicleId,view,follow,scenario,evaluation,review,simulation:sim.getState()}),getMetrics:()=>scene?.getMetrics?.(),version:'fleet-demo/v1'};
+  window.__fleetDemo={getState:()=>({intro,mode,stage,selectedVehicleId,view,follow,scenario,evaluation,review,simulation:sim.getState()}),getMetrics:()=>scene?.getMetrics?.(),version:'fleet-demo/v1'};
 }
 main().catch(error=>console.error('Fleet demo bootstrap failed',error));

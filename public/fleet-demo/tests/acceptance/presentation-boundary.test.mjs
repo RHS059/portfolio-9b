@@ -33,7 +33,7 @@ test('UI presentation boundary (not browser/layout verification)',{skip:!existsS
   await t.test('current recorded review is honestly labeled and advisory',()=>{
     const model=input();model.mode='today';model.review={mode:'recorded',configVersion:1,asOf:model.asOf,vehicleId:'TRK-104',findings:[{summary:'Unique current finding',evidenceReadingIds:['104-A-2']}]};
     model.notifications=[{text:'Unique in-app alert',recipient:'Responsible operator'}];
-    const html=renderProvenance(model);assert.match(html,/Recorded review.*not a live model call/);assert.match(html,/Unique current finding/);assert.match(html,/In-app notification/);
+    const html=renderProvenance(model);assert.match(html,/Recorded review.*not a live model call/);assert.match(html,/Unique current finding/);assert.match(html,/Manager notification/);
     assert.match(html,/Recommendations never change mileage, source policy or service history/);
   });
   for(const mismatch of ['version','cutoff','vehicle','live-mode'])await t.test(`${mismatch} review findings and notifications are withheld`,()=>{
@@ -48,7 +48,7 @@ test('UI presentation boundary (not browser/layout verification)',{skip:!existsS
   });
   await t.test('Then mode does not surface Today findings',()=>{
     const model=input();model.review={mode:'simulated',configVersion:1,asOf:model.asOf,findings:[{summary:'TODAY_ONLY'}]};
-    const html=renderProvenance(model);assert.doesNotMatch(html,/TODAY_ONLY|data-review-state=/);assert.match(html,/Then/i);assert.match(html,/source/i);
+    const html=renderProvenance(model);assert.doesNotMatch(html,/TODAY_ONLY|data-review-state=/);assert.match(html,/Choose the source/);assert.match(html,/source/i);
   });
 });
 

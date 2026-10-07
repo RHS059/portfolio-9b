@@ -6,7 +6,7 @@ import {renderReadingHistory} from '../reading-history/index.js';
 let instanceCount = 0;
 
 function renderReview(model) {
-  if (model.mode !== 'today') return '<p class="fp-kicker">THEN / SOURCE CONTROLS</p>';
+  if (model.mode !== 'today') return '';
   const state = reviewState(model), review = model.review;
   const current = state.kind === 'current';
   const findings = current ? list(review.findings) : [];
@@ -28,9 +28,9 @@ function renderReview(model) {
         <ol class="fp-findings">${findings.map(f=>`<li><strong>${esc(humanize(f.severity))}</strong><p>${esc(f.summary)}</p><p class="fp-meta">Evidence: ${list(f.evidenceReadingIds).map(esc).join(', ')||'No reading IDs supplied'} · confidence ${esc(f.confidence||'unknown')}</p>${f.suggestedAction?`<p>${esc(f.suggestedAction)}</p>`:''}</li>`).join('')}</ol>
         ${review.recommendation?`<p class="fp-meta">${esc(review.recommendation)}</p>`:''}
         ${review.provenance?.inputHash?`<p class="fp-meta">Snapshot ${esc(review.provenance.hashAlgorithm||'digest')}: ${esc(review.provenance.inputHash)}</p>`:''}
-        <p class="fp-meta">Recommendations never change mileage, source policy or service history. No external messages are sent.</p>
+        <p class="fp-meta">Recommendations never change mileage, source policy or service history. Notifications are shown here only. No external messages are sent.</p>
       </details>
-      ${model.notifications.map(n=>`<div class="fp-notification" role="status"><strong>In-app notification · demo</strong><span>${esc(n.text)}</span><p class="fp-meta">${esc(n.recipient||'Fleet manager')} · shown here only</p></div>`).join('')}`:''}
+      ${model.notifications.map(n=>`<div class="fp-notification" role="status"><strong>Manager notification</strong><span>${esc(n.text)}</span><p class="fp-meta">${esc(n.recipient||'Fleet manager')}</p></div>`).join('')}`:''}
   </section>`;
 }
 
@@ -45,10 +45,7 @@ export function renderProvenance(model, {idPrefix = 'fleet-provenance', scope = 
     ${renderReview(m)}
     ${renderSourceControls(m,{idPrefix,scope})}
     ${renderReadingHistory(m)}
-    <section class="fp-card" aria-label="Preserved service history"><p class="fp-kicker">04 / SERVICE FACTS</p><h3>Shop visits stay on the record</h3><p>The repeat oil changes and tire rotations stay in the history. These are synthetic examples.</p>
-      <p class="fp-meta">${m.serviceHistory.length} service example${m.serviceHistory.length===1?'':'s'} for ${esc(m.selectedVehicleId)} · retained unchanged</p>
-      ${m.serviceHistory.length?`<details data-details-key="service-history"><summary>Inspect service examples</summary><p class="fp-meta">Exact historical scheduling rules are unknown.</p><ol class="fp-service-list">${m.serviceHistory.map(s => `<li><strong>${esc(s.work)}</strong><br>${esc(timeLabel(s.recordedAt))}<br><small>${esc(s.id)} · ${esc(s.provenance || 'Synthetic service example')}</small></li>`).join('')}</ol></details>`:''}
-      <p class="fp-preserve">A replay does not erase visits or reverse work orders.</p></section>`;
+    <section class="fp-card" aria-label="Preserved service history"><h3>Shop visits this week</h3><ol class="fp-service-list">${m.serviceHistory.map(s => `<li><strong>${esc(s.work)}</strong><br>${esc(timeLabel(s.recordedAt))}</li>`).join('')||'<li>No visits recorded for this vehicle.</li>'}</ol><details data-details-key="service-history"><summary>Service record details</summary><p>These are synthetic examples. Exact historical scheduling rules are unknown. A replay does not erase visits or reverse work orders.</p><p class="fp-meta">${m.serviceHistory.length} records for ${esc(m.selectedVehicleId)} · retained unchanged</p>${m.serviceHistory.map(s=>`<p class="fp-meta">${esc(s.id)} · ${esc(s.provenance||'Synthetic service example')}</p>`).join('')}</details></section>`;
 }
 
 /**

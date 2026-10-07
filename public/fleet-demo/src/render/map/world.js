@@ -17,9 +17,9 @@ const factory=toLocal([-122.3089861,37.8129817]);
 // Fictional workshop within the warehouse parcel, not an asserted real-world business.
 const depot=[factory[0]-95,factory[1]-105];
 export const SITES = Object.freeze([
-  Object.freeze({ id:'oict',label:'OICT · Oakland port',caption:'Mapped yard extent · schematic operations',x:port[0],y:port[1],width:1902.772,depth:1296.4,focusZoom:15.2,focusBounds:portBounds,focusX:port[0]+OICT_GEOGRAPHY.centroidLocal[0],focusY:port[1]+OICT_GEOGRAPHY.centroidLocal[1],labelX:port[0]+OICT_GEOGRAPHY.centroidLocal[0],labelY:port[1]+OICT_GEOGRAPHY.centroidLocal[1],footprintWorld:Object.freeze(portWorldFootprint) }),
-  Object.freeze({ id:'centerpoint',label:'Drone factory',caption:'Fictional use · 1300 Maritime St',x:factory[0],y:factory[1],width:150,depth:90,focusZoom:18.3 }),
-  Object.freeze({ id:'depot',label:'Depot / workshop',caption:'Fictional campus service bays',x:depot[0],y:depot[1],width:85,depth:60,focusZoom:18.8 })
+  Object.freeze({ id:'oict',label:'OICT · Oakland port',caption:'',x:port[0],y:port[1],width:1902.772,depth:1296.4,focusZoom:15.2,focusBounds:portBounds,focusX:port[0]+OICT_GEOGRAPHY.centroidLocal[0],focusY:port[1]+OICT_GEOGRAPHY.centroidLocal[1],labelX:port[0]+OICT_GEOGRAPHY.centroidLocal[0],labelY:port[1]+OICT_GEOGRAPHY.centroidLocal[1],footprintWorld:Object.freeze(portWorldFootprint) }),
+  Object.freeze({ id:'centerpoint',label:'Drone factory',caption:'',x:factory[0],y:factory[1],width:150,depth:90,focusZoom:18.3 }),
+  Object.freeze({ id:'depot',label:'Depot / workshop',caption:'',x:depot[0],y:depot[1],width:85,depth:60,focusZoom:18.8 })
 ]);
 // Roads follow an OSM/OSRM general-driving reconstruction. Final yard connectors are illustrative.
 const road=ROAD_ROUTE_LNGLAT.map(toLocal);

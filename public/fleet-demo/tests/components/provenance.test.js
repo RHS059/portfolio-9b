@@ -41,7 +41,7 @@ test('Then panel distinguishes clocks, units, synthetic service facts and unreso
 test('vehicle isolation filters readings and service facts without touching the shared inputs',()=>{
   const m=view(),before=JSON.stringify(m);const other=renderProvenance({...m,selectedVehicleId:'TRK-208'});
   assert.match(other,/v2-a-3/);assert.doesNotMatch(other,/v1-b-3/);assert.doesNotMatch(other,/service-example-1/);
-  assert.match(other,/0 service examples for TRK-208/);assert.equal(JSON.stringify(m),before);
+  assert.match(other,/0 records for TRK-208/);assert.equal(JSON.stringify(m),before);
 });
 test('rendering respects domain decisions rather than choosing the largest/latest source',()=>{
   const html=renderProvenance(view(createScenario()));
@@ -83,7 +83,7 @@ test('equivalent timestamp spellings cannot conceal an authority conflict',()=>{
 test('Today simulated review is explicitly labeled and renders evidence/in-app notification only',async()=>{
   const state=createScenario({authorityApplied:false}),review=await reviewImports(state,createSimulatedReviewProvider());
   const m=view(state,'TRK-104',{mode:'today',review:{...review,vehicleId:'TRK-104'},notifications:[{text:'Check the source',recipient:'Fleet operator'}]});
-  const html=renderProvenance(m);assert.match(html,/Simulated review · no live AI call/);assert.match(html,/Evidence:/);assert.match(html,/In-app notification · demo/);assert.match(html,/shown here only/);assert.match(html,/No external messages are sent/);
+  const html=renderProvenance(m);assert.match(html,/Simulated review · no live AI call/);assert.match(html,/Evidence:/);assert.match(html,/Manager notification/);assert.match(html,/shown here only/);assert.match(html,/No external messages are sent/);
 });
 test('recorded review needs matching version, replay cutoff and selected vehicle',()=>{
   const m=view(),review={mode:'recorded',vehicleId:'TRK-104',configVersion:1,asOf:m.asOf,findings:[],summary:'RECORDED_FINDING'};

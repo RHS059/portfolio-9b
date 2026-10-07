@@ -40,7 +40,6 @@ export function createWorkshop({ THREE }) {
   }
   b.text('BAY 01', -12, -12.8, 0.3, 0.2);
   b.text('BAY 02', 12, -12.8, 0.3, 0.2);
-  b.text('FICTIONAL INTERIOR', 0, 7.7, 0.3, 0.19);
   const group = b.finish('workshop-cutaway');
   group.userData = {
     kind: 'workshop', fictional: true, label: 'Fictional interior · service reconstruction',

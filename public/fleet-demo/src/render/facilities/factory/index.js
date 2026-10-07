@@ -32,8 +32,6 @@ export function createFactory({ THREE }) {
   b.text('QA',42,15,0.04,.7);
   for(const y of [-1,-14]){b.box(11,10,.3,59,y,.15,'face');addDroneSymbol(b,59,y,.4);}
   b.text('DISPATCH',53,-25,0.04,.45);
-  b.text('DRONE ASSEMBLY',-12,-32,0.04,.7);
-  b.text('FICTIONAL INTERIOR / ILLUSTRATIVE OPERATIONS',0,-42,0.04,.35);
   for(const x of [-34,25])b.line([[x,-25,0.04],[x,35,0.04]]);
   const group=b.finish('centerpoint');
   group.userData={siteId:'centerpoint',kind:'factory',fictional:true,label:'Fictional drone assembly / sorting / dispatch',dimensions:FACTORY_DIMENSIONS,bounds:{min:[-75,-45,-.25],max:[75,45,12]}};

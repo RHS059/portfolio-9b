@@ -14,7 +14,7 @@ const canonical=(s,id='TRK-104')=>s.evaluation.vehicles.find(v=>v.vehicleId===id
 const action=(page,name)=>page.locator(`#provenance [data-action="${name}"]`);
 const authority=(page,source)=>page.locator(`#provenance [data-action="set-authority"][data-source="${source}"]`);
 const openInspector=async page=>{
-  if(await page.locator('#source-inspector').count()&&!await page.locator('#source-inspector').isVisible())await page.locator('#next-chapter').click();
+  if(await page.locator('#source-inspector').count()&&!await page.locator('#source-inspector').isVisible())await page.locator('#start-story').click();
 };
 
 test('Fleet browser acceptance: interactive workflow and honest review boundary', {skip:!url,timeout:180000},async t=>{
@@ -45,13 +45,13 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
     await run('initial fixture makes missing authority visible while TRK-208 remains A',async()=>{
       assert.equal(canonical(initial).reason,'missing-authority');assert.equal(canonical(initial,'TRK-208').sourceId,'A');
       assert.equal(canonical(initial,'TRK-208').status,'resolved');
-      assert.match(await page.locator('body').innerText(),/synthetic demo/i);
-      assert.equal(await page.locator('#canonical-reading').innerText(),'Unresolved');
+      assert.match(await page.locator('.demo-badge').innerText(),/demo/i);assert.equal(initial.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);
+      assert.equal(await page.locator('#project-info').isVisible(),true);
     });
     await run('opening project details transition to source inspector',async()=>{
       assert.equal(await page.locator('#project-info').isVisible(),true);
       assert.equal(await page.locator('#source-inspector').isVisible(),false);
-      await page.locator('#next-chapter').click();assert.equal(await page.locator('#source-inspector').isVisible(),true);
+      await page.locator('#start-story').click();assert.equal(await page.locator('#source-inspector').isVisible(),true);
     });
     await run('B authority fixes only migrated truck and retains raw/service evidence',async()=>{
       await authority(page,'B').click();const next=await state(page);
@@ -82,7 +82,7 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
     });
     await run('a policy change invalidates cached review and notifications',async()=>{
       await authority(page,'A').click();const next=await state(page);
-      assert.equal(next.review,null);assert.equal(canonical(next).reason,'authoritative-reading-excluded');
+      assert.equal(next.review,null);assert.equal(next.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);assert.equal(canonical(next).reason,'authoritative-reading-excluded');
       assert.equal(canonical(next).valueKm,null);assert.equal(canonical(next,'TRK-208').status,'resolved');
       assert.doesNotMatch(await page.locator('#provenance').innerText(),/TRK-104: \d+ advisory finding/);
     });
@@ -114,16 +114,16 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
     });
     await run('reset restores fixture, mode, selection and configuration',async()=>{
       await page.locator('#reset').click();const next=await state(page);
-      assert.deepEqual(next.scenario,initial.scenario);assert.equal(next.mode,'then');assert.equal(next.stage,0);assert.equal(next.selectedVehicleId,'TRK-104');assert.equal(next.review,null);
+      assert.deepEqual(next.scenario,initial.scenario);assert.equal(next.mode,'then');assert.equal(next.stage,0);assert.equal(next.selectedVehicleId,'TRK-104');assert.equal(next.review,null);assert.equal(next.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);
     });
     await run('reload honestly restores this in-memory fixture',async()=>{
       await openInspector(page);await authority(page,'B').click();await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo);
       assert.deepEqual((await state(page)).scenario,initial.scenario);
     });
-    await run('illustrative consequence and historical-unknown caveats stay visible',async()=>{
-      await page.locator('[data-stage="2"]').click();assert.match(await page.locator('#chapter-copy').innerText(),/exact maintenance-trigger rule is unknown/i);
+    await run('data limitations remain available in collapsed demo details',async()=>{
+      await openInspector(page);await page.locator('[data-stage="2"]').click();
       await page.locator('#about-toggle').click();assert.match(await page.locator('#about-panel').innerText(),/not live telemetry|not live/i);
-      assert.match(await page.locator('#about-panel').innerText(),/illustrative/i);
+      assert.match(await page.locator('#about-panel').innerText(),/illustrative/i);assert.match(await page.locator('#about-panel').innerText(),/exact maintenance-trigger rule is unknown/i);
       await page.locator('#about-close').click();
     });
     await run('narrow viewport retains essential authority controls',async()=>{

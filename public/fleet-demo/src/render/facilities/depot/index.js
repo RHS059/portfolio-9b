@@ -19,10 +19,6 @@ export function createDepot({ THREE }) {
     b.box(2.5, 6, 0.25, x, 21, 0.125, 'face');
     for (const y of [19.2, 22.7]) b.box(1.7, 2.6, 1.4, x, y, 0.95, 'paper');
   }
-  // Pavement annotations are batched strokes, so no web fonts or texture loaders.
-  b.text('DEPOT / WORKSHOP', 0, -24, 0.035, 0.55);
-  b.text('SERVICE RECONSTRUCTION', 0, -27.7, 0.035, 0.23);
-  b.text('FICTIONAL', 0, 26.5, 0.035, 0.3);
   // Wide directional arrows, strictly a layout cue.
   for (const x of [-12,12]) b.line([[x,-19,0.035],[x,-13,0.035],[x-1,-15,0.035],[x,-13,0.035],[x+1,-15,0.035]]);
   const group = b.finish('depot');

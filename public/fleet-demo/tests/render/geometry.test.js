@@ -16,3 +16,20 @@ actual('separate canvas captures every map projection, resizes, skips paused idl
 });
 actual('uniform-tone instanced batches preserve geometry and need no color attributes or instance colors',async()=>{const {createModelBuckets}=await import('../../src/render/core/models.js');for(const kind of ['truck','van']){const parts=createModelBuckets(T,kind),full=createModelGeometry(T,kind);assert.equal(parts.reduce((n,p)=>n+p.geometry.getAttribute('position').count,0),full.getAttribute('position').count);assert.ok(parts.some(p=>p.color.r>.9));for(const part of parts){assert.equal(part.geometry.getAttribute('color'),undefined);const mesh=new T.InstancedMesh(part.geometry,new T.MeshBasicMaterial({color:part.color}),1);assert.equal(mesh.instanceColor,null);assert.equal(mesh.material.vertexColors,false);part.geometry.dispose();mesh.material.dispose();}full.dispose();}});
 actual('mapped port injection reaches real asset and instanced surfaces use two-sided rendering',async()=>{const {OICT_GEOGRAPHY}=await import('../../src/render/map/oict-geography.js');const {applyFacilityFacePolicy}=await import('../../src/render/core/facilities-adapter.js');const root=createFacilities({THREE:T,geography:{oict:OICT_GEOGRAPHY}}),port=root.children.find(g=>g.userData.siteId==='oict');assert.equal(port.userData.status,'mapped');assert.equal(port.userData.representativeRowCount,61);assert.equal(port.userData.schematicCraneCount,9);applyFacilityFacePolicy(T,root);let count=0;root.traverse(o=>{if(o.isInstancedMesh){count++;assert.equal(o.material.side,T.DoubleSide);}});assert.ok(count>=2);root.userData.dispose();disposeObject(root);});
+actual('actual scene disposes independent Three resources when MapLibre remove omits custom cleanup',async t=>{
+ const {installDomHost,Element}=await import('./dom-host.js');const {createFleetScene}=await import('../../src/render/core/index.js');const host=installDomHost(t),container=new Element('div'),maps=[];let disposed=0,lost=0;
+ const gl={getExtension:()=>null,getParameter:()=> 'test renderer',RENDERER:0,isContextLost:()=>false};
+ class Renderer{constructor(){this.info={render:{}};}getContext(){return gl;}setClearColor(){}setPixelRatio(){}setSize(){}render(){}dispose(){disposed++;}forceContextLoss(){lost++;}}
+ class Map471{
+  constructor(options){this.options=options;this.canvas=new Element('canvas');this.canvas.className='maplibregl-canvas';options.container.append(this.canvas);this.listeners={};this.layers={};this.sources={};maps.push(this);queueMicrotask(()=>this.listeners.load?.());}
+  on(name,fn){this.listeners[name]=fn;}getCanvas(){return this.canvas;}getContainer(){return this.options.container;}getCenter(){return{toArray:()=>this.options.center};}getZoom(){return this.options.zoom;}getPitch(){return this.options.pitch;}getBearing(){return this.options.bearing;}
+  addSource(id,source){this.sources[id]=source;}getSource(id){return this.sources[id];}addLayer(layer){this.layers[layer.id]=layer;layer.onAdd?.(this,gl);}getLayer(id){return this.layers[id];}
+  remove(){this.removed=true;this.canvas.remove();/* Matches 4.7.1: no layer.onRemove here. */}
+  fitBounds(){}easeTo(){}project(){return{x:100,y:100};}resize(){}triggerRepaint(){}isSourceLoaded(){return true;}
+ }
+ globalThis.THREE={...T,WebGLRenderer:Renderer};globalThis.maplibregl={Map:Map471,LngLatBounds:class{extend(){return this;}},MercatorCoordinate:{fromLngLat:()=>({x:.2,y:.3,z:0,meterInMercatorCoordinateUnits:()=>1e-8})}};
+ const scene=createFleetScene({container});t.after(()=>scene.dispose());await host.settle();const first=maps[0],oldLayer=first.layers['fleet-editorial-3d'];assert.equal(oldLayer.disposed,false);
+ first.canvas.dispatchEvent(new Event('webglcontextlost',{cancelable:true}));assert.equal(oldLayer.disposed,true);assert.equal(disposed,1);assert.equal(lost,1);
+ await new Promise(resolve=>setTimeout(resolve,10));await host.settle();assert.equal(maps.length,2);assert.equal(scene.getMetrics().mapRebuilds,1);
+ scene.dispose();scene.dispose();assert.equal(disposed,2);assert.equal(lost,2);assert.ok(maps.every(map=>map.removed));assert.equal(container.children.length,0);assert.equal(host.frames.size,0);
+});
