@@ -9,6 +9,7 @@ import {exerciseCargoFlow} from './fleet-cargo-browser-checks.mjs';
 import {STORY_TITLE} from '../public/fleet-demo/src/app/story-timeline.js';
 import {createPerformanceProbe,profileRenderingWindows} from './fleet-performance-diagnostics.mjs';
 import {navigateStory,enterCameraView,reloadStory} from './fleet-browser-controls.mjs';
+import {checkMapRegion} from '../public/fleet-demo/tests/browser/map-region-checks.mjs';
 import {createRequire} from 'node:module';
 const require=createRequire(path.join(process.env.PLAYWRIGHT_PACKAGE || '/tmp/fleet-browser','package.json'));
 const {chromium}=require('playwright');
@@ -189,6 +190,7 @@ assert.equal(await page.evaluate(()=>document.querySelector('#start-story-manual
    else if(evidence.contextCycles.length===2){await page.locator('#follow').click();await setPaused(false);await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.camera.follow&&m.camera.focus===window.__fleetDemo.getState().selectedVehicleId&&m.viewState.zoom>17&&!m.cameraMoving;});}
 
  }
+ phase='map-region';evidence.mapRegion=await checkMapRegion({browser,url,out,assetBase:process.env.FLEET_DEMO_URL?new URL('/fleet-demo/',url).href:new URL('./',url).href});evidence.checks.push('Workshop-centered map retains a solid interior, Bayer edge and transparent exterior; wholly outside source tiles do not fetch');
  phase='legacy-reno';const legacyUrl=new URL('reno.html',url.endsWith('/')?url:url+'/').href;await page.goto(legacyUrl,{waitUntil:'domcontentloaded'});await page.getByRole('button',{name:'Live',exact:true}).click();
  for(const mode of ['2D','3D','Isometric'])await page.getByRole('button',{name:mode,exact:true}).click();
  await page.getByRole('button',{name:'Follow vehicle',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Following',exact:true}).isVisible(),true);await page.getByRole('button',{name:'Following',exact:true}).click();
