@@ -40,9 +40,9 @@ test('rapid scene changes retarget from the visible camera and discard supersede
  camera.update([pose(-400,-400,'old'),pose(500,400,'new')],1200);assert.deepEqual(map.view.center,toLngLat([500,400]));assert.equal(camera.get().focus,'new');
 });
 
-test('manual input cancels an active camera move and any pending delayed focus',()=>{
+test('manual movestart cancels owned camera work without stopping the active native gesture',()=>{
  const {map,camera}=fixture();start(camera);camera.update([pose()],250);const current=structuredClone(map.view),draws=map.jumps.length,stops=map.stops;
- camera.markManual();assert.ok(map.stops>stops);camera.update([pose()],900);assert.deepEqual(map.view,current);assert.equal(map.jumps.length,draws);
+ camera.markManual();assert.equal(map.stops,stops);camera.update([pose()],900);assert.deepEqual(map.view,current);assert.equal(map.jumps.length,draws);
  camera.setView('iso',{focusId:'TRK-104'});camera.markManual();camera.update([pose()],1000);assert.equal(map.jumps.length,draws);
  camera.setView('iso',{focusId:'depot'});const native=map.eases.length;camera.markManual();camera.update([pose()],2000);assert.equal(map.eases.length,native);assert.equal(camera.get().manual,true);
 });
@@ -83,4 +83,26 @@ test('facilities issue one native ease using the same bounded in/out curve',()=>
  camera.update([pose()],200);camera.update([pose()],1000);assert.equal(map.eases.length,1);
  camera.setView('iso',{focusId:'oict'});assert.equal(map.fits.length,1);assert.equal(map.fits[0].options.linear,true);assert.equal(map.fits[0].options.easing,cameraEase);
  close(cameraEase(0),0);close(cameraEase(.5),.5);close(cameraEase(1),1);assert.ok(cameraEase(.01)<.001);assert.ok(1-cameraEase(.99)<.001);
+});
+
+test('all orbit and pan steps survive a native movestart callback',()=>{
+ const {map,camera}=fixture();camera.setView('iso',{focusId:'TRK-104',animate:false});camera.update([pose()],0);
+ let gestureActive=false,nativeEase=false;const originalStop=map.stop;
+ // MapLibre4.7.1 stop() resets gesture handlers as well as stopping an ease.
+ map.stop=()=>{originalStop();gestureActive=false;nativeEase=false;};
+ function gesture(deltas,apply){
+  // The app's pointerdown disables Follow before MapLibre begins its gesture.
+  camera.setFollow(false);assert.equal(nativeEase,false);
+  gestureActive=true;let steps=0;
+  for(const delta of deltas){if(!gestureActive)break;apply(delta);steps++;if(steps===1)camera.markManual();}
+  gestureActive=false;return steps;
+ }
+ nativeEase=true;
+ const pixels=Array.from({length:12},(_,i)=>Math.round((i+1)*170/12)-Math.round(i*170/12));
+ assert.equal(gesture(pixels,delta=>map.view.bearing+=delta*.8),12);
+ assert.ok(Math.abs(map.view.bearing-108)<1e-6,'Orbit must consume the whole170px drag, not just the first14px step');
+ const start=[...map.view.center],delta=[.008,.004];
+ assert.equal(gesture(Array(8).fill(1),()=>{map.view.center=map.view.center.map((value,i)=>value+delta[i]/8);}),8);
+ map.view.center.forEach((value,i)=>close(value,start[i]+delta[i]));
+ assert.equal(camera.get().manual,true);assert.equal(camera.get().transitioning,false);
 });

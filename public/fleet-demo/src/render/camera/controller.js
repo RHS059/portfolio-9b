@@ -48,7 +48,9 @@ export function createCameraController(getMap){
     },
     setFocus,
     setFollow(value){const next=!!value,changed=follow!==next||(manual&&next);if(changed||!next)cancelTransition();if(changed)resetFollow();follow=next;if(follow)manual=false;else{pendingFocus=false;pendingOrientation=null;}},
-    markManual(){cancelTransition();manual=true;pendingFocus=false;pendingOrientation=null;},
+    // Called inside MapLibre's user movestart. Its handler already stopped native
+    // easing; calling map.stop() here also resets the gesture after its first step.
+    markManual(){transition=null;manual=true;pendingFocus=false;pendingOrientation=null;},
     resize(){if(!manual&&SITES.some(s=>s.id===focus))setFocus(focus,false);},
     update(entities,now){
       const map=getMap();if(!focus||!map||manual||!Number.isFinite(now))return;

@@ -216,7 +216,7 @@ export default function FleetDemoShell() {
             <p>This case study follows the provider-overlap incident. The source controls use sample records so you can try the workflow.</p>
             <p id="cargo-capability-note">Follow the trucks, incoming kits and assembly work in the scene.</p>
 
-            <details><summary>Data and performance</summary><p id="integrity-count" /><p>Original readings and service history are preserved. Settings are versioned and recalculated results are derived views.</p><p><span id="run-status">Scene paused</span> · One 20 Hz simulation clock with interpolated rendering.</p><p id="performance">Performance measurement pending</p><p>Browser frame cadence is not a physical-GPU benchmark.</p></details>
+            <details><summary>Data and performance</summary><p>The animated readings, visits and $350 service price are examples. No live telemetry is connected. The exact maintenance-trigger rule is unknown.</p><p id="integrity-count" /><p>Original readings and service history are preserved. Settings are versioned and recalculated results are derived views.</p><p><span id="run-status">Scene paused</span> · One 20 Hz simulation clock with interpolated rendering.</p><p id="performance">Performance measurement pending</p><p>Browser frame cadence is not a physical-GPU benchmark.</p></details>
             <p><a href="/fleet-demo/reno.html">Original Reno console ↗</a></p><AnimatedLink href="/projects/fleet-fuel-integration">Read the original case study ↗</AnimatedLink>
           </div>
         </section>

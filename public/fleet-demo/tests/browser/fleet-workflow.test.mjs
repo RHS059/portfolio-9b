@@ -11,9 +11,10 @@ const url=process.env.FLEET_BROWSER_URL;
 const require=process.env.PLAYWRIGHT_PACKAGE?createRequire(join(resolve(process.env.PLAYWRIGHT_PACKAGE),'package.json')):createRequire(import.meta.url);
 const state=page=>page.evaluate(()=>window.__fleetDemo.getState());
 const textSettled=page=>page.waitForFunction(()=>{const t=window.__fleetDemo.getState().textTransition;return !t||t.phase==='idle';});
-const reset=async page=>{if(await page.locator('#source-dialog').isVisible())await page.locator('#source-close').click();await page.locator('#reset').click();await textSettled(page);};
+const closeDialogs=async page=>{for(const [dialog,close]of [['#source-dialog','#source-close'],['#about-panel','#about-close']])if(await page.locator(dialog).isVisible())await page.locator(close).click();};
+const reset=async page=>{await closeDialogs(page);await page.locator('#reset').click();await textSettled(page);};
 const canonical=(s,id='TRK-104')=>s.evaluation.vehicles.find(v=>v.vehicleId===id);
-const goToStage=async(page,target)=>{if(await page.locator('#source-dialog').isVisible())await page.locator('#source-close').click();await page.locator(`[data-scene-index="${target}"]`).click();await textSettled(page);};
+const goToStage=async(page,target)=>{await closeDialogs(page);await page.locator(`[data-scene-index="${target}"]`).click();await textSettled(page);};
 const openInspector=async page=>{if(!await page.locator('#source-inspector').isVisible()){await goToStage(page,6);await page.locator('#open-source-controls').click();}};
 const revealControl=async(page,selector)=>{
   await openInspector(page);const target=page.locator(`#provenance ${selector}`);
@@ -56,7 +57,7 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
     await run('initial fixture makes missing authority visible while TRK-208 remains A',async()=>{
       assert.equal(canonical(initial).reason,'missing-authority');assert.equal(canonical(initial,'TRK-208').sourceId,'A');
       assert.equal(canonical(initial,'TRK-208').status,'resolved');
-      await page.locator('#about-toggle').click();assert.match(await page.locator('#about-panel').innerText(),/synthetic demo|not live telemetry/i);await page.locator('#about-close').click();assert.equal(initial.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);
+      await page.locator('#about-toggle').click();try{assert.match(await page.locator('#about-panel').innerText(),/source controls use sample records/i);}finally{await page.locator('#about-close').click();}assert.equal(initial.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);
       assert.equal(await page.locator('#project-info').isVisible(),true);
     });
     await run('opening project details transition to source inspector',async()=>{
@@ -133,9 +134,12 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
     });
     await run('data limitations remain available in collapsed demo details',async()=>{
       await goToStage(page,2);
-      await page.locator('#about-toggle').click();assert.match(await page.locator('#about-panel').innerText(),/not live telemetry|not live/i);
-      assert.match(await page.locator('#about-panel').innerText(),/illustrative/i);assert.match(await page.locator('#about-panel').innerText(),/exact maintenance-trigger rule is unknown/i);
-      await page.locator('#about-close').click();
+      await page.locator('#about-toggle').click();
+      try{
+        await page.locator('#about-panel details > summary').click();
+        const details=await page.locator('#about-panel').innerText();
+        assert.match(details,/no live telemetry/i);assert.match(details,/readings, visits and \$350 service price are examples/i);assert.match(details,/exact maintenance-trigger rule is unknown/i);
+      }finally{await page.locator('#about-close').click();}
     });
     await run('narrow viewport retains essential authority controls',async()=>{
       await page.setViewportSize({width:390,height:844});await authority(page,'B').click();assert.equal(canonical(await state(page)).status,'resolved');

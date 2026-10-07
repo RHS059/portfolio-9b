@@ -27,7 +27,7 @@ test('opening places project name, unchanged project information, teaser and Nex
 });
 test('technical diagnostics and data limitations are inside the initially collapsed About panel',()=>{
  const start=html.indexOf('<div id="about-panel"');const about=html.slice(start,html.indexOf('</section>',start));
- assert.match(about,/hidden/);assert.match(about,/sample records/);assert.match(about,/Original readings and service history are preserved/);assert.match(about,/id="performance"/);assert.match(about,/id="run-status"/);
+ assert.match(about,/hidden/);assert.match(about,/sample records/);const limits=about.slice(about.indexOf('<details>'),about.indexOf('</details>'));assert.match(limits,/No live telemetry is connected/);assert.match(limits,/exact maintenance-trigger rule is unknown/);assert.doesNotMatch(limits,/<details[^>]*\bopen\b/);assert.match(about,/Original readings and service history are preserved/);assert.match(about,/id="performance"/);assert.match(about,/id="run-status"/);
  assert.doesNotMatch(html,/story-footnote|Operations lab|Fictional drone assembly/);
  assert.equal((html.match(/Original Reno console/g)||[]).length,1);
 });
