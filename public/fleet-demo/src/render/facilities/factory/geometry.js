@@ -29,18 +29,25 @@ export function createArticulatedInstances(THREE,definitions){
   const T=THREE,group=new T.Group();group.name='assembly-articulation';const buckets=new Map(),index=new Map();
   for(const d of definitions){const list=buckets.get(d.shape||'box')||[];list.push(d);buckets.set(d.shape||'box',list);}
   for(const[shape,list]of buckets){
-    const geometry=shape==='cylinder'?new T.CylinderGeometry(.5,.5,1,12):new T.BoxGeometry(1,1,1);if(shape==='cylinder')geometry.rotateX(Math.PI/2);
+    const geometry=shape==='cylinder'?new T.CylinderGeometry(.5,.5,1,12):shape==='ellipsoid'?new T.SphereGeometry(.5,12,6):new T.BoxGeometry(1,1,1);if(shape==='cylinder')geometry.rotateX(Math.PI/2);
     const material=new T.MeshLambertMaterial({color:0xffffff,side:T.DoubleSide});const mesh=new T.InstancedMesh(geometry,material,list.length);mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.frustumCulled=false;mesh.name='articulated-'+shape;
     const edge=new T.EdgesGeometry(geometry,30),unit=Float32Array.from(edge.getAttribute('position').array);edge.dispose();const lineGeometry=new T.BufferGeometry();lineGeometry.setAttribute('position',new T.BufferAttribute(new Float32Array(unit.length*list.length),3).setUsage(T.DynamicDrawUsage));const lines=new T.LineSegments(lineGeometry,new T.LineBasicMaterial({color:FACILITY_THEME.ink}));lines.frustumCulled=false;lines.name=mesh.name+'-outlines';group.add(mesh,lines);
-    list.forEach((d,i)=>{mesh.setColorAt(i,new T.Color(FACILITY_THEME[d.tone||'paper']));index.set(d.id,{mesh,lines,unit,index:i});});
+    list.forEach((d,i)=>{mesh.setColorAt(i,new T.Color(FACILITY_THEME[d.tone||'paper']));index.set(d.id,{mesh,lines,unit,index:i,matrix:new T.Matrix4(),positions:new Float32Array(unit.length),visible:true});});
   }
   const p=new T.Vector3(),s=new T.Vector3(),q=new T.Quaternion(),m=new T.Matrix4(),v=new T.Vector3(),z=new T.Vector3(0,0,1);
   function set(id,position,scale,quaternion=null){
-    const b=index.get(id);if(!b)return;p.fromArray(position);s.fromArray(scale);quaternion?q.copy(quaternion):q.identity();m.compose(p,q,s);b.mesh.setMatrixAt(b.index,m);const out=b.lines.geometry.getAttribute('position').array,offset=b.index*b.unit.length;
+    const b=index.get(id);if(!b)return;p.fromArray(position);s.fromArray(scale);quaternion?q.copy(quaternion):q.identity();m.compose(p,q,s);b.matrix.copy(m);b.visible=true;const out=b.positions,offset=0;
     for(let i=0;i<b.unit.length;i+=3){v.fromArray(b.unit,i).applyMatrix4(m);out[offset+i]=v.x;out[offset+i+1]=v.y;out[offset+i+2]=v.z;}
   }
   function between(id,a,b,width,depth){const start=new T.Vector3(...a),end=new T.Vector3(...b),delta=end.clone().sub(start);set(id,start.add(end).multiplyScalar(.5).toArray(),[width,depth,delta.length()],new T.Quaternion().setFromUnitVectors(z,delta.normalize()));}
   function axis(id,position,scale,direction){set(id,position,scale,new T.Quaternion().setFromUnitVectors(z,new T.Vector3(...direction).normalize()));}
-  function commit(){for(const child of group.children){if(child.isInstancedMesh){child.instanceMatrix.needsUpdate=true;if(child.instanceColor)child.instanceColor.needsUpdate=true;}else child.geometry.getAttribute('position').needsUpdate=true;}}
-  group.userData.partIds=Object.freeze(definitions.map(d=>d.id));return{group,set,between,axis,commit};
+  function hide(id){const entry=index.get(id);if(entry)entry.visible=false;}
+  function commit(){
+    for(const [shape,list] of buckets){let count=0;const sample=index.get(list[0].id),out=sample.lines.geometry.getAttribute('position').array;
+      for(const d of list){const entry=index.get(d.id);if(!entry.visible)continue;sample.mesh.setMatrixAt(count,entry.matrix);sample.mesh.setColorAt(count,new T.Color(FACILITY_THEME[d.tone||'paper']));out.set(entry.positions,count*entry.unit.length);count++;}
+      sample.mesh.count=count;sample.mesh.instanceMatrix.needsUpdate=true;if(sample.mesh.instanceColor)sample.mesh.instanceColor.needsUpdate=true;
+      sample.lines.geometry.setDrawRange(0,count*sample.unit.length/3);sample.lines.geometry.getAttribute('position').needsUpdate=true;
+    }
+  }
+  group.userData.partIds=Object.freeze(definitions.map(d=>d.id));return{group,set,between,axis,hide,commit};
 }

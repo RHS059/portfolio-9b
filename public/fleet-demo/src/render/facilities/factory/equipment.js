@@ -1,10 +1,12 @@
 import {createFactoryGeometry} from './geometry.js';
+import {cartonOpeningPose} from './carton-motion.js';
+import {assemblyStep} from './assembly-plan.js';
 
 /** Reusable transport props only. The caller owns travel and cargo handoff state. */
 export function createForklift({THREE}){
  const T=THREE,b=createFactoryGeometry(T),root=new T.Group();root.name='factory-forklift';
  b.box(1.04,1.9,.27,0,-.02,.48,'dark');b.box(1.02,.8,.73,0,-.65,.85,'paper');for(const z of [.73,.82,.91])b.box(.58,.018,.035,0,-1.06,z,'dark');
- b.box(.90,.87,.22,0,.20,.72,'face');b.box(.46,.40,.12,0,-.12,.99,'dark');b.box(.46,.12,.46,0,-.34,1.20,'dark');
+ b.box(.90,.87,.10,0,.20,.53,'face');b.box(.25,.25,.40,0,-.10,.78,'muted');b.box(.46,.40,.12,0,-.12,.99,'dark');b.box(.46,.12,.46,0,-.34,1.20,'dark');
  // Open overhead guard and driver's controls.
  for(const x of[-.44,.44])for(const y of[-.5,.46])b.box(.045,.045,1.38,x,y,1.52,'ink');
  for(const x of[-.47,.47])b.box(.055,1.12,.055,x,-.02,2.23,'dark');for(const y of[-.57,.53])b.box(.97,.055,.055,0,y,2.23,'dark');
@@ -24,11 +26,12 @@ export function createForklift({THREE}){
  const carriage=new T.Group();carriage.name='forklift-carriage';const forks=createFactoryGeometry(T);
  forks.box(.82,.10,.65,0,1.10,.39,'dark');for(const x of[-.30,.30]){forks.box(.10,1.07,.055,x,1.64,-.028,'muted');forks.box(.10,.10,.54,x,1.15,.24,'muted');}
  carriage.add(forks.finish('forks-and-carriage'));const payloadMount=new T.Group();payloadMount.name='forklift-payload-mount';payloadMount.position.set(0,1.65,0);carriage.add(payloadMount);root.add(carriage);
+ const seatMount=new T.Group();seatMount.name='forklift-seat-mount';seatMount.position.set(0,-.12,1.05);root.add(seatMount);
  let disposed=false;
- root.userData={kind:'forklift',illustrative:true,axes:'x-right/y-forward/z-up',payloadMount,dimensions:{width:1.25,length:3.42,height:2.35},
+ root.userData={kind:'forklift',illustrative:true,axes:'x-right/y-forward/z-up',payloadMount,seatMount,operatorFootSupportZ:.58,dimensions:{width:1.25,length:3.42,height:2.35},
    update({liftHeight=.08,travelMeters=0}={}){if(disposed)return;carriage.position.z=Math.max(.055,Math.min(1.6,Number.isFinite(liftHeight)?liftHeight:.08));for(const wheel of wheelGroups)wheel.rotation.x=Number.isFinite(travelMeters)&&travelMeters!==0?-travelMeters/wheel.userData.radius:0;},
    dispose(){disposed=true;}
- };root.userData.update();return root;
+ };root.userData.setLiftHeight=liftHeight=>{if(!disposed&&Number.isFinite(liftHeight))carriage.position.z=Math.max(.055,Math.min(1.6,liftHeight));};root.userData.update();return root;
 }
 
 export function createRollerAMR({THREE}){
@@ -67,12 +70,18 @@ export function createOpeningCarton({THREE}){
  const T=THREE,b=createFactoryGeometry(T),root=new T.Group();root.name='parts-carton';
  b.box(.78,.58,.025,0,0,.0125,'face');b.box(.70,.50,.17,0,0,.11,'dark');for(const x of[-.39,.39])b.box(.025,.58,.45,x,0,.25,'paper');for(const y of[-.29,.29])b.box(.78,.025,.45,0,y,.25,'paper');
  // Visible separators and component placeholders do not claim inventory quantities.
- for(const x of[-.18,.18])b.box(.016,.50,.25,x,0,.15,'face');for(const x of[-.27,0,.27])for(const y of[-.12,.12])b.cylinder(.065,.13,x,y,.27,'muted');root.add(b.finish('carton-and-kit'));
+ for(const x of[-.30,.30])b.box(.016,.50,.18,x,0,.12,'face');root.add(b.finish('carton-and-kit'));
  const flaps=[];
- for(const side of[-1,1]){const pivot=new T.Group(),g=createFactoryGeometry(T);pivot.position.set(side*.39,0,.475);g.box(.39,.58,.018,-side*.195,0,0,'paper');pivot.add(g.finish('carton-side-flap'));pivot.userData={axis:'y',sign:side};root.add(pivot);flaps.push(pivot);}
- for(const side of[-1,1]){const pivot=new T.Group(),g=createFactoryGeometry(T);pivot.position.set(0,side*.29,.478);g.box(.78,.29,.018,0,-side*.145,0,'paper');pivot.add(g.finish('carton-end-flap'));pivot.userData={axis:'x',sign:-side};root.add(pivot);flaps.push(pivot);}
+ for(const side of[-1,1]){const pivot=new T.Group(),g=createFactoryGeometry(T);pivot.position.set(side*.39,0,.475);g.box(.39,.58,.018,-side*.195,0,0,'paper');pivot.add(g.finish('carton-side-flap'));pivot.userData={axis:'y',sign:side,side:side>0?'right':'left'};root.add(pivot);flaps.push(pivot);}
+ for(const side of[-1,1]){const pivot=new T.Group(),g=createFactoryGeometry(T);pivot.position.set(0,side*.29,.478);g.box(.78,.29,.018,0,-side*.145,0,'paper');pivot.add(g.finish('carton-end-flap'));pivot.userData={axis:'x',sign:-side,side:side>0?'front':'back'};root.add(pivot);flaps.push(pivot);}
+ const pickupMount=new T.Group();pickupMount.name='carton-part-pickup';root.add(pickupMount);const sourceParts=new Map();for(const shape of['box','cylinder','ellipsoid']){const g=createFactoryGeometry(T);if(shape==='box')g.box(1,1,1,0,0,0,'muted');else if(shape==='cylinder')g.cylinder(.5,1,0,0,0,'muted');else g.ellipsoid(.5,.5,.5,0,0,0,'paper');const node=g.finish('kit-'+shape);pickupMount.add(node);sourceParts.set(shape,node);}
  let disposed=false;root.userData={kind:'parts-carton',illustrative:true,
-  setOpen(progress){if(disposed)return;const p=Number.isFinite(progress)?Math.max(0,Math.min(1,progress)):0;for(const flap of flaps)flap.rotation[flap.userData.axis]=flap.userData.sign*p*Math.PI*.8;root.userData.openProgress=p;},
+  setOpen(progress){if(disposed)return;const p=Number.isFinite(progress)?Math.max(0,Math.min(1,progress)):0;const state=cartonOpeningPose(p);for(const flap of flaps)flap.rotation[flap.userData.axis]=flap.userData.sign*state.flaps[flap.userData.side]*Math.PI*.8;root.userData.openProgress=p;root.userData.openingState=state;},
+  setAssemblyProgress(progress){if(disposed)return;const state=assemblyStep(progress);pickupMount.position.fromArray(state.sourcePoint);for(const[shape,node]of sourceParts){node.visible=shape===state.step.shape&&state.sourceVisible;node.scale.fromArray(state.step.size);}root.userData.assemblyProgress=state.progress;root.userData.sourcePartId=state.step.id;root.userData.sourcePartVisible=state.sourceVisible;},
+  pickupMount,
+  getPickupContact(){return pickupMount.position.toArray();},
+  getToolContact(){return root.userData.openingState.tool;},
+  getFlapContact(){return root.userData.openingState.contact;},
   dispose(){disposed=true;}
- };root.userData.setOpen(0);return root;
+ };root.userData.setBoxOpen=root.userData.setOpen;root.userData.setOpen(0);root.userData.setAssemblyProgress(0);return root;
 }
