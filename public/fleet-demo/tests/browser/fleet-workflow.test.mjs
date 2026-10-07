@@ -38,7 +38,7 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
     await page.goto(url,{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>window.__fleetDemo,{timeout:45000});
     const initial=await state(page);
-    report.panel=await page.locator('#provenance .fp-panel').count()?'H1':'A1 fallback';
+    report.panel=await page.locator('#provenance .fp-panel').count()?'source-panel':'built-in fallback';
     const unchanged=(next,prior)=>{assert.deepEqual(next.scenario.readings,prior.scenario.readings);assert.deepEqual(next.scenario.serviceFacts,prior.scenario.serviceFacts);};
     const run=async(name,fn)=>t.test(name,async()=>{try{await fn();report.scenarios.push({name,status:'passed'});}catch(error){report.scenarios.push({name,status:'failed',error:error.message});throw error;}});
 

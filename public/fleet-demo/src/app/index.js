@@ -6,7 +6,7 @@ import {createProvenancePanel as createFallbackPanel} from './fallback-provenanc
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
 const chapters = [
-  {title:'The shop noticed the repeats',short:'Back in the shop',copy:'The same trucks were getting oil changes and tire rotations more than once in the same week. Shop technicians asked why they kept coming back. The extra work cost the customer money; the loss was not quantified.'},
+  {title:'The shop noticed the repeats',short:'Back in the shop',copy:'The customer paid for unnecessary repeat oil changes and tire rotations. Each extra visit meant more shop work and less time with the vehicle available.'},
   {title:'Two providers still connected',short:'A partial migration',copy:'The customer was switching providers. TRK-104 had moved to B, while TRK-208 still used A. Both accounts stayed open. Each vehicle needed its own source setting.'},
   {title:'The old reading came back nightly',short:'Conflicting readings',copy:'Provider A’s odometer froze before its device was removed. Provider B had current readings. Each night, the system switched between old and current readings. The exact maintenance-trigger rule is unknown.'},
   {title:'Choose the source',short:'Stop using the old reading',copy:'Choose Provider B for TRK-104’s odometer. Keep TRK-208 on A. Exclude old readings at the integration, vehicle, field or individual-record level. Recalculate without changing the original readings or completed service records.'},

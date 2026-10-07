@@ -60,6 +60,3 @@ dispose removes only the component-owned subtree and handlers.
 - `button[data-action="replay"]`, `button[data-action="review-imports"]`, `button[data-action="reimport"]`
 - `[data-reading-id]` for raw record rows
 - `[data-review-state]`: `empty`, `current`, `stale`, `unsupported`
-
-The source reference used for adapter inspection and local domain checks was
-RHS059/portfolio-9b PR 4, commit `2e5bc645c4ba2cff78a45f824a9cde62694aadca`.

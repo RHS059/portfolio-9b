@@ -1,6 +1,7 @@
+import {OICT_GEOGRAPHY} from '../map/oict-geography.js';
 import {vehiclePresentationPose} from './presentation-pose.js';
-import {placeFacilityGroups,workshopSupportElevation,WORKSHOP_SURFACES} from './facilities-adapter.js';
-import {ORIGIN,SITES} from '../map/world.js';
+import {placeFacilityGroups,workshopSupportElevation,WORKSHOP_SURFACES,portDetailLevel,applyFacilityFacePolicy} from './facilities-adapter.js';
+import {ORIGIN,SITES,toLocal} from '../map/world.js';
 import {createModelGeometry,createModelBuckets,disposeObject,THEME} from './models.js';
 /** MapLibre 4.7 custom layer contract: render(gl, matrix), not the v5 render-arguments object. */
 export function createVehicleLayer({THREE:T,maplibregl:M,getVehicles,getSelected,getView,onFailure,canvas}){
@@ -17,9 +18,9 @@ export function createVehicleLayer({THREE:T,maplibregl:M,getVehicles,getSelected
       // Facility module is optional while integrating; a failed module does not blank the road view.
       import('../facilities/index.js').then(mod=>{
         if(this.disposed)return;
-        const facilities=mod.createFacilities?.({THREE:T});
+        const facilities=mod.createFacilities?.({THREE:T,geography:{oict:OICT_GEOGRAPHY}});
         const group=facilities?.isObject3D?facilities:facilities?.group;
-        if(group){const placed=placeFacilityGroups(group);if(!placed){const site=SITES.find(s=>s.id==='centerpoint');group.position.x+=site.x;group.position.y+=site.y;}this.facilities=group;this.facilityState='ready';this.facilityAPI=facilities;this.scene.add(group);this.baySupportElevation=workshopSupportElevation(T,group);this.invalidate();map.triggerRepaint();}
+        if(group){applyFacilityFacePolicy(T,group);const placed=placeFacilityGroups(group);if(!placed){const site=SITES.find(s=>s.id==='centerpoint');group.position.x+=site.x;group.position.y+=site.y;}this.facilities=group;this.facilityState='ready';this.facilityAPI=facilities;this.scene.add(group);this.baySupportElevation=workshopSupportElevation(T,group);this.invalidate();map.triggerRepaint();}
       }).catch(error=>{this.facilityState='unavailable';onFailure?.({kind:'facility-unavailable',message:'Facility cutaway is unavailable; routes and source controls remain usable.'});console.warn('Facility module',error.message);});
     },
     setFacilitySnapshot(snapshot){this.facilitySnapshot=snapshot;},
@@ -55,9 +56,10 @@ export function createVehicleLayer({THREE:T,maplibregl:M,getVehicles,getSelected
         group.lines.geometry.setDrawRange(0,count*group.edgePositions.length/3);group.lines.geometry.getAttribute('position').needsUpdate=true;
       }
       const selected=vehicles.find(v=>v.id===getSelected());this.ring.visible=!!selected;if(selected){const pose=vehiclePresentationPose(selected,k,this.baySupportElevation);this.ring.position.set(selected.x,selected.y,selected.routeId==='depot-bay'?this.baySupportElevation+.015:.2);this.ring.scale.setScalar(pose.scale);}
+      const port=this.facilities?.children?.find(child=>child.userData?.siteId==='oict');if(port?.userData?.setDetailLevel){const center=this.map.getCenter(),xy=toLocal(center.toArray?center.toArray():[center.lng,center.lat]),level=portDetailLevel(this.map.getZoom(),xy);if(level!==this.portLOD){port.userData.setDetailLevel(level);this.portLOD=level;}}
       if(this.facilitySnapshot){this.facilities?.userData?.update?.(this.facilitySnapshot);if(this.facilityAPI!==this.facilities)this.facilityAPI?.update?.(this.facilitySnapshot);}
       this.renderer.render(this.scene,this.camera);this.drawFrames++;
     },
-    onRemove(){if(this.disposed)return;this.disposed=true;this.facilities?.userData?.dispose?.();if(this.facilityAPI!==this.facilities)this.facilityAPI?.dispose?.();disposeObject(this.scene);this.renderer?.dispose();this.renderer?.forceContextLoss();this.meshes?.clear();}
+    onRemove(){if(this.disposed)return;this.disposed=true;this.facilities?.userData?.dispose?.();if(this.facilityAPI!==this.facilities)this.facilityAPI?.dispose?.();disposeObject(this.scene);const wasLost=this.renderer?.getContext?.()?.isContextLost?.();this.renderer?.dispose();if(!wasLost)this.renderer?.forceContextLoss();this.meshes?.clear();}
   };return layer;
 }

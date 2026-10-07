@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#eeede7">
-  <meta name="description" content="An interactive fleet integration case study: a partial telematics migration, conflicting readings, and explicit source authority.">
+  <meta name="description" content="Why the same trucks kept returning for maintenance: inspect conflicting odometer readings and choose the source for each vehicle.">
   <title>Fleet / Odometer sources</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
   <link rel="stylesheet" href="./src/app/style.css">
@@ -21,12 +21,12 @@
       <aside class="story-panel" aria-label="Guided case study">
         <div class="eyebrow">CASE STUDY 01 <span>DATA → OPERATIONS</span></div>
         <h1>Why the same trucks kept coming back <em>to the shop.</em></h1>
-        <p class="intro">The same trucks kept returning for oil changes and tire rotations within one week. The extra work cost the customer money and took vehicles out of service.</p>
+        <p class="intro">Shop technicians noticed the same trucks returning for oil changes and tire rotations within one week.</p>
         <div class="mode-switch" aria-label="Approach"><button type="button" data-mode="then" aria-pressed="true">Then <small>2021–22</small></button><button type="button" data-mode="today" aria-pressed="false">Today <small>Agent review</small></button></div>
         <p id="mode-description" class="mode-description"></p>
         <nav id="story-steps" class="story-steps" aria-label="Story chapters"></nav>
         <section class="chapter-card" aria-live="polite"><span id="chapter-number" class="eyebrow"></span><h2 id="chapter-title"></h2><p id="chapter-copy"></p><button id="next-chapter" class="primary-button" type="button">Continue <span>↗</span></button></section>
-        <div class="story-footnote">Based on a real integration incident. Vehicle IDs, readings, dates and service events here are synthetic. Financial loss was not quantified.</div>
+        <div class="story-footnote">Based on a real integration incident. Vehicle IDs, readings, dates and service events here are synthetic.</div>
       </aside>
       <section class="world-panel" aria-label="Oakland operations scene">
         <div class="world-heading"><div><span class="eyebrow">OAKLAND, CALIFORNIA</span><h2>Repeated maintenance in the same week</h2><p class="world-subtitle">Repeat services · extra labor and parts · time out of service</p></div><button id="about-toggle" class="icon-button" type="button" aria-label="About the scene" aria-expanded="false">i</button></div>

@@ -3,7 +3,7 @@ import { createWorkshop } from '../workshop/index.js';
 
 export const DEPOT_DIMENSIONS = Object.freeze({ width: 85, depth: 60, height: 7.5 });
 
-/** Fictional 85 x 60 m campus service yard. Geographic positioning belongs to A3. */
+/** Fictional 85 x 60 m campus service yard. Geographic positioning belongs to the renderer. */
 export function createDepot({ THREE }) {
   const b = createDiagramBuilder(THREE);
   b.box(85, 60, 0.22, 0, 0, -0.11, 'ground');

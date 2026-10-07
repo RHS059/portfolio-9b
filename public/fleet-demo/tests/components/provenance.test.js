@@ -146,7 +146,7 @@ test('integrated UI command and replay preserve raw/service facts and other vehi
   h.click({action:'set-authority',source:'B'});await settle();h.click({action:'replay'});await settle();
   assert.match(h.root.innerHTML,/Source chosen/);assert.match(h.root.innerHTML,/Using B/);assert.equal(replayReadings(state).vehicles.find(v=>v.vehicleId==='TRK-208').sourceId,'A');assert.equal(JSON.stringify(state.readings),raw);assert.equal(JSON.stringify(state.serviceFacts),service);h.panel.dispose();
 });
-test('A1 additive reimport command preserves its CI selector and carries no write payload',async()=>{
+test('App reimport command preserves its CI selector and carries no write payload',async()=>{
   const calls=[],h=host(a=>calls.push(a));h.panel.update(view());assert.match(h.root.innerHTML,/data-action="reimport"/);h.click({action:'reimport'});await settle();assert.deepEqual(calls,[{type:'reimport'}]);h.panel.dispose();
 });
 

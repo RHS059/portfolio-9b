@@ -263,12 +263,12 @@ export default function FleetFuelIntegrationProject() {
           <p className="mb-2 text-xs font-medium uppercase tracking-widest text-[#685c84]">Then / Today · Interactive exploration</p>
           <h2 id="fleet-demo-title" className="mb-3 text-2xl font-semibold text-[#181425]">Why the same trucks kept coming back to the shop</h2>
           <p className="mb-5 max-w-3xl text-base leading-relaxed text-[#181425]">
-            Explore a synthetic replay of a partial telematics migration that sent vehicles back for repeated maintenance. Compare the explicit validation and source controls from 2021–22 with a present-day, agent-assisted review approach. Original readings and service history stay intact. Choose which provider supplies each vehicle’s odometer.
+            Shop technicians noticed the same trucks returning for oil changes and tire rotations within one week. Follow the readings from both providers, then choose which one supplies the truck’s odometer. Compare the controls I added in 2021–22 with a proposed agent review today.
           </p>
           <a href="/fleet-demo" className="inline-flex items-center gap-3 rounded-md bg-[#181425] px-5 py-3 text-sm font-medium text-white hover:bg-[#685c84] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#685c84]">
             Open the working demo <span aria-hidden="true">↗</span>
           </a>
-          <p className="mt-4 text-xs leading-relaxed text-[#685c84]">The Oakland operations scene, readings and service examples are illustrative. The review adapter is labeled in the demo; it does not silently change records or send external messages.</p>
+          <p className="mt-4 text-xs leading-relaxed text-[#685c84]">The scene and records are illustrative. Today’s review is a labeled simulation; source changes require your choice.</p>
         </section>
 
         {sectionContent.map((section) => (

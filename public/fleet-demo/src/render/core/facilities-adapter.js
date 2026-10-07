@@ -13,7 +13,7 @@ export function placeFacilityGroups(group){
  }
  return placed;
 }
-/** H2 authored surfaces, supplied with its bay contract (not the bay anchor z=0).
+/** Facility-authored surfaces, supplied with its bay contract (not the bay anchor z=0).
  * Rail box is 0.10m high at z=0.31m; workshop floor top is 0.25m.
  */
 export const WORKSHOP_SURFACES=Object.freeze({floorTop:.25,railTop:.31+.10/2});
@@ -32,3 +32,11 @@ export function workshopSupportElevation(T,group){
  }
  return heights.length===4?Math.max(...heights):WORKSHOP_SURFACES.railTop;
 }
+/** Camera-only port detail choice. It cannot modify snapshots or operational outcomes. */
+export function portDetailLevel(zoom,worldCenter){
+ const port=SITES.find(s=>s.id==='oict'),x=worldCenter[0]-port.x,y=worldCenter[1]-port.y;
+ return zoom>=16.2&&x>=-1130.295&&x<=1072.477&&y>=-446.578&&y<=1149.822?'detail':'overview';
+}
+
+/** Instanced geography sees the same projection reflection as vehicles. Keep both faces available. */
+export function applyFacilityFacePolicy(T,group){group.traverse(object=>{if(object.isInstancedMesh)for(const material of Array.isArray(object.material)?object.material:[object.material]){material.side=T.DoubleSide;material.needsUpdate=true;}});}

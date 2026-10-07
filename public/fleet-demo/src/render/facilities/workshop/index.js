@@ -30,7 +30,7 @@ export function createWorkshop({ THREE }) {
   }
   for (const { x, width, depth } of WORKSHOP_BAYS) {
     b.rectangle(x, 0, width, depth, 0.3);
-    // Inspection tracks, kept below vehicle geometry owned by A3.
+    // Inspection tracks, kept below vehicle geometry owned by the renderer.
     b.box(0.5, 17, 0.1, x-1.35, 0, 0.31, 'muted');
     b.box(0.5, 17, 0.1, x+1.35, 0, 0.31, 'muted');
     for (const dx of [-4.8, 4.8]) {
@@ -64,7 +64,7 @@ export function createWorkshop({ THREE }) {
       plate.material.color.setHex(occupantId ? FACILITY_THEME.dark : FACILITY_THEME.face);
     });
   };
-  // Final A3 ownership: renderer releases geometry/materials after this hook.
+  // Final renderer ownership: renderer releases geometry/materials after this hook.
   group.userData.dispose = () => { disposed = true; };
   return group;
 }

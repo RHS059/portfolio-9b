@@ -1,6 +1,6 @@
 # Independent Fleet acceptance checks
 
-Scope: the anonymous A/B partial-provider-migration odometer incident. These tests do not implement domain rules, a historical maintenance scheduler, or live AI. All new files belong under `public/fleet-demo/tests/{acceptance,browser,performance}/`; paths in the delivered patch are relative to the demo root.
+Scope: the anonymous A/B partial-provider-migration odometer incident. These tests do not implement domain rules, a historical maintenance scheduler, or live AI. The suites live under `tests/{acceptance,browser,performance}/` relative to the demo root.
 
 ## Native checks
 
@@ -10,7 +10,7 @@ From the demo root:
 node --test tests/acceptance/*.test.mjs tests/performance/*.test.mjs
 ```
 
-No package installation or transpilation is required. `load-domain.mjs` imports the existing `src/domain/readings/index.js` and app review adapter. To test an unchanged separate checkout, set `FLEET_DEMO_ROOT` to its absolute demo root. During isolated collaboration, `FLEET_UI_ROOT` and `FLEET_FACILITIES_ROOT` can point to H1/H2 demo roots. Missing H1/H2 outputs are explicit skips, never presentation passes; acceptance requires rerunning with both integrated.
+No package installation or transpilation is required. `load-domain.mjs` imports the existing `src/domain/readings/index.js` and app review adapter. To test an unchanged separate checkout, set `FLEET_DEMO_ROOT` to its absolute demo root. For isolated component testing, `FLEET_UI_ROOT` and `FLEET_FACILITIES_ROOT` can identify separate demo roots. Missing UI/facility modules are explicit skips, never presentation passes; acceptance requires both integrated.
 
 Coverage:
 
@@ -20,8 +20,8 @@ Coverage:
 - Duplicate imports, atomic conflicting-ID rejection, deterministic input-order-independent replay, cutoff visibility
 - Missing/stale/invalid/ambiguous/excluded authoritative input without fallback
 - Simulated review honesty, exact recorded-review SHA-256 input/configuration/cutoff binding, discarded executable fields, in-app notifications
-- H1 pure rendering escapes raw strings and withholds stale or unsupported reviews; this is not DOM/layout testing
-- H2 presentation only follows declared service status; odometer changes or elapsed animation time cannot invent service visits
+- UI rendering escapes raw strings and withholds stale or unsupported reviews; this is not DOM/layout testing
+- Facility presentation only follows declared service status; odometer changes or elapsed animation time cannot invent service visits
 - Frame-summary arithmetic and absent-data behavior; synthetic arithmetic samples are not performance evidence
 
 ## Browser checks
@@ -41,11 +41,11 @@ The suite uses user-visible controls. `window.__fleetDemo.getState/getMetrics` a
 
 ## Integration assumptions
 
-- Frozen v1 plus Aella's 2026-10-06 hardening patch: exact row-exclusion scope mismatches now reject with `EXCLUSION_SCOPE_MISMATCH`
-- `src/domain/readings/index.js` remains the real module entrypoint (the original attachment's `src/domain/index.js` was provisional)
-- A1 owns command adaptation, version stamps, review invalidation and shared entrypoint; H3 edits none of those
+- Exact row-exclusion scope mismatches reject with `EXCLUSION_SCOPE_MISMATCH`
+- `src/domain/readings/index.js` remains the real module entrypoint
+- The app owns command adaptation, version stamps and review invalidation; tests exercise that boundary without replacing it
 - App opening metadata uses `#project-info`; `#source-inspector` appears after the opening chapter; the component still mounts inside `#provenance`
-- H1 buttons preserve agreed `data-action`, `data-source`, `data-reading` and `data-exclusion-scope` selectors, including the later agreed `reimport` action
+- UI buttons expose stable `data-action`, `data-source`, `data-reading` and `data-exclusion-scope` selectors, including `reimport`
 - Browser fixture IDs remain v1-b-3 / TRK-104 / TRK-208; native acceptance fixtures use their own IDs to avoid simply replaying implementation-owned expected values
 - Missing/stale scenarios use the declared demo freshness policy, never an inferred customer threshold
 - The default Today provider is simulated. Recorded-review tests use an explicitly synthetic test recording, not a claimed real agent session

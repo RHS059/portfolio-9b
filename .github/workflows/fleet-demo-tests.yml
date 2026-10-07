@@ -24,6 +24,7 @@ jobs:
       - name: Complete native suite with actual Three r128 geometry
         working-directory: public/fleet-demo
         env:
+          REQUIRE_MAPPED_PORT: '1'
           FLEET_THREE_MODULE: ${{ runner.temp }}/fleet-three-r128.mjs
         run: node --test
   browser:
@@ -42,6 +43,7 @@ jobs:
         env:
           PLAYWRIGHT_PACKAGE: ${{ runner.temp }}/fleet-browser
           REQUIRE_FACILITIES: '1'
+          REQUIRE_MAPPED_PORT: '1'
         run: node scripts/fleet-browser-smoke.mjs
       - name: Independent browser acceptance
         env:

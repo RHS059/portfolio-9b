@@ -20,7 +20,7 @@ export function createCameraController(getMap){
     setFollow(value){follow=!!value;},
     markManual(){manual=true;},
     resize(){if(!manual&&SITES.some(s=>s.id===focus))setFocus(focus,false);},
-    update(entities,now){if(!focus)return;const v=entities.find(v=>v.id===focus);if(!v)return;if(pendingFocus){pendingFocus=false;getMap()?.easeTo({center:toLngLat([v.x,v.y]),zoom:16.6,duration:motionDuration(550)});}if(follow&&now-last>=80){last=now;getMap()?.jumpTo({center:toLngLat([v.x,v.y])});}},
+    update(entities,now){if(!focus||!getMap())return;const v=entities.find(v=>v.id===focus);if(!v)return;if(pendingFocus){pendingFocus=false;getMap()?.easeTo({center:toLngLat([v.x,v.y]),zoom:16.6,duration:motionDuration(550)});}if(follow&&now-last>=80){last=now;getMap()?.jumpTo({center:toLngLat([v.x,v.y])});}},
     get(){return {mode,focus,follow,manual};}
   };
 }

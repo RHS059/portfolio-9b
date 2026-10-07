@@ -17,7 +17,7 @@ const input=()=>{
     canonical:evaluation.vehicles[0],authorityStatus:evaluation.vehicles[0].status,vehicles:state.vehicles,notifications:[],review:null};
 };
 
-test('H1 pure presentation boundary (not browser/layout verification)',{skip:!existsSync(uiPath)},async t=>{
+test('UI presentation boundary (not browser/layout verification)',{skip:!existsSync(uiPath)},async t=>{
   const {renderProvenance}=await import(pathToFileURL(uiPath));
   const {reviewState}=await import(pathToFileURL(resolve(uiRoot,'src/ui/provenance/model.js')));
   await t.test('source values and distinct observation/import timestamps remain readable',()=>{
@@ -52,7 +52,7 @@ test('H1 pure presentation boundary (not browser/layout verification)',{skip:!ex
   });
 });
 
-test('H2 presentation follows declared shop status, never inferred maintenance',{skip:!existsSync(facilityPath)},async t=>{
+test('Facility presentation follows declared shop status, never inferred maintenance',{skip:!existsSync(facilityPath)},async t=>{
   const {workshopPresentation}=await import(pathToFileURL(facilityPath));
   await t.test('source conflict, odometer, and animation time cannot create a shop visit',()=>{
     const baseline=workshopPresentation({vehicles:[{id:'TRK-104',status:'moving'}],issueActive:true});

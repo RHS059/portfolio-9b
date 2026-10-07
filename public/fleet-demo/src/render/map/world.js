@@ -1,3 +1,4 @@
+import {OICT_GEOGRAPHY} from './oict-geography.js';
 import {ROAD_ROUTE_LNGLAT} from './route-data.js';
 /** Oakland backdrop. Facility positions/routes are an illustrative reconstruction, not dispatch records. */
 export const ORIGIN = Object.freeze([-122.3080, 37.8050]);
@@ -9,11 +10,14 @@ export const toLocal = ([lng, lat]) => [(lng - ORIGIN[0]) * METERS_LNG, (lat - O
 // https://smdg.org/wp-content/uploads/Codelists/Terminals/SMDG-Terminal-Code-List-v20260609.xlsx
 // CenterPoint warehouse: OSM way 1019902402, 1300 Maritime Street. Interior use is fictional.
 const port=toLocal([-122.3141666667,37.7963888889]);
+const portWorldFootprint=OICT_GEOGRAPHY.footprintLocal.map(([x,y])=>Object.freeze([port[0]+x,port[1]+y]));
+const portLngLats=OICT_GEOGRAPHY.footprintLngLat;
+const portBounds=Object.freeze([Object.freeze([Math.min(...portLngLats.map(p=>p[0])),Math.min(...portLngLats.map(p=>p[1]))]),Object.freeze([Math.max(...portLngLats.map(p=>p[0])),Math.max(...portLngLats.map(p=>p[1]))])]);
 const factory=toLocal([-122.3089861,37.8129817]);
 // Fictional workshop within the warehouse parcel, not an asserted real-world business.
 const depot=[factory[0]-95,factory[1]-105];
 export const SITES = Object.freeze([
-  Object.freeze({ id:'oict',label:'OICT · Oakland port',caption:'Terminal reference point · SMDG',x:port[0],y:port[1],width:220,depth:120,focusZoom:17.8 }),
+  Object.freeze({ id:'oict',label:'OICT · Oakland port',caption:'Mapped yard extent · schematic operations',x:port[0],y:port[1],width:1902.772,depth:1296.4,focusZoom:15.2,focusBounds:portBounds,focusX:port[0]+OICT_GEOGRAPHY.centroidLocal[0],focusY:port[1]+OICT_GEOGRAPHY.centroidLocal[1],labelX:port[0]+OICT_GEOGRAPHY.centroidLocal[0],labelY:port[1]+OICT_GEOGRAPHY.centroidLocal[1],footprintWorld:Object.freeze(portWorldFootprint) }),
   Object.freeze({ id:'centerpoint',label:'Drone factory',caption:'Fictional use · 1300 Maritime St',x:factory[0],y:factory[1],width:150,depth:90,focusZoom:18.3 }),
   Object.freeze({ id:'depot',label:'Depot / workshop',caption:'Fictional campus service bays',x:depot[0],y:depot[1],width:85,depth:60,focusZoom:18.8 })
 ]);
@@ -57,3 +61,6 @@ export function vehiclePosition(vehicle) {
   if (Number.isFinite(vehicle.x) && Number.isFinite(vehicle.y)) return {x:vehicle.x,y:vehicle.y,heading:vehicle.heading||0};
   return routePosition(vehicle.routeId, vehicle.progress);
 }
+
+/** Overview includes the complete mapped terminal, not only the route reference point. */
+export function overviewLngLats(){return [...routeGeoJSON().features.flatMap(f=>f.geometry.coordinates),...SITES.flatMap(s=>(s.footprintWorld||[]).map(toLngLat))];}

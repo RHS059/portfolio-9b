@@ -16,7 +16,7 @@ testThree('adapter returns an untagged Group with three independently placeable 
 testThree('actual geometry remains within declared local meter bounds',()=>{
  for(const create of [createDepot,createWorkshop,createFactory,createPort]){const group=create({THREE});group.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(group);const {min,max}=group.userData.bounds;for(let i=0;i<3;i++){assert.ok(box.min.toArray()[i]>=min[i]-.0001,`${group.name} min ${i}`);assert.ok(box.max.toArray()[i]<=max[i]+.0001,`${group.name} max ${i}`);}group.userData.dispose();}
 });
-testThree('workshop bay centers line up with the A3 depot-bay endpoint',()=>{
+testThree('workshop bay centers line up with the renderer depot-bay endpoint',()=>{
  const depot=createDepot({THREE});assert.deepEqual(depot.userData.bayCenters[0],[-12,6,0]);assert.deepEqual(depot.userData.workshop.position.toArray(),[0,6,0]);depot.userData.dispose();
 });
 testThree('static geometry is batched and its materials are opaque',()=>{

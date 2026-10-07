@@ -12,20 +12,35 @@ const mime={'.html':'text/html','.js':'text/javascript','.json':'application/jso
 const server=http.createServer(async(req,res)=>{try{const target=path.resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://local').pathname.replace(/\/$/,'/index.html')));if(!target.startsWith(root+path.sep))throw Error('outside root');const body=await fs.readFile(target);res.writeHead(200,{'content-type':mime[path.extname(target)]||'application/octet-stream'});res.end(body);}catch{res.writeHead(404);res.end('Not found');}});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const url=`http://127.0.0.1:${server.address().port}/`;
-let browser,phase='bootstrap';const evidence={url,startedAt:new Date().toISOString(),checks:[],errors:[],console:[],notes:['CI Chromium software rendering is functional evidence, not named-hardware GPU performance.']};
+let browser,page,phase='bootstrap';const evidence={url,startedAt:new Date().toISOString(),checks:[],errors:[],console:[],contextCycles:[],notes:['CI Chromium software rendering is functional evidence, not named-hardware GPU performance.']};
 try{
  browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
- const page=await browser.newPage({viewport:{width:1600,height:1000},deviceScaleFactor:1});
+ page=await browser.newPage({viewport:{width:1600,height:1000},deviceScaleFactor:1});
  page.on('pageerror',error=>evidence.errors.push(String(error)));
- page.on('console',msg=>{if(['warning','warn','error'].includes(msg.type()))evidence.console.push({level:msg.type(),text:msg.text(),phase,url:page.url(),location:msg.location(),at:new Date().toISOString()});});
+ page.on('console',msg=>{if(['warning','warn','error'].includes(msg.type())||/THREE\.WebGLRenderer: Context (Lost|Restored)\./.test(msg.text()))evidence.console.push({level:msg.type(),text:msg.text(),phase,url:page.url(),location:msg.location(),at:new Date().toISOString()});});
+ await page.addInitScript(()=>{
+   const ids=new WeakMap();let generation=0;const events=[];
+   const describe=canvas=>{let gl;try{gl=canvas.getContext('webgl2')||canvas.getContext('webgl');}catch{}if(!ids.has(canvas))ids.set(canvas,++generation);return{generation:ids.get(canvas),className:canvas.className,isConnected:canvas.isConnected,width:canvas.width,height:canvas.height,contextLost:gl?.isContextLost?.()??null,attributes:gl?.getContextAttributes?.()??null};};
+   window.__fleetGraphicsDiagnostics=()=>({events:[...events],canvases:[...document.querySelectorAll('.fleet-three-overlay,.maplibregl-canvas')].map(describe)});
+   for(const type of ['webglcontextlost','webglcontextrestored'])document.addEventListener(type,event=>{const record={type,at:performance.now(),canvas:describe(event.target),metrics:window.__fleetDemo?.getMetrics?.()??null};events.push(record);queueMicrotask(()=>{const fallback=document.querySelector('svg[aria-label="Oakland fleet map, 2D fallback"]');record.afterHandlers={metrics:window.__fleetDemo?.getMetrics?.()??null,fallbackVisible:!!fallback&&getComputedStyle(fallback).display!=='none',status:document.querySelector('.fleet-scene-status')?.textContent??null};});if(events.length>100)events.shift();},true);
+ });
  await page.goto(url,{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>{const m=window.__fleetDemo?.getMetrics?.();return m?.ready&&!m.initializing&&m.mapTilesLoaded&&m.camera?.focus==='depot'&&!m.cameraMoving;},undefined,{timeout:30000});
  if(process.env.REQUIRE_FACILITIES==='1')await page.waitForFunction(()=>window.__fleetDemo.getMetrics().facilitiesLoaded,undefined,{timeout:15000});
+ if(process.env.REQUIRE_MAPPED_PORT==='1')await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.portStatus==='mapped'&&m.portRowCount>0&&m.portContainerCount>0&&m.portCraneCount>0;},undefined,{timeout:15000});
  await page.waitForTimeout(800);
  await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:30000});
  phase='initial-scene';await page.screenshot({path:path.join(out,'01-desktop-initial.png'),fullPage:true});
  const state=()=>page.evaluate(()=>window.__fleetDemo.getState());
- for(const id of ['depot','oict','centerpoint']){phase=`facility-${id}`;await page.locator(`[data-focus="${id}"]`).click();await page.waitForTimeout(750);await page.waitForFunction(()=>window.__fleetDemo.getMetrics().mapTilesLoaded,undefined,{timeout:20000});await page.screenshot({path:path.join(out,`facility-${id}.png`),fullPage:true});}
+ for(const id of ['depot','oict','centerpoint']){
+   phase=`facility-${id}`;await page.locator(`[data-focus="${id}"]`).click();await page.waitForTimeout(750);await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:20000});await page.screenshot({path:path.join(out,`facility-${id}.png`),fullPage:true});
+   if(id==='oict'&&process.env.REQUIRE_MAPPED_PORT==='1'){
+     evidence.portOverview=await page.evaluate(()=>window.__fleetDemo.getMetrics());assert.equal(evidence.portOverview.portStatus,'mapped');
+     const box=await page.locator('.maplibregl-canvas').boundingBox();await page.mouse.move(box.x+box.width*.5,box.y+box.height*.5);await page.mouse.wheel(0,-600);await page.waitForTimeout(1000);
+     await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.portDetailLevel==='detail'&&m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:20000});
+     evidence.portDetail=await page.evaluate(()=>window.__fleetDemo.getMetrics());await page.screenshot({path:path.join(out,'facility-oict-detail.png'),fullPage:true});evidence.checks.push('Mapped terminal footprint loads and switches to individual containers at inspection scale');
+   }
+ }
  await page.locator('[data-focus="depot"]').click();
  phase='manual-camera';
  const sceneBox=await page.locator('.maplibregl-canvas').boundingBox();
@@ -84,20 +99,40 @@ try{
 assert.equal(await page.evaluate(()=>document.querySelector('#project-info').getBoundingClientRect().top>=document.querySelector('.world-panel').getBoundingClientRect().bottom),true);
  evidence.checks.push('390px responsive layout stacks metadata below scene without overlap or horizontal overflow');
  await page.setViewportSize({width:1600,height:1000});
- const beforeLoss=await state();
+ await page.locator('#next-chapter').click();
+ await page.locator('[data-action="set-authority"][data-source="B"]').click();
+ await page.locator('[data-vehicle="TRK-208"]').click();await page.locator('#pause').click();
  for(const selector of ['.fleet-three-overlay','.maplibregl-canvas','.maplibregl-canvas']){
+   await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&!m.cameraMoving;});
+   const beforeLoss=await state();
    phase=`${selector}-context-loss`;
    const viewBefore=await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState);
-   const available=await page.evaluate(selector=>{const canvas=document.querySelector(selector);if(!canvas)return false;const gl=canvas.getContext('webgl2')||canvas.getContext('webgl');const ext=gl?.getExtension('WEBGL_lose_context');if(!ext)return false;window.__fleetTestContextExtension=ext;ext.loseContext();return true;},selector);
+   const available=await page.evaluate(selector=>{const canvas=document.querySelector(selector);if(!canvas)return false;const gl=canvas.getContext('webgl2')||canvas.getContext('webgl');const ext=gl?.getExtension('WEBGL_lose_context');if(!ext)return false;window.__fleetTestContextExtension=ext;window.__fleetTestContext=gl;window.__fleetTestLossEventCount=window.__fleetGraphicsDiagnostics().events.length;ext.loseContext();return true;},selector);
    assert.equal(available,true,`Context-loss extension required for ${selector}`);
-   await page.waitForFunction(()=>window.__fleetDemo.getMetrics().contextLost,undefined,{timeout:10000});
+   await page.waitForFunction(()=>{const events=window.__fleetGraphicsDiagnostics().events;return events.length>window.__fleetTestLossEventCount&&events.at(-1)?.afterHandlers;},undefined,{timeout:10000});
    assert.equal(JSON.stringify((await state()).scenario.readings),JSON.stringify(beforeLoss.scenario.readings));
-   await page.screenshot({path:path.join(out,selector.includes('three')?'04-overlay-context-loss.png':'04-map-context-loss.png'),fullPage:true});
-   phase=`${selector}-context-recovery`;await page.evaluate(()=>window.__fleetTestContextExtension.restoreContext());
+   assert.equal(await page.locator('#reset').isEnabled(),true);
+   assert.equal(await page.evaluate(()=>window.__fleetTestContext.isContextLost()),true);
+   const lossEvent=await page.evaluate(()=>window.__fleetGraphicsDiagnostics().events.filter(event=>event.type==='webglcontextlost').at(-1));assert.ok(lossEvent);assert.ok(lossEvent.canvas.className.includes(selector.slice(1)));assert.equal(lossEvent.canvas.contextLost,true);assert.equal(lossEvent.afterHandlers.metrics.contextLost,true);assert.equal(lossEvent.afterHandlers.fallbackVisible,true);
+   const cycle={selector,loss:await page.evaluate(()=>({metrics:window.__fleetDemo.getMetrics(),graphics:window.__fleetGraphicsDiagnostics()}))};evidence.contextCycles.push(cycle);
+   // A screenshot with an intentionally lost GPU context can stall Chromium's compositor.
+   // Record the real lost state, then restore immediately; capture pixels after recovery.
+   phase=`${selector}-context-recovery`;cycle.restoreCommand=await page.evaluate(()=>{const gl=window.__fleetTestContext;window.__fleetTestContextExtension.restoreContext();const errors=[];for(let i=0;i<4;i++){const code=gl.getError();if(code===gl.NO_ERROR)break;errors.push(code);}return{errors,contextLost:gl.isContextLost()};});
+   await page.waitForTimeout(200);
+   cycle.afterRestore=await page.evaluate(()=>{const gl=window.__fleetTestContext,errors=[];for(let i=0;i<4;i++){const code=gl.getError();if(code===gl.NO_ERROR)break;errors.push(code);}return{errors,contextLost:gl.isContextLost(),metrics:window.__fleetDemo.getMetrics()};});
    await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return !m.contextLost&&m.ready&&m.renderer.includes('Three');},undefined,{timeout:15000});
+   cycle.recovered=await page.evaluate(()=>({metrics:window.__fleetDemo.getMetrics(),graphics:window.__fleetGraphicsDiagnostics()}));
+   await page.screenshot({path:path.join(out,selector.includes('three')?'04-overlay-recovered.png':`04-map-recovered-${evidence.contextCycles.length}.png`),fullPage:true});
    const viewAfter=await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState);
    assert.ok(Math.abs(viewAfter.zoom-viewBefore.zoom)<.01);assert.ok(Math.abs(viewAfter.pitch-viewBefore.pitch)<.01);assert.ok(Math.abs(viewAfter.bearing-viewBefore.bearing)<.01);for(let i=0;i<2;i++)assert.ok(Math.abs(viewAfter.center[i]-viewBefore.center[i])<.00001);
-   evidence.checks.push(`${selector} actual context loss and recovery preserve records`);
+   const recovered=await state();
+   assert.equal(JSON.stringify(recovered.scenario),JSON.stringify(beforeLoss.scenario),'Recovery preserves readings, services and configuration');
+   assert.equal(recovered.selectedVehicleId,beforeLoss.selectedVehicleId);assert.equal(recovered.mode,beforeLoss.mode);assert.equal(recovered.view,beforeLoss.view);assert.equal(recovered.follow,beforeLoss.follow);assert.equal(recovered.simulation.paused,beforeLoss.simulation.paused);
+   if(beforeLoss.simulation.paused)assert.equal(recovered.simulation.timeSeconds,beforeLoss.simulation.timeSeconds);
+   else assert.ok(recovered.simulation.timeSeconds>beforeLoss.simulation.timeSeconds,'Live simulation continues through recovery');
+   evidence.checks.push(`${selector} actual context loss and recovery preserve records, source policy, selection and pause state`);
+   if(selector.includes('three')){await page.locator('#reset').click();assert.equal((await state()).simulation.paused,false);}
+
  }
  phase='legacy-reno';await page.getByRole('link',{name:'Original Reno console ↗'}).click();await page.waitForLoadState('domcontentloaded');await page.getByRole('button',{name:'Live',exact:true}).click();
  for(const mode of ['2D','3D','Isometric'])await page.getByRole('button',{name:mode,exact:true}).click();
@@ -111,6 +146,13 @@ assert.equal(await page.evaluate(()=>document.querySelector('#project-info').get
  // The preserved legacy console may log unrelated external-map warnings; new page exceptions are captured above.
  evidence.unexpectedGraphicsWarnings=evidence.console.filter(m=>m.phase!=='legacy-reno'&&/INVALID_OPERATION|INVALID_VALUE|buffer overflow|element array buffer/i.test(m.text));
  assert.deepEqual(evidence.errors,[]);assert.deepEqual(evidence.unexpectedGraphicsWarnings,[],'New-demo graphics warnings need investigation');
+ evidence.graphicsDiagnostics=await page.evaluate(()=>window.__fleetGraphicsDiagnostics?.()??null);
  evidence.result='passed';
-}catch(error){evidence.result='failed';evidence.failure=String(error);throw error;}
+}catch(error){
+ evidence.result='failed';evidence.failure=String(error);evidence.failurePhase=phase;
+ if(page&&!page.isClosed()){
+   try{evidence.failureMetrics=await page.evaluate(()=>window.__fleetDemo?.getMetrics?.()??null);evidence.graphicsDiagnostics=await page.evaluate(()=>window.__fleetGraphicsDiagnostics?.()??null);await page.screenshot({path:path.join(out,'failure.png'),fullPage:true,timeout:5000});}catch(diagnosticError){evidence.diagnosticFailure=String(diagnosticError);}
+ }
+ throw error;
+}
 finally{await fs.writeFile(path.join(out,'result.json'),JSON.stringify(evidence,null,2));console.log(JSON.stringify(evidence,null,2));await browser?.close();await new Promise(resolve=>server.close(resolve));}
