@@ -1,6 +1,6 @@
 # Illustrative cargo process contract
 
-`sampleCargoProcess(timeSeconds, {paused})` is the primary API. Feed it the existing
+`sampleCargoProcess(timeSeconds, {paused, presentationOffsetSeconds})` is the primary API. Feed it the existing
 simulation clock, then give the renderer `cargoProcess: process` and
 `factoryAssembly: process.factoryAssembly`. It creates no timer and reads no
 odometer, source-authority or maintenance data. Changing a source setting cannot
@@ -11,6 +11,24 @@ to zero are deterministic. Pausing is owned by the caller's clock; passing
 `paused:true` alone does not stop a new absolute time from being sampled. The
 optional `createCargoProcess()` adapter has `tick`, `pause`, `resume`, `setPaused`,
 `reset`, `getSnapshot` and a non-mutating `snapshotAt` for isolated consumers.
+
+## Populated initial presentation
+
+Raw sampling keeps its original behavior: omitted `presentationOffsetSeconds`
+means zero, so `sampleCargoProcess(0)` shows the initial cargo on the ships. For the
+interactive demo, explicitly pass the exported
+`CARGO_PRESENTATION_OFFSET_SECONDS` (102.5). That places the first frame within a
+populated illustrative pipeline: ship unloading, one loaded road shipment,
+forklift receiving and drone assembly are all active across the four slots.
+
+`timeSeconds` always remains the app clock. `processTimeSeconds` is app time plus
+the validated presentation offset and owns the material phases. Resetting the app
+clock to zero therefore reproduces the exact populated frame and cargo IDs; no
+second timer, historical records or dispatch history are created. Changing the
+option is a seek, so a renderer should discard interpolation across the change.
+The optional adapter also accepts
+`createCargoProcess({presentationOffsetSeconds})`; a `snapshotAt` call can override
+that offset explicitly without mutating its clock.
 
 ## Identities and limits
 
@@ -48,7 +66,11 @@ Truck snapshots include `routeId`, `progress`, `bayId`, `trailerId`,
 `trailerAttached`, `trailer`, `loaded`, `loadProgress`, `rearDoorOpen`, `reversing`,
 `stopped`, and `stopAnchorId`. Door/load/grip progress is normalized 0–1. Forklifts
 expose `workerId`, `operatorPresent`, `forkHeight` in authored meters and `grip`.
-Floor robots expose `carrying`, `payload`, and `lift`.
+Floor robots expose `carrying`, `payload`, and `lift`. Forklift pickup support is
+1.23 m above the 0.25 m receiving floor, matching the trailer payload support at
+world Z 1.48 m. Placement raises the forks to 0.975 m above that floor, matching
+storage/AMR input support at world Z 1.225 m. Empty return lowers the forks smoothly
+to 0.18 m. These heights describe presentation asset supports only.
 
 ## Timeline
 
@@ -97,8 +119,12 @@ finished drone identity. The narrow existing assembly normalizer may forward onl
 
 ## Events and tests
 
-`cargoEventsBetween(fromSeconds, toSeconds, {limit})` derives stage-entry events
-in the half-open interval `(from, to]`, without stored history. `drone-completed`
+`cargoEventsBetween(fromSeconds, toSeconds, {limit, presentationOffsetSeconds})` derives stage-entry events
+in the half-open interval `(from, to]`, without stored history. With an offset,
+input times and each event's `timeSeconds` remain in the app clock; the event's
+`processTimeSeconds` exposes its phase time. Earlier warm-up events are not emitted.
+Pass the same offset used for snapshots; each event's cargo identity, stage and
+owner then match the snapshot at that event's app time. `drone-completed`
 includes the product ID. Finished products stop at the workcell output in a ready state; outgoing dispatch transport is not implemented. Reset/reverse intervals produce no stale events. At most
 128 events are returned; a large seek returns recent events and `omittedCount`.
 Do not replay omitted events into a second source of process state; sample the
@@ -107,4 +133,4 @@ absolute snapshot instead.
 Run `node --test tests/core/cargo-process.test.js`. It verifies custody, handoffs,
 loading, backing and doors, empty return, two-bay exclusion over eight cycles,
 box-before-drone ordering, snapshot immutability, pause/reset/seek, invalid inputs,
-bounded counts and nonduplicating transition events.
+bounded counts, nonduplicating transition events, populated-start snapshot/event agreement, and measured fork support heights.

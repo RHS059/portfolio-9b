@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {CARGO_PROCESS_VERSION,CARGO_PROCESS_LIMITS,CARGO_CYCLE_SECONDS,CARGO_SLOTS,CARGO_STAGES,
+import {CARGO_PROCESS_VERSION,CARGO_PROCESS_LIMITS,CARGO_CYCLE_SECONDS,CARGO_PRESENTATION_OFFSET_SECONDS,CARGO_SLOTS,CARGO_STAGES,
   sampleCargoProcess,cargoEventsBetween,createCargoProcess} from '../../src/core/cargo-process.js';
 
 const at=(stage,progress=.5,slot=0,cycle=0)=>CARGO_SLOTS[slot].offsetSeconds+cycle*CARGO_CYCLE_SECONDS+CARGO_STAGES.find(s=>s.id===stage).start+CARGO_STAGES.find(s=>s.id===stage).duration*progress;
@@ -139,4 +139,48 @@ test('transition events are deterministic, nonduplicating across partitions, bou
   assert.deepEqual(bounded,cargoEventsBetween(0,1e12,{limit:12}));assertFrozen(bounded);
   const empty=cargoEventsBetween(0,256,{limit:0});assert.equal(empty.events.length,0);assert.equal(empty.omittedCount,full.events.length);
   for(let i=1;i<bounded.events.length;i++)assert.ok(bounded.events[i].timeSeconds>=bounded.events[i-1].timeSeconds);
+});
+
+test('explicit warm start populates all four material-flow areas without changing the app clock',()=>{
+  const options={presentationOffsetSeconds:CARGO_PRESENTATION_OFFSET_SECONDS};
+  const warm=sampleCargoProcess(0,options),raw=sampleCargoProcess(CARGO_PRESENTATION_OFFSET_SECONDS);
+  assert.equal(warm.timeSeconds,0);assert.equal(warm.processTimeSeconds,102.5);assert.equal(warm.presentationOffsetSeconds,102.5);
+  assert.deepEqual(warm.cargo.map(c=>c.stage),['drone-assembly','forklift-unloading','road-transit','ship-unloading']);
+  for(const key of ['cargo','ships','trucks','cranes','forklifts','floorRobots','products','factoryAssembly'])assert.deepEqual(warm[key],raw[key]);
+  assert.equal(warm.cargo[0].assemblyProgress,8.5/24);assert.equal(warm.forklifts[1].carrying,true);
+  assert.equal(warm.trucks[2].loaded,true);assert.equal(warm.cranes[3].cargoId,warm.cargo[3].id);
+  assert.deepEqual(sampleCargoProcess(0).cargo.map(c=>c.stage),['ship','ship','ship','ship']);
+  assertFrozen(warm);
+});
+
+test('warm start pauses and resets to the identical populated frame with stable cargo IDs',()=>{
+  const options={presentationOffsetSeconds:CARGO_PRESENTATION_OFFSET_SECONDS},process=createCargoProcess(options);
+  const initial=process.getSnapshot();process.tick(2000);process.pause();const paused=process.getSnapshot();
+  process.tick(2000);assert.deepEqual(process.getSnapshot(),paused);process.reset();process.resume();
+  assert.deepEqual(process.getSnapshot(),initial);assert.deepEqual(process.snapshotAt(0),initial);
+  assert.deepEqual(process.snapshotAt(0,{presentationOffsetSeconds:0}),sampleCargoProcess(0));
+  assert.deepEqual(sampleCargoProcess(20,{...options,paused:true}).cargo,sampleCargoProcess(20,options).cargo);
+  for(const invalid of [-1,NaN,Infinity,-Infinity,null,'50'])assert.deepEqual(sampleCargoProcess(20,{presentationOffsetSeconds:invalid}),sampleCargoProcess(20));
+});
+
+test('offset events use app-clock intervals and agree exactly with sampled custody at each transition',()=>{
+  const options={presentationOffsetSeconds:CARGO_PRESENTATION_OFFSET_SECONDS};
+  const full=cargoEventsBetween(0,256,options),split=[...cargoEventsBetween(0,87,options).events,...cargoEventsBetween(87,256,options).events];
+  assert.deepEqual(full.events,split);assert.equal(full.omittedCount,0);assert.equal(cargoEventsBetween(0,0,options).events.length,0);
+  for(const event of full.events){
+    assert.ok(event.timeSeconds>0);assert.equal(event.processTimeSeconds,event.timeSeconds+CARGO_PRESENTATION_OFFSET_SECONDS);
+    const cargo=sampleCargoProcess(event.timeSeconds,options).cargo.find(c=>c.slotId===event.slotId);
+    assert.equal(event.cargoId,cargo.id);assert.equal(event.stage,cargo.stage);assert.deepEqual(event.owner,cargo.owner);
+  }
+  const raw=cargoEventsBetween(CARGO_PRESENTATION_OFFSET_SECONDS,256+CARGO_PRESENTATION_OFFSET_SECONDS);
+  assert.deepEqual(full.events.map(e=>e.id),raw.events.map(e=>e.id));
+});
+
+test('fork height meets exact trailer pickup and storage supports with continuous placement/retraction',()=>{
+  const pickup=first('forklift-unloading',0),arrivalEnd=first('bay-arrival',1-1e-8),drop=first('storage',0),dropBefore=first('forklift-unloading',1-1e-8);
+  assert.equal(pickup.forklifts[0].forkHeight,1.23);assert.ok(Math.abs(arrivalEnd.forklifts[0].forkHeight-1.23)<1e-6);
+  assert.equal(drop.forklifts[0].forkHeight,.975);assert.ok(Math.abs(dropBefore.forklifts[0].forkHeight-.975)<1e-6);
+  assert.equal(first('forklift-unloading',.5).forklifts[0].forkHeight,.55);
+  assert.ok(Math.abs(first('storage',.5).forklifts[0].forkHeight-.18)<1e-12);
+  assert.equal(pickup.forklifts[0].forkHeight+.25,1.48);assert.equal(drop.forklifts[0].forkHeight+.25,1.225);
 });
