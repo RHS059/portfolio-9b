@@ -17,3 +17,11 @@ export function createModelGeometry(T,kind){
   const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));geometry.setAttribute('normal',new T.Float32BufferAttribute(normals,3));geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));geometry.computeBoundingSphere();return geometry;
 }
 export function disposeObject(root){const geometries=new Set(),materials=new Set(),textures=new Set();root?.traverse?.(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of (Array.isArray(o.material)?o.material:[o.material]))if(m){materials.add(m);for(const value of Object.values(m))if(value?.isTexture)textures.add(value);}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());}
+/** Uniform-color instanced batches avoid vertex-color × instance-color bindings.
+ * Keep original face tones, but every batch has one explicit material color.
+ */
+export function createModelBuckets(T,kind){
+ const source=createModelGeometry(T,kind),p=source.getAttribute('position'),n=source.getAttribute('normal'),c=source.getAttribute('color'),buckets=new Map();
+ for(let i=0;i<p.count;i+=3){const rgb=[c.getX(i),c.getY(i),c.getZ(i)],key=rgb.map(v=>Math.round(v*255)).join('/');let b=buckets.get(key);if(!b){b={positions:[],normals:[],color:new T.Color().setRGB(...rgb)};buckets.set(key,b);}for(let j=i;j<i+3;j++){b.positions.push(p.getX(j),p.getY(j),p.getZ(j));b.normals.push(n.getX(j),n.getY(j),n.getZ(j));}}
+ source.dispose();return [...buckets.values()].map(b=>{const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(b.positions,3));geometry.setAttribute('normal',new T.Float32BufferAttribute(b.normals,3));geometry.computeBoundingSphere();return{geometry,color:b.color};});
+}

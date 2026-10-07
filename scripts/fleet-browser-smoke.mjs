@@ -12,22 +12,22 @@ const mime={'.html':'text/html','.js':'text/javascript','.json':'application/jso
 const server=http.createServer(async(req,res)=>{try{const target=path.resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://local').pathname.replace(/\/$/,'/index.html')));if(!target.startsWith(root+path.sep))throw Error('outside root');const body=await fs.readFile(target);res.writeHead(200,{'content-type':mime[path.extname(target)]||'application/octet-stream'});res.end(body);}catch{res.writeHead(404);res.end('Not found');}});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const url=`http://127.0.0.1:${server.address().port}/`;
-let browser;const evidence={url,startedAt:new Date().toISOString(),checks:[],errors:[],console:[],notes:['CI Chromium software rendering is functional evidence, not named-hardware GPU performance.']};
+let browser,phase='bootstrap';const evidence={url,startedAt:new Date().toISOString(),checks:[],errors:[],console:[],notes:['CI Chromium software rendering is functional evidence, not named-hardware GPU performance.']};
 try{
  browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  const page=await browser.newPage({viewport:{width:1600,height:1000},deviceScaleFactor:1});
  page.on('pageerror',error=>evidence.errors.push(String(error)));
- page.on('console',msg=>{if(['warning','warn','error'].includes(msg.type()))evidence.console.push({level:msg.type(),text:msg.text()});});
+ page.on('console',msg=>{if(['warning','warn','error'].includes(msg.type()))evidence.console.push({level:msg.type(),text:msg.text(),phase,url:page.url(),location:msg.location(),at:new Date().toISOString()});});
  await page.goto(url,{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>{const m=window.__fleetDemo?.getMetrics?.();return m?.ready&&m.mapTilesLoaded;},undefined,{timeout:30000});
  if(process.env.REQUIRE_FACILITIES==='1')await page.waitForFunction(()=>window.__fleetDemo.getMetrics().facilitiesLoaded,undefined,{timeout:15000});
  await page.waitForTimeout(800);
  await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded;},undefined,{timeout:30000});
- await page.screenshot({path:path.join(out,'01-desktop-initial.png'),fullPage:true});
+ phase='initial-scene';await page.screenshot({path:path.join(out,'01-desktop-initial.png'),fullPage:true});
  const state=()=>page.evaluate(()=>window.__fleetDemo.getState());
- for(const id of ['depot','oict','centerpoint']){await page.locator(`[data-focus="${id}"]`).click();await page.waitForTimeout(750);await page.waitForFunction(()=>window.__fleetDemo.getMetrics().mapTilesLoaded,undefined,{timeout:20000});await page.screenshot({path:path.join(out,`facility-${id}.png`),fullPage:true});}
+ for(const id of ['depot','oict','centerpoint']){phase=`facility-${id}`;await page.locator(`[data-focus="${id}"]`).click();await page.waitForTimeout(750);await page.waitForFunction(()=>window.__fleetDemo.getMetrics().mapTilesLoaded,undefined,{timeout:20000});await page.screenshot({path:path.join(out,`facility-${id}.png`),fullPage:true});}
  await page.locator('[data-focus="depot"]').click();
- const initial=await state();
+ phase='source-workflow';const initial=await state();
  assert.equal(initial.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').status,'unresolved');
  assert.equal(initial.evaluation.vehicles.find(v=>v.vehicleId==='TRK-208').sourceId,'A');
  const raw=JSON.stringify(initial.scenario.readings),services=JSON.stringify(initial.scenario.serviceFacts);
@@ -58,13 +58,13 @@ try{
  await page.locator('#about-toggle').click();assert.equal(await page.locator('#about-panel').isVisible(),true);await page.keyboard.press('Escape');assert.equal(await page.locator('#about-panel').isVisible(),false);
  await page.locator('#reset').click();const reset=await state();assert.equal(reset.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').status,'unresolved');assert.equal(reset.follow,false);assert.equal(reset.simulation.paused,false);
  evidence.checks.push('selection, about dismissal and reset restore expected state');
- evidence.interactionMetrics=await page.evaluate(()=>window.__fleetDemo.getMetrics());
+ phase='steady-1080p';evidence.interactionMetrics=await page.evaluate(()=>window.__fleetDemo.getMetrics());
  await page.setViewportSize({width:1920,height:1080});
  await page.waitForTimeout(1000);
  evidence.settledMeasurement=await page.evaluate(()=>new Promise(resolve=>{const frames=[];let start,last;const sample=now=>{if(start===undefined)start=now;if(last!==undefined)frames.push(now-last);last=now;if(now-start<10000)requestAnimationFrame(sample);else{const sorted=[...frames].sort((a,b)=>a-b);resolve({durationMs:now-start,samples:frames.length,fps:1000/(frames.reduce((a,b)=>a+b,0)/frames.length),p95Ms:sorted[Math.ceil(sorted.length*.95)-1],p99Ms:sorted[Math.ceil(sorted.length*.99)-1],longFrames:frames.filter(x=>x>50).length,metrics:window.__fleetDemo.getMetrics()});}};requestAnimationFrame(sample);}));
  evidence.environment={os:os.platform()+' '+os.release(),cpus:os.cpus().map(c=>c.model),memoryBytes:os.totalmem(),viewport:{width:1920,height:1080},hardwareBenchmark:false};
  await page.screenshot({path:path.join(out,'05-settled-1080p.png'),fullPage:true});
- await page.setViewportSize({width:390,height:844});
+ phase='responsive-390';await page.setViewportSize({width:390,height:844});
  await page.screenshot({path:path.join(out,'03-mobile.png'),fullPage:true});
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
 assert.equal(await page.evaluate(()=>document.querySelector('#project-info').getBoundingClientRect().top>=document.querySelector('.world-panel').getBoundingClientRect().bottom),true);
@@ -72,26 +72,28 @@ assert.equal(await page.evaluate(()=>document.querySelector('#project-info').get
  await page.setViewportSize({width:1600,height:1000});
  const beforeLoss=await state();
  for(const selector of ['.fleet-three-overlay','.maplibregl-canvas']){
+   phase=`${selector}-context-loss`;
    const available=await page.evaluate(selector=>{const canvas=document.querySelector(selector);if(!canvas)return false;const gl=canvas.getContext('webgl2')||canvas.getContext('webgl');const ext=gl?.getExtension('WEBGL_lose_context');if(!ext)return false;window.__fleetTestContextExtension=ext;ext.loseContext();return true;},selector);
    assert.equal(available,true,`Context-loss extension required for ${selector}`);
    await page.waitForFunction(()=>window.__fleetDemo.getMetrics().contextLost,undefined,{timeout:10000});
    assert.equal(JSON.stringify((await state()).scenario.readings),JSON.stringify(beforeLoss.scenario.readings));
    await page.screenshot({path:path.join(out,selector.includes('three')?'04-overlay-context-loss.png':'04-map-context-loss.png'),fullPage:true});
-   await page.evaluate(()=>window.__fleetTestContextExtension.restoreContext());
+   phase=`${selector}-context-recovery`;await page.evaluate(()=>window.__fleetTestContextExtension.restoreContext());
    await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return !m.contextLost&&m.ready&&m.renderer.includes('Three');},undefined,{timeout:15000});
    evidence.checks.push(`${selector} actual context loss and recovery preserve records`);
  }
- await page.getByRole('link',{name:'Original Reno console ↗'}).click();await page.waitForLoadState('domcontentloaded');await page.getByRole('button',{name:'Live',exact:true}).click();
+ phase='legacy-reno';await page.getByRole('link',{name:'Original Reno console ↗'}).click();await page.waitForLoadState('domcontentloaded');await page.getByRole('button',{name:'Live',exact:true}).click();
  for(const mode of ['2D','3D','Isometric'])await page.getByRole('button',{name:mode,exact:true}).click();
  await page.getByRole('button',{name:'Follow vehicle',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Following',exact:true}).isVisible(),true);await page.getByRole('button',{name:'Following',exact:true}).click();
  evidence.checks.push('original Reno Live, 2D, 3D, Isometric and follow controls remain usable');
- await page.goBack({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo?.getMetrics?.());const backTime=(await state()).simulation.timeSeconds;await page.waitForTimeout(150);assert.ok((await state()).simulation.timeSeconds>backTime);await page.locator('[data-mode="today"]').click();assert.equal((await state()).mode,'today');
+ await page.goBack({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo?.getMetrics?.());phase='back-navigation';const backTime=(await state()).simulation.timeSeconds;await page.waitForTimeout(150);assert.ok((await state()).simulation.timeSeconds>backTime);await page.locator('[data-mode="today"]').click();assert.equal((await state()).mode,'today');
  evidence.checks.push('Back navigation restores an operating scene and controls');
- await page.emulateMedia({reducedMotion:'reduce'});await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo?.getState?.());assert.equal((await state()).simulation.paused,true);await page.locator('#reset').click();assert.equal((await state()).simulation.paused,true);
+ phase='reduced-motion';await page.emulateMedia({reducedMotion:'reduce'});await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo?.getState?.());assert.equal((await state()).simulation.paused,true);await page.locator('#reset').click();assert.equal((await state()).simulation.paused,true);
  evidence.checks.push('reduced-motion preference pauses initial scene and reset');
  evidence.checks.push('original Reno console remains reachable');
  // The preserved legacy console may log unrelated external-map warnings; new page exceptions are captured above.
- assert.deepEqual(evidence.errors,[]);
+ evidence.unexpectedGraphicsWarnings=evidence.console.filter(m=>m.phase!=='legacy-reno'&&/INVALID_OPERATION|INVALID_VALUE|buffer overflow|element array buffer/i.test(m.text));
+ assert.deepEqual(evidence.errors,[]);assert.deepEqual(evidence.unexpectedGraphicsWarnings,[],'New-demo graphics warnings need investigation');
  evidence.result='passed';
 }catch(error){evidence.result='failed';evidence.failure=String(error);throw error;}
 finally{await fs.writeFile(path.join(out,'result.json'),JSON.stringify(evidence,null,2));console.log(JSON.stringify(evidence,null,2));await browser?.close();await new Promise(resolve=>server.close(resolve));}

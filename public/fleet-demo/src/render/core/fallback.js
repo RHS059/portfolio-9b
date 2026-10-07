@@ -1,3 +1,4 @@
+import {viewportZoom} from '../camera/controller.js';
 import {createSvgMap} from '../map/svg-map.js';
 import {SITES,ROUTES,toLngLat} from '../map/world.js';
 const NS='http://www.w3.org/2000/svg';
@@ -30,5 +31,5 @@ export function createFallback({container,onSelect}){
   const up=()=>{pointer=null;};
   const wheel=e=>{e.preventDefault();zoom=Math.min(18,Math.max(12,zoom+(e.deltaY<0?1:-1)));pan={x:0,y:0};redraw();};
   svg.addEventListener('pointerdown',down);svg.addEventListener('pointermove',move);svg.addEventListener('pointerup',up);svg.addEventListener('wheel',wheel,{passive:false});
-  return {project,update:drawVehicles,resize(w,h){width=w;height=h;if(!fitted&&w>50&&h>50){const a=world(minLng,minLat,0),b=world(maxLng,maxLat,0);zoom=Math.max(12,Math.min(16,Math.floor(Math.log2(Math.min((w-100)/Math.abs(b.x-a.x),(h-150)/Math.abs(b.y-a.y))))));fitted=true;}svg.setAttribute('viewBox',`0 0 ${w} ${h}`);redraw();},setVisible(value){visible=value;svg.style.display=value?'':'none';if(value)redraw();},setFocus(id,zoomTo=false){if(!id){reset();return;}const s=SITES.find(s=>s.id===id)||last.find(v=>v.id===id);if(s){if(zoomTo)zoom=s.focusZoom||17;center=toLngLat([s.x,s.y]);pan={x:0,y:0};redraw();}},dispose(){disposed=true;tileMap.dispose();svg.remove();},getMetrics(){return{renderer:'SVG + OpenFreeMap vectors (no WebGL)',zoom,...tileMap.getMetrics()};}};
+  return {project,update:drawVehicles,resize(w,h){width=w;height=h;if(!fitted&&w>50&&h>50){const a=world(minLng,minLat,0),b=world(maxLng,maxLat,0);zoom=Math.max(12,Math.min(16,Math.floor(Math.log2(Math.min((w-100)/Math.abs(b.x-a.x),(h-150)/Math.abs(b.y-a.y))))));fitted=true;}svg.setAttribute('viewBox',`0 0 ${w} ${h}`);redraw();},setVisible(value){visible=value;svg.style.display=value?'':'none';if(value)redraw();},setFocus(id,zoomTo=false){if(!id){reset();return;}const s=SITES.find(s=>s.id===id)||last.find(v=>v.id===id);if(s){if(zoomTo)zoom=viewportZoom(s.focusZoom||17,width,height);center=toLngLat([s.x,s.y]);pan={x:0,y:0};redraw();}},dispose(){disposed=true;tileMap.dispose();svg.remove();},getMetrics(){return{renderer:'SVG + OpenFreeMap vectors (no WebGL)',zoom,...tileMap.getMetrics()};}};
 }
