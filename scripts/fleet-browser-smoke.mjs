@@ -22,7 +22,7 @@ try{
    const ids=new WeakMap();let generation=0;const events=[];
    const describe=canvas=>{let gl;const metrics=window.__fleetDemo?.getMetrics?.();const initialized=canvas.className.includes('maplibregl')?!!metrics?.viewState:typeof metrics?.overlayContextLost==='boolean';if(initialized)try{gl=canvas.getContext('webgl2')||canvas.getContext('webgl');}catch{}if(!ids.has(canvas))ids.set(canvas,++generation);return{generation:ids.get(canvas),className:canvas.className,isConnected:canvas.isConnected,width:canvas.width,height:canvas.height,contextLost:gl?.isContextLost?.()??null,attributes:gl?.getContextAttributes?.()??null};};
    window.__fleetGraphicsDiagnostics=()=>({events:[...events],canvases:[...document.querySelectorAll('.fleet-three-overlay,.maplibregl-canvas')].map(describe)});
-   for(const type of ['webglcontextlost','webglcontextrestored'])document.addEventListener(type,event=>{const record={type,at:performance.now(),canvas:describe(event.target),metrics:window.__fleetDemo?.getMetrics?.()??null};events.push(record);queueMicrotask(()=>{const fallback=document.querySelector('svg[aria-label="Oakland fleet map, 2D fallback"]');record.afterHandlers={metrics:window.__fleetDemo?.getMetrics?.()??null,fallbackVisible:!!fallback&&getComputedStyle(fallback).display!=='none',status:document.querySelector('.fleet-scene-status')?.textContent??null};});if(events.length>100)events.shift();},true);
+   for(const type of ['webglcontextlost','webglcontextrestored'])document.addEventListener(type,event=>{const record={type,at:performance.now(),canvas:describe(event.target),metrics:window.__fleetDemo?.getMetrics?.()??null};events.push(record);if(events.length>100)events.shift();},true);
  });
  await page.goto(url,{waitUntil:'domcontentloaded'});
  if(evidence.errors.length)throw new Error(`Startup page error: ${evidence.errors[0]}`);
@@ -111,17 +111,17 @@ assert.equal(await page.evaluate(()=>document.querySelector('#project-info').get
    const beforeLoss=await state();
    phase=`${selector}-context-loss`;
    const viewBefore=await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState);
-   const available=await page.evaluate(selector=>{const canvas=document.querySelector(selector);if(!canvas)return false;const gl=canvas.getContext('webgl2')||canvas.getContext('webgl');const ext=gl?.getExtension('WEBGL_lose_context');if(!ext)return false;window.__fleetTestContextExtension=ext;window.__fleetTestContext=gl;window.__fleetTestLossEventCount=window.__fleetGraphicsDiagnostics().events.length;ext.loseContext();return true;},selector);
+   const available=await page.evaluate(selector=>{const canvas=document.querySelector(selector);if(!canvas)return false;const gl=canvas.getContext('webgl2')||canvas.getContext('webgl');const ext=gl?.getExtension('WEBGL_lose_context');if(!ext)return false;window.__fleetTestContextExtension=ext;window.__fleetTestContext=gl;window.__fleetTestCanvas=canvas;window.__fleetTestContextSelector=selector;window.__fleetTestLossSnapshot=null;canvas.addEventListener('webglcontextlost',()=>{const fallback=document.querySelector('svg[aria-label="Oakland fleet map, 2D fallback"]');window.__fleetTestLossSnapshot={metrics:window.__fleetDemo.getMetrics(),fallbackVisible:!!fallback&&getComputedStyle(fallback).display!=='none',status:document.querySelector('.fleet-scene-status')?.textContent,resetEnabled:!document.querySelector('#reset').disabled};},{once:true});ext.loseContext();return true;},selector);
    assert.equal(available,true,`Context-loss extension required for ${selector}`);
-   await page.waitForFunction(()=>{const events=window.__fleetGraphicsDiagnostics().events;return events.length>window.__fleetTestLossEventCount&&events.at(-1)?.afterHandlers;},undefined,{timeout:10000});
+   await page.waitForFunction(()=>window.__fleetTestLossSnapshot!==null,undefined,{timeout:10000});
    assert.equal(JSON.stringify((await state()).scenario.readings),JSON.stringify(beforeLoss.scenario.readings));
    assert.equal(await page.locator('#reset').isEnabled(),true);
    assert.equal(await page.evaluate(()=>window.__fleetTestContext.isContextLost()),true);
-   const lossEvent=await page.evaluate(()=>window.__fleetGraphicsDiagnostics().events.filter(event=>event.type==='webglcontextlost').at(-1));assert.ok(lossEvent);assert.ok(lossEvent.canvas.className.includes(selector.slice(1)));assert.equal(lossEvent.canvas.contextLost,true);assert.equal(lossEvent.afterHandlers.metrics.contextLost,true);assert.equal(lossEvent.afterHandlers.fallbackVisible,true);
-   const cycle={selector,loss:await page.evaluate(()=>({metrics:window.__fleetDemo.getMetrics(),graphics:window.__fleetGraphicsDiagnostics()}))};evidence.contextCycles.push(cycle);
+   const lossEvent=await page.evaluate(()=>window.__fleetGraphicsDiagnostics().events.filter(event=>event.type==='webglcontextlost').at(-1));assert.ok(lossEvent);assert.ok(lossEvent.canvas.className.includes(selector.slice(1)));assert.equal(lossEvent.canvas.contextLost,true);const lossSnapshot=await page.evaluate(()=>window.__fleetTestLossSnapshot);assert.equal(lossSnapshot.metrics.contextLost,true);assert.equal(lossSnapshot.fallbackVisible,true);assert.equal(lossSnapshot.resetEnabled,true);
+   const cycle={selector,afterHandlers:lossSnapshot,loss:await page.evaluate(()=>({metrics:window.__fleetDemo.getMetrics(),graphics:window.__fleetGraphicsDiagnostics()}))};evidence.contextCycles.push(cycle);
    // A screenshot with an intentionally lost GPU context can stall Chromium's compositor.
    // Record the real lost state, then restore immediately; capture pixels after recovery.
-   phase=`${selector}-context-recovery`;cycle.restoreCommand=await page.evaluate(()=>{const gl=window.__fleetTestContext;window.__fleetTestContextExtension.restoreContext();const errors=[];for(let i=0;i<4;i++){const code=gl.getError();if(code===gl.NO_ERROR)break;errors.push(code);}return{errors,contextLost:gl.isContextLost()};});
+   phase=`${selector}-context-recovery`;cycle.restoreCommand=await page.evaluate(()=>{const gl=window.__fleetTestContext,canvas=window.__fleetTestCanvas,isCurrent=canvas.isConnected&&document.querySelector(window.__fleetTestContextSelector)===canvas;if(isCurrent)window.__fleetTestContextExtension.restoreContext();const errors=[];for(let i=0;i<4;i++){const code=gl.getError();if(code===gl.NO_ERROR)break;errors.push(code);}return{path:isCurrent?'native-restoration':'replacement-canvas',lostCanvasConnected:canvas.isConnected,errors,contextLost:gl.isContextLost()};});
    await page.waitForTimeout(200);
    cycle.afterRestore=await page.evaluate(()=>{const gl=window.__fleetTestContext,errors=[];for(let i=0;i<4;i++){const code=gl.getError();if(code===gl.NO_ERROR)break;errors.push(code);}return{errors,contextLost:gl.isContextLost(),metrics:window.__fleetDemo.getMetrics()};});
    await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return !m.contextLost&&m.ready&&m.renderer.includes('Three');},undefined,{timeout:15000});
@@ -155,7 +155,7 @@ assert.equal(await page.evaluate(()=>document.querySelector('#project-info').get
 }catch(error){
  evidence.result='failed';evidence.failure=String(error);evidence.failurePhase=phase;
  if(page&&!page.isClosed()){
-   try{evidence.failureMetrics=await page.evaluate(()=>window.__fleetDemo?.getMetrics?.()??null);evidence.graphicsDiagnostics=await page.evaluate(()=>window.__fleetGraphicsDiagnostics?.()??null);await page.screenshot({path:path.join(out,'failure.png'),fullPage:true,timeout:5000});}catch(diagnosticError){evidence.diagnosticFailure=String(diagnosticError);}
+   try{evidence.failureMetrics=await page.evaluate(()=>window.__fleetDemo?.getMetrics?.()??null);evidence.graphicsDiagnostics=await page.evaluate(()=>window.__fleetGraphicsDiagnostics?.()??null);if(!evidence.failureMetrics?.contextLost)await page.screenshot({path:path.join(out,'failure.png'),fullPage:true,timeout:5000});else evidence.diagnosticNote='Lost-state screenshot omitted to avoid blocking the compositor; native context and DOM state are recorded.';}catch(diagnosticError){evidence.diagnosticFailure=String(diagnosticError);}
  }
  throw error;
 }

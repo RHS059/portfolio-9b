@@ -37,6 +37,7 @@ jobs:
         with:
           node-version: '24'
       - name: Install isolated browser test tooling
+        id: browser-tooling
         run: |
           npm install --prefix "$RUNNER_TEMP/fleet-browser" --no-save --ignore-scripts playwright@1.62.0
           "$RUNNER_TEMP/fleet-browser/node_modules/.bin/playwright" install --with-deps chromium
@@ -47,6 +48,7 @@ jobs:
           REQUIRE_MAPPED_PORT: '1'
         run: node scripts/fleet-browser-smoke.mjs
       - name: Independent browser acceptance
+        if: ${{ !cancelled() && steps.browser-tooling.outcome == 'success' }}
         env:
           PLAYWRIGHT_PACKAGE: ${{ runner.temp }}/fleet-browser
           FLEET_BROWSER_URL: http://127.0.0.1:8024/
