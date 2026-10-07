@@ -33,7 +33,7 @@ export async function exerciseCargoFlow({page,evidence,out,setPhase=()=>{}}){
   const frameMaterial=async(id,list,site)=>{
     await page.locator(`[data-focus="${site}"]`).click();
     await page.waitForFunction(()=>!window.__fleetDemo.getMetrics().cameraMoving);
-    for(let step=0;step<7;step++){
+    for(let step=0;step<12;step++){
       const point=await page.evaluate(({id,list})=>{const item=window.__fleetDemo.getMetrics().cargoProcessRender[list].find(x=>x.id===id);return window.__fleetDemo.projectScenePoint(item.position);},{id,list});
       const box=await page.locator('#world').boundingBox();
       assert.ok(point&&Number.isFinite(point.x)&&Number.isFinite(point.y),'Material must project to a visible scene point');
