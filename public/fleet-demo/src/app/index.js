@@ -4,6 +4,7 @@ import {createSimulation} from '../core/simulation.js';
 import {sampleCargoProcess,CARGO_PRESENTATION_OFFSET_SECONDS} from '../core/cargo-process.js';
 import {sampleOrdinaryTraffic} from '../render/map/cargo-routes.js';
 import {STORY_SCENES,STORY_DURATION,sampleStory,sceneTime,sampleMileage,sampleCost} from './story-timeline.js';
+import {createStoryTextTransition} from './story-text-transition.js';
 import {reviewFixture} from './review-adapter.js';
 import {createProvenancePanel as createFallbackPanel} from './fallback-provenance.js';
 const sampleProcess=(timeSeconds,paused)=>sampleCargoProcess(timeSeconds,{paused,presentationOffsetSeconds:CARGO_PRESENTATION_OFFSET_SECONDS,outgoingEnabled:false});
@@ -21,8 +22,9 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   let review=null,notifications=[],commandSequence=0,reviewing=false,reviewSequence=0,lastMetricUpdate=0;
   let exploring=false,activeDialog=null,dialogReturnFocus=null,visibilityPauseState=null;
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
+  const sidebarTransition=createStoryTextTransition({element:$('.story-panel'),reducedMotion:()=>reducedMotion.matches});
   function on(target,type,listener,options){if(!target)throw new Error(`Missing Fleet control for ${type}`);target.addEventListener(type,listener,options);cleanups.push(()=>target.removeEventListener(type,listener,options));}
-  function dispose(){if(disposed)return;disposed=true;ready=false;reviewSequence++;for(const remove of cleanups.splice(0))remove();sim?.dispose();scene?.dispose();panel?.dispose();if(window.__fleetDemo===debugAPI)delete window.__fleetDemo;if(mountedControllers.get(root)?.dispose===dispose)mountedControllers.delete(root);}
+  function dispose(){if(disposed)return;disposed=true;ready=false;reviewSequence++;for(const remove of cleanups.splice(0))remove();sidebarTransition.dispose();sim?.dispose();scene?.dispose();panel?.dispose();if(window.__fleetDemo===debugAPI)delete window.__fleetDemo;if(mountedControllers.get(root)?.dispose===dispose)mountedControllers.delete(root);}
   const feedback=text=>{$('#app-feedback').textContent=text;};
   function snapshot(timeSeconds=0,paused=false){
     const beat=sampleStory(timeSeconds),cargoProcess=sampleProcess(timeSeconds,paused);
@@ -48,23 +50,26 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     selectedVehicleId='TRK-104';follow=stage<=1;
     // The scene wrapper’s setFollow also sets focus. Do it before the atomic view command.
     scene?.setFollow(follow);
-    if(stage===8){scene?.setView(view,{animate:false});scene?.setFocus(null);}
+    if(stage===8){scene?.setView(view);scene?.setFocus(null);}
     else scene?.setView(view,{focusId:stage<=1?'TRK-104':'depot'});
     $('#follow').setAttribute('aria-pressed',String(follow));
   }
   function renderStory(){
     const workspace=$('.workspace');workspace.dataset.intro=String(intro);workspace.dataset.scene=story.id;workspace.dataset.exploring=String(exploring);
     $('#explore-scene').setAttribute('aria-pressed',String(exploring));$('#explore-scene').textContent=exploring?'Return to story':'Explore scene';$('#explore-controls').hidden=!exploring;
-    $('#intro-panel').hidden=!intro;$('#story-content').hidden=intro;$('#project-info').hidden=!intro;
-    $('#chapter-number').textContent=`SCENE ${String(stage+1).padStart(2,'0')} / 09`;
-    $('#chapter-title').textContent=story.title;$('#chapter-copy').textContent=story.copy;
-    $('#chapter-title').hidden=stage===6||stage===7;$('#chapter-copy').hidden=stage===6||stage===7||!story.copy;
+    const beat=story,beatIndex=stage,isIntro=intro;
+    sidebarTransition.update(beat.id,()=>{
+    $('#intro-panel').hidden=!isIntro;$('#story-content').hidden=isIntro;$('#project-info').hidden=!isIntro;
+    $('#chapter-number').textContent=`SCENE ${String(beatIndex+1).padStart(2,'0')} / 09`;
+    $('#chapter-title').textContent=beat.title;$('#chapter-copy').textContent=beat.copy;
+    $('#chapter-title').hidden=beatIndex===6||beatIndex===7;$('#chapter-copy').hidden=beatIndex===6||beatIndex===7||!beat.copy;
+    $('#open-source-controls').hidden=beatIndex!==6;$('#run-story-review').hidden=beatIndex!==7;$('#story-replay').hidden=beatIndex!==8;
+    const takeaways={6:'<strong>90% faster</strong><p>Data issue resolution went from weeks to hours.</p>'};
+    $('#chapter-takeaway').innerHTML=takeaways[beatIndex]||'';
+    });
     $('#story-position').textContent=`${String(stage+1).padStart(2,'0')} / 09 · ${story.label}`;
     $('#previous-chapter').disabled=stage===0;
     $('#next-chapter').textContent=stage===8?'Replay ↺':'Next →';$('#next-chapter').setAttribute('aria-label',stage===8?'Replay story':'Next scene');
-    $('#open-source-controls').hidden=stage!==6;$('#run-story-review').hidden=stage!==7;$('#story-replay').hidden=stage!==8;
-    const takeaways={6:'<strong>90% faster</strong><p>Data issue resolution went from weeks to hours.</p>'};
-    $('#chapter-takeaway').innerHTML=takeaways[stage]||'';
     $$('[data-story-overlay]').forEach(element=>{element.hidden=exploring||element.dataset.storyOverlay!==story.id;});
     $$('[data-scene-index]').forEach(button=>{const index=Number(button.dataset.sceneIndex);button.setAttribute('aria-current',index===stage?'step':'false');button.dataset.complete=String(index<stage);});
     renderPlayback();
@@ -99,7 +104,8 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     if(completionChanged)renderPlayback();if(story.complete&&!paused&&!exploring)setPaused(true);
     renderPresentation();scene?.update(snapshot(timeSeconds,sim?.getState().paused??paused));updateMetrics(performance.now());
   }
-  function focusStoryText(){const title=intro?$('#intro-panel h1'):$('#chapter-title');title?.setAttribute('tabindex','-1');title?.focus?.({preventScroll:true});}
+  function focusStoryText(){sidebarTransition.afterCommit(()=>{const title=stage===6||stage===7?$(`[data-story-overlay="${story.id}"] h2`):intro?$('#intro-panel h1'):$('#chapter-title');title?.setAttribute('tabindex','-1');title?.focus?.({preventScroll:true});});}
+
   function setChapter(index){
     closeDialog(false);exploring=false;setPaused(true);const target=index>=STORY_SCENES.length?0:Math.max(0,index);
     if(sim)sim.seek(sceneTime(target));else{story=sampleStory(sceneTime(target));stage=story.index;intro=stage===0;render();}
@@ -174,7 +180,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
       if(event.defaultPrevented||event.altKey||event.ctrlKey||event.metaKey||event.target?.closest?.('input,select,textarea,[contenteditable="true"]'))return;
       if(event.key==='ArrowRight'){event.preventDefault();setChapter(stage+1);}else if(event.key==='ArrowLeft'){event.preventDefault();setChapter(stage-1);}else if(event.code==='Space'&&!event.target?.closest?.('button,a,summary')){event.preventDefault();togglePlayback();}
     });
-    on(reducedMotion,'change',event=>{if(event.matches)setPaused(true);});
+    on(reducedMotion,'change',event=>{if(event.matches){setPaused(true);sidebarTransition.finish();}});
     on(doc,'visibilitychange',()=>{if(doc.hidden){visibilityPauseState=sim?.getState().paused??true;setPaused(true);}else if(visibilityPauseState!==null){setPaused(visibilityPauseState);visibilityPauseState=null;}});
   }
   function updateMetrics(time){if(time-lastMetricUpdate<2000)return;lastMetricUpdate=time;const metrics=scene?.getMetrics?.();if(!metrics)return;const fps=metrics.fps??metrics.averageFps??metrics.fpsAverage;$('#performance').textContent=Number.isFinite(fps)?`${Math.round(fps)} RAF/s · p95 ${Math.round(metrics.p95Ms||0)} ms · GPU target unverified`:(metrics.renderer||metrics.mode||'Browser scene')+' · hardware performance unverified';}
@@ -197,7 +203,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     on(window,'pagehide',event=>{if(event.persisted){suspendedPauseState=sim?.getState().paused??true;setPaused(true);}else dispose();});
     on(window,'pageshow',event=>{if(event.persisted&&suspendedPauseState!==null){setPaused(suspendedPauseState);suspendedPauseState=null;scene?.resize();render();}});
     debugAPI={
-      getState:()=>({intro,mode,stage,exploring,story:{...story,paused:sim.getState().paused},selectedVehicleId,view,follow,scenario,evaluation,review,simulation:sim.getState(),cargoProcess:sampleProcess(sim.getState().timeSeconds,sim.getState().paused)}),
+      getState:()=>({intro,mode,stage,exploring,textTransition:sidebarTransition.getState(),story:{...story,paused:sim.getState().paused},selectedVehicleId,view,follow,scenario,evaluation,review,simulation:sim.getState(),cargoProcess:sampleProcess(sim.getState().timeSeconds,sim.getState().paused)}),
       getMetrics:()=>scene?.getMetrics?.(),projectScenePoint:position=>scene?.projectPoint?.(position)??null,
       getSceneSnapshot:()=>{const current=sim.getState();return freezeScene(snapshot(current.timeSeconds,current.paused));},
       seekScene:timeSeconds=>{if(disposed)return;sim.seek(timeSeconds);render();},seekStory:(index,progress=0)=>{if(disposed)return;setPaused(true);sim.seek(sceneTime(index,progress));render();},

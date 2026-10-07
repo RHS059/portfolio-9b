@@ -34,7 +34,7 @@ try{
  await page.waitForFunction(()=>{const m=window.__fleetDemo?.getMetrics?.();return m?.ready&&!m.initializing&&m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:30000});
  if(process.env.REQUIRE_FACILITIES==='1')await page.waitForFunction(()=>window.__fleetDemo.getMetrics().facilitiesLoaded,undefined,{timeout:15000});
  if(process.env.REQUIRE_MAPPED_PORT==='1')await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.portStatus==='mapped'&&m.portRowCount>0&&m.portContainerCount>0&&m.portCraneCount>0;},undefined,{timeout:15000});
- await page.locator('#reset').click();await page.locator('#pause').click();
+ await page.locator('#reset').click();await page.waitForFunction(()=>{const t=window.__fleetDemo.getState().textTransition;return !t||t.phase==='idle';});await page.locator('#pause').click();
  await page.waitForTimeout(800);
  await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:30000});
  await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.vehicleDetailState==='ready'&&m.vehicleDetail.models.some(v=>v.id==='TRK-104');},undefined,{timeout:15000});
@@ -44,7 +44,7 @@ try{
  const setPaused=async value=>{if((await state()).simulation.paused!==value)await page.locator('#pause').click();};
  const exploreScene=async()=>{if(!(await state()).exploring)await page.locator('#explore-scene').click();};
  const closeSource=async()=>{if(await page.locator('#source-dialog').isVisible())await page.locator('#source-close').click();};
- const advanceToStage=async target=>{await closeSource();await page.locator(`[data-scene-index="${target}"]`).click();assert.equal((await state()).stage,target);};
+ const advanceToStage=async target=>{await closeSource();await page.locator(`[data-scene-index="${target}"]`).click();assert.equal((await state()).stage,target);await page.waitForFunction(()=>{const t=window.__fleetDemo.getState().textTransition;return !t||t.phase==='idle';});};
  const openSource=async()=>{if(!await page.locator('#source-dialog').isVisible()){await advanceToStage(6);await page.locator('#open-source-controls').click();}};
  const openReview=async()=>{await advanceToStage(7);await page.locator('#run-story-review').click();};
  const chooseTruck=async id=>{await openSource();const picker=page.locator('[data-vehicle-select]');if(!await picker.isVisible())await page.getByText('Check another truck',{exact:true}).click();await picker.selectOption(id);await closeSource();};
@@ -92,7 +92,7 @@ try{
  await page.waitForFunction(()=>!window.__fleetDemo.getMetrics().cameraMoving);
  await page.screenshot({path:path.join(out,'07-orbit-alignment.png'),fullPage:true});
  evidence.checks.push('manual map pan and orbit remain usable with scene overlay');
- await page.locator('#reset').click();
+ await page.locator('#reset').click();await page.waitForFunction(()=>{const t=window.__fleetDemo.getState().textTransition;return !t||t.phase==='idle';});
  await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;});
 
  phase='source-workflow';await setPaused(true);const initial=await state();
@@ -128,7 +128,7 @@ try{
  evidence.checks.push('camera modes/follow/pause controls operate without data mutation');
  await chooseTruck('TRK-208');assert.equal((await state()).selectedVehicleId,'TRK-208');
  await page.locator('#about-toggle').click();assert.equal(await page.locator('#about-panel').isVisible(),true);await page.keyboard.press('Escape');assert.equal(await page.locator('#about-panel').isVisible(),false);
- await page.locator('#reset').click();const reset=await state();assert.equal(reset.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').status,'unresolved');assert.equal(reset.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);assert.equal(reset.follow,true);assert.equal(reset.selectedVehicleId,'TRK-104');assert.equal(reset.simulation.paused,false);
+ await page.locator('#reset').click();await page.waitForFunction(()=>{const t=window.__fleetDemo.getState().textTransition;return !t||t.phase==='idle';});const reset=await state();assert.equal(reset.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').status,'unresolved');assert.equal(reset.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);assert.equal(reset.follow,true);assert.equal(reset.selectedVehicleId,'TRK-104');assert.equal(reset.simulation.paused,false);
  evidence.checks.push('selection, about dismissal and reset restore expected state');
  phase='steady-1080p';evidence.interactionMetrics=await page.evaluate(()=>window.__fleetDemo.getMetrics());
  await page.setViewportSize({width:1920,height:1080});
@@ -184,7 +184,7 @@ assert.equal(await page.evaluate(()=>document.querySelector('#start-story').getB
    if(beforeLoss.simulation.paused)assert.equal(recovered.simulation.timeSeconds,beforeLoss.simulation.timeSeconds);
    else assert.ok(recovered.simulation.timeSeconds>beforeLoss.simulation.timeSeconds,'Live simulation continues through recovery');
    evidence.checks.push(`${selector} actual context loss and recovery preserve records, source policy, selection and pause state`);
-   if(selector.includes('three')){await page.locator('#reset').click();assert.equal((await state()).simulation.paused,false);await exploreScene();await setPaused(false);await page.locator('#overview').click();assert.equal((await state()).follow,false);}
+   if(selector.includes('three')){await page.locator('#reset').click();await page.waitForFunction(()=>{const t=window.__fleetDemo.getState().textTransition;return !t||t.phase==='idle';});assert.equal((await state()).simulation.paused,false);await exploreScene();await setPaused(false);await page.locator('#overview').click();assert.equal((await state()).follow,false);}
    else if(evidence.contextCycles.length===2){await page.locator('#follow').click();await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.camera.follow&&m.camera.focus===window.__fleetDemo.getState().selectedVehicleId&&m.viewState.zoom>17&&!m.cameraMoving;});}
 
  }
@@ -194,7 +194,7 @@ assert.equal(await page.evaluate(()=>document.querySelector('#start-story').getB
  evidence.checks.push('original Reno Live, 2D, 3D, Isometric and follow controls remain usable');
  await page.goBack({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo?.getMetrics?.());phase='back-navigation';await page.keyboard.press('Escape');assert.equal(await page.locator('#about-panel').isVisible(),false);await setPaused(false);const backTime=(await state()).simulation.timeSeconds;await page.waitForTimeout(150);assert.ok((await state()).simulation.timeSeconds>backTime);await openReview();assert.equal((await state()).mode,'today');
  evidence.checks.push('Back navigation restores an operating scene and controls');
- phase='reduced-motion';await page.emulateMedia({reducedMotion:'reduce'});await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo?.getState?.());assert.equal((await state()).simulation.paused,true);await page.locator('#reset').click();assert.equal((await state()).simulation.paused,true);
+ phase='reduced-motion';await page.emulateMedia({reducedMotion:'reduce'});await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo?.getState?.());assert.equal((await state()).simulation.paused,true);await page.locator('#reset').click();await page.waitForFunction(()=>{const t=window.__fleetDemo.getState().textTransition;return !t||t.phase==='idle';});assert.equal((await state()).simulation.paused,true);
  evidence.checks.push('reduced-motion preference pauses initial scene and reset');
  evidence.checks.push('original Reno console remains reachable');
  // The preserved legacy console may log unrelated external-map warnings; new page exceptions are captured above.

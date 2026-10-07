@@ -76,8 +76,8 @@ test('reduced motion uses direct tracking, and explicit nonanimated vehicle focu
  const {camera,eases}=fixture();camera.setFollow(false);camera.setView('3d',{focusId:'TRK-208',animate:false});camera.update([pose(0)],0);assert.equal(eases.at(-1).duration,0);
 });
 
-test('changing view while following applies the whole preset before the next tracking update',()=>{
- const {camera,jumps,eases}=fixture();camera.update([pose(0)],0);camera.setView('3d');assert.deepEqual(eases.at(-1),{pitch:65,bearing:-16,duration:0});camera.update([pose(1)],16);assert.equal(jumps.length,2);assert.deepEqual(Object.keys(jumps.at(-1)),['center']);
+test('nonanimated follow view changes apply the whole preset without a competing native ease',()=>{
+ const {camera,jumps,eases}=fixture();camera.update([pose(0)],0);camera.setView('3d',{animate:false});camera.update([pose(1)],16);assert.equal(eases.length,0);assert.equal(jumps.length,2);assert.equal(jumps.at(-1).pitch,65);assert.equal(jumps.at(-1).bearing,-16);
  camera.setView('2d',{focusId:'TRK-208'});camera.update([pose(2)],32);assert.equal(jumps.at(-1).pitch,0);assert.equal(jumps.at(-1).bearing,0);
 });
 

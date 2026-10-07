@@ -278,3 +278,9 @@
 .costTotal span, .costRepeat span { font-size: 13px; }
 .costTotal strong { font-size: 28px; font-weight: 600; }
 .costRepeat strong { font-size: 36px; color: var(--accent); font-weight: 600; letter-spacing: -.035em; }
+.costCard h2 { margin: 8px 0 14px; }
+.costVisits { margin-top: 18px; }
+.costVisits > div { padding: 14px; gap: 6px; }
+.costVisits strong, .costTotal strong, .costRepeat strong { line-height: 1; }
+.costCard #cost-caption { margin: 12px 0; font-size: 12px; }
+.costTotal, .costRepeat { padding: 12px 0; }

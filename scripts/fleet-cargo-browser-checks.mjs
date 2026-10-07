@@ -19,6 +19,7 @@ export async function exerciseCargoFlow({page,evidence,out,setPhase=()=>{}}){
       return s.simulation.paused&&s.simulation.timeSeconds===t&&m?.active&&m.errors.length===0;
     },time);
     await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+    await page.waitForFunction(()=>{const t=window.__fleetDemo.getState().textTransition;return !t||t.phase==='idle';});
     const m=await metrics();
     assert.deepEqual(m.errors,[]);
     assert.equal(m.port.cargoRenderer,'external');

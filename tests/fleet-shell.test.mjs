@@ -30,7 +30,7 @@ test('persistent bottom controls include pause, navigation, scrubbing and cost c
 test('source controls are an optional modal, with human approval and preserved history',()=>{
  assert.match(shell,/id="source-dialog"[^>]*role="dialog"[^>]*aria-modal="true"[^>]*hidden/);
  for(const id of ['open-source-controls','run-story-review','source-close','source-inspector','canonical-reading','canonical-source','provenance','app-feedback'])assert.ok(shell.includes(`id="${id}"`));
- assert.match(app,/hidden=stage!==6/);assert.match(app,/hidden=stage!==7/);
+ assert.match(app,/hidden=beatIndex!==6/);assert.match(app,/hidden=beatIndex!==7/);
  assert.ok(app.includes("action.type==='set-authority'||action.type==='add-exclusion'"));
  assert.ok(app.includes('Original readings and service records are preserved.'));
  assert.match(app,/event.key==='Tab'/);assert.match(app,/event.key==='Escape'/);
@@ -41,7 +41,7 @@ test('story copy removes redundant captions and uses one compact fixed-cost labe
  const solution=shell.slice(shell.indexOf('data-story-overlay="solution"'),shell.indexOf('data-story-overlay="agents"'));
  const agents=shell.slice(shell.indexOf('data-story-overlay="agents"'),shell.indexOf('data-story-overlay="learning"'));
  assert.match(solution,/<h2>The change I designed<\/h2>/);assert.match(agents,/<h2>How I’d approach it today<\/h2>/);
- assert.ok(app.includes("$('#chapter-title').hidden=stage===6||stage===7"));
+ assert.ok(app.includes("$('#chapter-title').hidden=beatIndex===6||beatIndex===7"));
 });
 test('single-clock story has a reduced-motion pause, manual override and route cleanup',()=>{
  assert.equal((app.match(/createSimulation\(\{/g)||[]).length,1);
@@ -61,5 +61,5 @@ test('story camera sets follow before the atomic focus/view so orientation canno
  assert.equal((body.match(/scene\?\.setFollow/g)||[]).length,1);
  assert.ok(body.indexOf('scene?.setFollow(follow)')<body.indexOf('scene?.setView'));
  assert.match(body,/setView\(view,\{focusId:stage<=1\?'TRK-104':'depot'\}\)/);
- assert.match(body,/if\(stage===8\)\{scene\?\.setView\(view,\{animate:false\}\);scene\?\.setFocus\(null\);\}/);
+ assert.match(body,/if\(stage===8\)\{scene\?\.setView\(view\);scene\?\.setFocus\(null\);\}/);
 });
