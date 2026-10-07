@@ -158,7 +158,8 @@ function sampleSlot(slot, timeSeconds) {
   const product=sampleProduct(slot,timeSeconds);
   cell.outputProductId=product.visible&&product.owner.kind==='workcell'?product.id:null;
   cell.outputTransferProgress=product.stage==='ready'?product.stageProgress:0;
-  if(product.stage==='ready')cell.armAction='handoff-output';
+  // Finished-output activity is independent of already-consumed input custody.
+  if(product.stage==='ready'){cell.armAction='handoff-output';cell.active=true;}
   return {cargo,truck,forklift:outgoingForklift(slot,forklift,product),floorRobot:outgoingRobot(slot,floorRobot,product),crane,cell,product};
 }
 

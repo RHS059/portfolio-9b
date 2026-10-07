@@ -126,6 +126,10 @@ explicit progress zero, never an independent free-running animation clock.
 `armAction` is `open-box`, `assemble-drone`, `handoff-output`, or `park`.
 `outputProductId` is present only while that cell owns its visible product;
 `outputTransferProgress` controls the completed-product transfer to the AMR pickup.
+During the explicit ready-product handoff at118–122, `active:true` enables that
+mechanism while `cargoId` remains null: the input kit is consumed, and only the
+identified `outputProductId` is being handled. At122, the product moves into AMR
+custody, the arm returns to park, and this output activity gate turns off.
 
 The machinery can read the complete process snapshot for cargo attachments and
 finished drone identity. The narrow existing assembly normalizer may forward only

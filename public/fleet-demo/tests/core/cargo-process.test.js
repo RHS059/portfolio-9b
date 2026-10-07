@@ -387,3 +387,28 @@ test('AMR stops outside the workcell before custody transfers into the jig',()=>
   const event=cargoEventsBetween(86,88).events.find(e=>e.type==='cargo-handed-to-workcell');
   assert.equal(event.timeSeconds,87);assert.equal(event.stage,'robot-transport');assert.equal(event.cargoId,receiving.cargo[0].id);assert.deepEqual(event.owner,receiving.cargo[0].owner);
 });
+
+test('finished-output mechanism is explicitly active during ready handoff without reviving consumed input',()=>{
+  for(const slot of CARGO_SLOTS)for(let cycle=0;cycle<3;cycle++)for(const progress of [0,.25,.5,.75,1-1e-7]){
+    const t=slot.offsetSeconds+cycle*128+118+progress*4,s=sampleCargoProcess(t),cell=s.factoryAssembly.cells[slot.index],cargo=s.cargo[slot.index],product=s.products[slot.index];
+    // The mechanism's real contract intentionally requires this activity gate.
+    assert.equal(cell.active,true,'output arm must be enabled by explicit ready-product handoff');
+    assert.equal(cell.armAction,'handoff-output');assert.ok(Math.abs(cell.outputTransferProgress-progress)<1e-10);
+    assert.equal(cell.outputProductId,product.id);assert.equal(product.stage,'ready');assert.equal(product.owner.kind,'workcell');
+    assert.equal(cell.cargoId,null,'consumed input must not become active material again');assert.equal(cargo.owner.kind,'consumed');assert.equal(cargo.visible,false);
+    assert.equal(s.factoryAssembly.cells.filter(c=>c.cargoId===cargo.id).length,0);
+  }
+});
+
+test('output activity gate stops exactly at QA pickup and never enables unrelated idle or receiving phases',()=>{
+  for(const slot of CARGO_SLOTS)for(let cycle=0;cycle<3;cycle++){
+    const base=slot.offsetSeconds+cycle*128;
+    for(const t of [0,50,87,87.5,122,126,128,138,150,178]){
+      const s=sampleCargoProcess(base+t),cell=s.factoryAssembly.cells[slot.index];assert.equal(cell.active,false,`unrelated activity at ${base+t}`);assert.notEqual(cell.armAction,'handoff-output');
+    }
+    const before=sampleCargoProcess(base+122-1e-7),after=sampleCargoProcess(base+122);
+    assert.equal(before.factoryAssembly.cells[slot.index].active,true);assert.equal(after.factoryAssembly.cells[slot.index].active,false);
+    assert.equal(after.factoryAssembly.cells[slot.index].outputProductId,null);assert.equal(after.factoryAssembly.cells[slot.index].cargoId,null);
+    assert.equal(after.products[slot.index].owner.kind,'floor-robot');assert.equal(after.cargo[slot.index].owner.kind,'consumed');
+  }
+});
