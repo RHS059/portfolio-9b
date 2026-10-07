@@ -2,6 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const html=await readFile(new URL('../../index.html',import.meta.url),'utf8');
+const bootstrap=await readFile(new URL('../../src/app/bootstrap.js',import.meta.url),'utf8');
+test('standalone bootstrap selector resolves the declared story root',()=>{
+ const selector=bootstrap.match(/document\.querySelector\('([^']+)'\)/)?.[1];
+ assert.ok(selector?.startsWith('.'),'Bootstrap selects a named root class');
+ const classes=[...html.matchAll(/class="([^"]+)"/g)].map(match=>match[1].split(/\s+/));
+ assert.ok(classes.some(tokens=>tokens.includes(selector.slice(1))),`Missing bootstrap root ${selector}`);
+});
 test('opening places project name, unchanged project information, teaser and Next in the left panel',()=>{
  const intro=html.slice(html.indexOf('<aside '),html.indexOf('<div id="story-content"'));
  const fields=['UX Designer','User research, systems design, workflow architecture, integration logic, prototyping, and cross-functional collaboration','Figma-style wireframing, whiteboarding, API and integration workflows','UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager','2019 – 2022','Data issue resolution improved by 90%, from weeks to hours'];
