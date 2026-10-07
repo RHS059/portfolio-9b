@@ -36,7 +36,7 @@ test('Then panel distinguishes clocks, units, synthetic service facts and unreso
   assert.match(html,/A · 120,000 km/);assert.match(html,/B · 80,300 mi/);assert.match(html,/v1-a-3/);
   assert.match(html,/2026-01-05 12:00:00 UTC/);assert.match(html,/2026-01-12 02:00:00 UTC/);
   assert.match(html,/synthetic examples/);assert.match(html,/does not erase visits or reverse work orders/);
-  assert.doesNotMatch(html,/data-action="review-imports"/);assert.match(html,/Then · I added controls/);
+  assert.doesNotMatch(html,/data-action="review-imports"/);assert.doesNotMatch(html,/Then · I added controls/);
 });
 test('vehicle isolation filters readings and service facts without touching the shared inputs',()=>{
   const m=view(),before=JSON.stringify(m);const other=renderProvenance({...m,selectedVehicleId:'TRK-208'});
@@ -83,7 +83,7 @@ test('equivalent timestamp spellings cannot conceal an authority conflict',()=>{
 test('Today simulated review is explicitly labeled and renders evidence/in-app notification only',async()=>{
   const state=createScenario({authorityApplied:false}),review=await reviewImports(state,createSimulatedReviewProvider());
   const m=view(state,'TRK-104',{mode:'today',review:{...review,vehicleId:'TRK-104'},notifications:[{text:'Check the source',recipient:'Fleet operator'}]});
-  const html=renderProvenance(m);assert.match(html,/Deterministic demo review · no model call/);assert.match(html,/Evidence:/);assert.match(html,/In-app notification · demo/);assert.match(html,/shown here only/);assert.match(html,/No external messages are sent/);
+  const html=renderProvenance(m);assert.match(html,/Simulated review · no live AI call/);assert.match(html,/Evidence:/);assert.match(html,/In-app notification · demo/);assert.match(html,/shown here only/);assert.match(html,/No external messages are sent/);
 });
 test('recorded review needs matching version, replay cutoff and selected vehicle',()=>{
   const m=view(),review={mode:'recorded',vehicleId:'TRK-104',configVersion:1,asOf:m.asOf,findings:[],summary:'RECORDED_FINDING'};
@@ -148,4 +148,10 @@ test('integrated UI command and replay preserve raw/service facts and other vehi
 });
 test('A1 additive reimport command preserves its CI selector and carries no write payload',async()=>{
   const calls=[],h=host(a=>calls.push(a));h.panel.update(view());assert.match(h.root.innerHTML,/data-action="reimport"/);h.click({action:'reimport'});await settle();assert.deepEqual(calls,[{type:'reimport'}]);h.panel.dispose();
+});
+
+test('review detail stays expandable and the app can supply its own vehicle tabs',async()=>{
+ const state=createScenario({authorityApplied:false}),review=await reviewImports(state,createSimulatedReviewProvider());
+ const html=renderProvenance(view(state,'TRK-104',{mode:'today',review:{...review,vehicleId:'TRK-104'},showVehicleSelector:false}));
+ assert.match(html,/<details data-details-key="review-details"><summary>Evidence and review details/);assert.doesNotMatch(html,/data-vehicle-select/);assert.doesNotMatch(html,/<details[^>]* open/);
 });

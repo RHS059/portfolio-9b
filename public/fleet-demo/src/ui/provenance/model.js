@@ -56,5 +56,5 @@ export function reviewState(model) {
   const version = review.provenance?.configVersion ?? review.configVersion;
   const asOf = review.provenance?.asOf ?? review.asOf;
   if (version == null || version !== model.configurationVersion || (model.asOf && asOf !== model.asOf)) return {kind:'stale', label:'Review is not current for this configuration'};
-  return {kind:'current', label:review.mode === 'recorded' ? 'Recorded review · not a live model call' : 'Deterministic demo review · no model call'};
+  return {kind:'current', label:review.mode === 'recorded' ? 'Recorded review · not a live model call' : 'Simulated review · no live AI call'};
 }

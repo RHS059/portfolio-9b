@@ -18,11 +18,11 @@ export function renderSourceControls(model, {idPrefix, scope = 'field'} = {}) {
     <p class="fp-kicker">01 / ${esc(model.selectedVehicleId || 'VEHICLE')}</p>
     <h3>Choose the source</h3>
     <p>Choose the trusted source for this vehicle. Import order never chooses it.</p>
-    <div class="fp-button-row" role="group" aria-label="Authoritative odometer source">${model.sources.map(source => {
+    <div class="fp-button-row" role="group" aria-label="Chosen odometer source">${model.sources.map(source => {
       const chosen = policy?.sourceId === source;
       return `<button type="button" data-action="set-authority" data-source="${esc(source)}" data-ui-key="authority-${esc(source)}" aria-pressed="${chosen}" ${chosen?'disabled':''}>${chosen?'Using':'Use'} ${esc(source)}</button>`;
     }).join('') || '<p>No source records are available.</p>'}</div>
-    <p class="fp-meta">Configuration v${esc(model.configurationVersion)}${policy ? ` · effective ${esc(timeLabel(policy.effectiveFrom))}` : ' · authority needs an explicit decision'}</p>
+    <p class="fp-meta">Configuration v${esc(model.configurationVersion)}${policy ? ` · effective ${esc(timeLabel(policy.effectiveFrom))}` : ' · no source selected yet'}</p>
     <p class="fp-preserve">Raw values and service history stay unchanged.</p>
   </section>
   <section class="fp-card" aria-label="Integration exclusions">
@@ -35,11 +35,10 @@ export function renderSourceControls(model, {idPrefix, scope = 'field'} = {}) {
       const excluded = sourceAlreadyExcluded(model,source,validScope);
       return `<button type="button" data-action="add-exclusion" data-source="${esc(source)}" data-scope="choose" data-ui-key="exclude-source-${esc(source)}" ${excluded?'disabled':''}>${excluded?'Excluded':'Exclude'} ${esc(source)}</button>`;
     }).join('')}</div>
-    <p class="fp-meta">An exclusion changes eligibility, not the raw record. Exclude one exact reading in the history below.</p>
+    <p class="fp-meta">Excluded readings stay in the history. Individual records can be excluded below.</p>
     <details data-details-key="exclusion-rules"><summary>${model.exclusions.length} recorded exclusion rule${model.exclusions.length===1?'':'s'}</summary>${model.exclusions.length ? `<ul class="fp-rule-list">${model.exclusions.map(rule => `<li><strong>${esc(rule.sourceId || 'All sources')} · ${esc(rule.readingId ? `reading ${rule.readingId}` : `${rule.vehicleId || 'all vehicles'} / ${rule.field || 'all fields'}`)}</strong><span>${esc(rule.reason || 'No reason supplied')}</span><small>${esc(rule.id)} · v${esc(rule.version ?? '?')} · effective ${esc(timeLabel(rule.effectiveFrom))}${rule.effectiveUntil?` until ${esc(timeLabel(rule.effectiveUntil))}`:''}</small></li>`).join('')}</ul>` : '<p>No exclusions. Every raw record remains visible.</p>'}</details>
     <button type="button" data-action="replay" data-ui-key="replay" class="fp-wide">Recalculate using these settings ↗</button>
     <button type="button" data-action="reimport" data-ui-key="reimport" class="fp-wide">Re-import the same batch</button>
-    <p class="fp-meta">Re-import checks that duplicate records are ignored.</p>
-    <p class="fp-meta">Replay does not cancel or recreate work orders.</p>
+    <p class="fp-meta">Re-import ignores duplicates. Recalculating does not add or cancel service records.</p>
   </section>`;
 }

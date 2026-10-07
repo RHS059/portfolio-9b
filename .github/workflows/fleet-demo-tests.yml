@@ -4,6 +4,9 @@ on:
     paths: ['public/fleet-demo/**', 'app/fleet-demo/**', 'scripts/fleet-browser-smoke.mjs', '.github/workflows/fleet-demo-tests.yml']
   pull_request:
     paths: ['public/fleet-demo/**', 'app/fleet-demo/**', 'scripts/fleet-browser-smoke.mjs', '.github/workflows/fleet-demo-tests.yml']
+concurrency:
+  group: fleet-demo-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -14,8 +17,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Deterministic domain and renderer tests
-        run: node --test public/fleet-demo/tests/**/*.test.js
+      - name: Fetch pinned geometry test module
+        run: |
+          curl -fsSL https://unpkg.com/three@0.128.0/build/three.module.js -o "$RUNNER_TEMP/fleet-three-r128.mjs"
+          echo "af527c374b56b8688737a42d7fcea7cb8aaeb57a4e3c6da98b4dffd55bcc3514  $RUNNER_TEMP/fleet-three-r128.mjs" | sha256sum -c -
+      - name: Complete native suite with actual Three r128 geometry
+        working-directory: public/fleet-demo
+        env:
+          FLEET_THREE_MODULE: ${{ runner.temp }}/fleet-three-r128.mjs
+        run: node --test
   browser:
     runs-on: ubuntu-latest
     timeout-minutes: 12
@@ -31,7 +41,21 @@ jobs:
       - name: Exercise Fleet demo in Chromium
         env:
           PLAYWRIGHT_PACKAGE: ${{ runner.temp }}/fleet-browser
+          REQUIRE_FACILITIES: '1'
         run: node scripts/fleet-browser-smoke.mjs
+      - name: Independent browser acceptance
+        env:
+          PLAYWRIGHT_PACKAGE: ${{ runner.temp }}/fleet-browser
+          FLEET_BROWSER_URL: http://127.0.0.1:8024/
+          FLEET_SOURCE_REVISION: ${{ github.sha }}
+          FLEET_TEST_ENV: GitHub Actions ubuntu-latest Chromium
+          FLEET_EVIDENCE_DIR: fleet-browser-evidence/independent
+        run: |
+          python3 -m http.server 8024 --directory public/fleet-demo &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          for i in {1..40}; do curl -fsS "$FLEET_BROWSER_URL" >/dev/null && break; sleep 0.1; done
+          node --test public/fleet-demo/tests/browser/fleet-workflow.test.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

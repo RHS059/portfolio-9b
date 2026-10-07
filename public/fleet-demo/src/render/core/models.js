@@ -12,7 +12,7 @@ export function createModelGeometry(T,kind){
   for(const [w,l,h,x,y,z,key] of MODEL_REGISTRY[kind]||MODEL_REGISTRY.truck){
     const indexed=new T.BoxGeometry(w,l,h);const g=indexed.toNonIndexed();indexed.dispose();g.translate(x,y,z);
     const p=g.getAttribute('position'),n=g.getAttribute('normal'),color=new T.Color(THEME[key]);
-    for(let i=0;i<p.count;i++){positions.push(p.getX(i),p.getY(i),p.getZ(i));normals.push(n.getX(i),n.getY(i),n.getZ(i));colors.push(color.r,color.g,color.b);}g.dispose();
+    for(let i=0;i<p.count;i++){positions.push(p.getX(i),p.getY(i),p.getZ(i));normals.push(n.getX(i),n.getY(i),n.getZ(i));const shade=n.getZ(i)>.5?1:n.getX(i)>.5?.88:n.getY(i)>.5?.93:.84;colors.push(color.r*shade,color.g*shade,color.b*shade);}g.dispose();
   }
   const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));geometry.setAttribute('normal',new T.Float32BufferAttribute(normals,3));geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));geometry.computeBoundingSphere();return geometry;
 }

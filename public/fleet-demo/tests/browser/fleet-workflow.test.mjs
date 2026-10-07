@@ -121,8 +121,9 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
       assert.deepEqual((await state(page)).scenario,initial.scenario);
     });
     await run('illustrative consequence and historical-unknown caveats stay visible',async()=>{
-      await page.locator('[data-stage="2"]').click();assert.match(await page.locator('#chapter-copy').innerText(),/illustrate.*exact old trigger is unknown/i);
+      await page.locator('[data-stage="2"]').click();assert.match(await page.locator('#chapter-copy').innerText(),/exact maintenance-trigger rule is unknown/i);
       await page.locator('#about-toggle').click();assert.match(await page.locator('#about-panel').innerText(),/not live telemetry|not live/i);
+      assert.match(await page.locator('#about-panel').innerText(),/illustrative/i);
       await page.locator('#about-close').click();
     });
     await run('narrow viewport retains essential authority controls',async()=>{

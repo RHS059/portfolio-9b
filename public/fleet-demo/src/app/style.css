@@ -6,3 +6,4 @@
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 
 .project-info h2{font-size:23px;font-weight:500;letter-spacing:-.035em;margin:8px 0 26px}.project-info dl{margin:0;display:grid;gap:24px}.project-info dt{font:9px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:7px}.project-info dd{margin:0;font-size:13px;line-height:1.7;color:var(--ink)}.project-info .project-outcome{border-top:1px solid var(--line);padding-top:23px}.project-info .project-outcome dd{font-size:20px;line-height:1.45;letter-spacing:-.03em}#project-info[hidden],#source-inspector[hidden]{display:none}@media(max-width:1120px) and (min-width:681px){.project-info dl{grid-template-columns:repeat(2,minmax(0,1fr))}.project-info .project-outcome{border-top:0;padding-top:0}}
+.world-subtitle{font-size:10px;line-height:1.5;color:var(--muted);margin:6px 0 0;max-width:360px}

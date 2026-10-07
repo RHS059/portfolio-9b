@@ -2,10 +2,7 @@ import {escapeHTML as esc, formatNumber, timeLabel, humanize, reasonLabel, match
 
 export function renderReadingHistory(model) {
   const decisions = new Map(model.decisions.filter(d => !d.vehicleId || d.vehicleId === model.selectedVehicleId).map(d => [d.readingId,d]));
-  return `<section class="fp-history" aria-label="Immutable raw reading history">
-    <p class="fp-kicker">03 / IMPORT HISTORY</p><h3>Original records</h3>
-    <p class="fp-meta">${model.rows.length} raw record${model.rows.length===1?'':'s'} · newest import first. A new import does not make an old observation current.</p>
-    <ol class="fp-records">${model.rows.map(row => {
+  const renderRow = row => {
       const decision = decisions.get(row.id), rules = matchingExclusions(model,row);
       const excluded = rules.length > 0 || decision?.status === 'excluded';
       return `<li class="fp-record" data-reading-id="${esc(row.id)}">
@@ -17,6 +14,11 @@ export function renderReadingHistory(model) {
         ${rules.length ? `<p class="fp-meta">Rule${rules.length===1?'':'s'}: ${rules.map(rule => esc(rule.id)).join(', ')}</p>` : ''}
         <button type="button" data-action="add-exclusion" data-scope="reading" data-reading="${esc(row.id)}" data-source="${esc(row.sourceId)}" data-ui-key="exclude-reading-${esc(row.id)}" aria-label="Exclude reading ${esc(row.id)}" ${excluded?'disabled':''}>${excluded?'Excluded · raw retained':'Exclude this reading'}</button>
       </li>`;
-    }).join('') || '<li class="fp-empty">No raw readings for this vehicle.</li>'}</ol>
+  };
+  return `<section class="fp-history" aria-label="Immutable raw reading history">
+    <p class="fp-kicker">03 / IMPORT HISTORY</p><h3>Original records</h3>
+    <p class="fp-meta">${model.rows.length} raw record${model.rows.length===1?'':'s'} · newest import first. Observation and import times are kept separately.</p>
+    <ol class="fp-records">${model.rows.slice(0,2).map(renderRow).join('')||'<li class="fp-empty">No raw readings for this vehicle.</li>'}</ol>
+    ${model.rows.length>2?`<details data-details-key="earlier-readings"><summary>Earlier readings (${model.rows.length-2})</summary><ol class="fp-records">${model.rows.slice(2).map(renderRow).join('')}</ol></details>`:''}
   </section>`;
 }

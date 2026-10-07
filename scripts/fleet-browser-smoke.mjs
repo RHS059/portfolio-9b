@@ -12,17 +12,21 @@ const mime={'.html':'text/html','.js':'text/javascript','.json':'application/jso
 const server=http.createServer(async(req,res)=>{try{const target=path.resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://local').pathname.replace(/\/$/,'/index.html')));if(!target.startsWith(root+path.sep))throw Error('outside root');const body=await fs.readFile(target);res.writeHead(200,{'content-type':mime[path.extname(target)]||'application/octet-stream'});res.end(body);}catch{res.writeHead(404);res.end('Not found');}});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const url=`http://127.0.0.1:${server.address().port}/`;
-let browser;const evidence={url,startedAt:new Date().toISOString(),checks:[],errors:[],notes:['CI Chromium software rendering is functional evidence, not named-hardware GPU performance.']};
+let browser;const evidence={url,startedAt:new Date().toISOString(),checks:[],errors:[],console:[],notes:['CI Chromium software rendering is functional evidence, not named-hardware GPU performance.']};
 try{
  browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  const page=await browser.newPage({viewport:{width:1600,height:1000},deviceScaleFactor:1});
  page.on('pageerror',error=>evidence.errors.push(String(error)));
+ page.on('console',msg=>{if(['warning','warn','error'].includes(msg.type()))evidence.console.push({level:msg.type(),text:msg.text()});});
  await page.goto(url,{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>{const m=window.__fleetDemo?.getMetrics?.();return m?.ready&&m.mapTilesLoaded;},undefined,{timeout:30000});
  if(process.env.REQUIRE_FACILITIES==='1')await page.waitForFunction(()=>window.__fleetDemo.getMetrics().facilitiesLoaded,undefined,{timeout:15000});
- await page.waitForTimeout(250);
+ await page.waitForTimeout(800);
+ await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded;},undefined,{timeout:30000});
  await page.screenshot({path:path.join(out,'01-desktop-initial.png'),fullPage:true});
  const state=()=>page.evaluate(()=>window.__fleetDemo.getState());
+ for(const id of ['depot','oict','centerpoint']){await page.locator(`[data-focus="${id}"]`).click();await page.waitForTimeout(750);await page.waitForFunction(()=>window.__fleetDemo.getMetrics().mapTilesLoaded,undefined,{timeout:20000});await page.screenshot({path:path.join(out,`facility-${id}.png`),fullPage:true});}
+ await page.locator('[data-focus="depot"]').click();
  const initial=await state();
  assert.equal(initial.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').status,'unresolved');
  assert.equal(initial.evaluation.vehicles.find(v=>v.vehicleId==='TRK-208').sourceId,'A');
@@ -67,8 +71,16 @@ assert.equal(await page.evaluate(()=>document.querySelector('#project-info').get
  evidence.checks.push('390px responsive layout stacks metadata below scene without overlap or horizontal overflow');
  await page.setViewportSize({width:1600,height:1000});
  const beforeLoss=await state();
- const lost=await page.evaluate(()=>{const canvas=document.querySelector('.maplibregl-canvas');if(!canvas)return false;canvas.dispatchEvent(new Event('webglcontextlost',{cancelable:true}));return true;});
- if(lost){await page.waitForTimeout(150);assert.equal(JSON.stringify((await state()).scenario.readings),JSON.stringify(beforeLoss.scenario.readings));await page.screenshot({path:path.join(out,'04-context-loss.png'),fullPage:true});evidence.checks.push('context-loss fallback preserves source records');}
+ for(const selector of ['.fleet-three-overlay','.maplibregl-canvas']){
+   const available=await page.evaluate(selector=>{const canvas=document.querySelector(selector);if(!canvas)return false;const gl=canvas.getContext('webgl2')||canvas.getContext('webgl');const ext=gl?.getExtension('WEBGL_lose_context');if(!ext)return false;window.__fleetTestContextExtension=ext;ext.loseContext();return true;},selector);
+   assert.equal(available,true,`Context-loss extension required for ${selector}`);
+   await page.waitForFunction(()=>window.__fleetDemo.getMetrics().contextLost,undefined,{timeout:10000});
+   assert.equal(JSON.stringify((await state()).scenario.readings),JSON.stringify(beforeLoss.scenario.readings));
+   await page.screenshot({path:path.join(out,selector.includes('three')?'04-overlay-context-loss.png':'04-map-context-loss.png'),fullPage:true});
+   await page.evaluate(()=>window.__fleetTestContextExtension.restoreContext());
+   await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return !m.contextLost&&m.ready&&m.renderer.includes('Three');},undefined,{timeout:15000});
+   evidence.checks.push(`${selector} actual context loss and recovery preserve records`);
+ }
  await page.getByRole('link',{name:'Original Reno console ↗'}).click();await page.waitForLoadState('domcontentloaded');await page.getByRole('button',{name:'Live',exact:true}).click();
  for(const mode of ['2D','3D','Isometric'])await page.getByRole('button',{name:mode,exact:true}).click();
  await page.getByRole('button',{name:'Follow vehicle',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Following',exact:true}).isVisible(),true);await page.getByRole('button',{name:'Following',exact:true}).click();

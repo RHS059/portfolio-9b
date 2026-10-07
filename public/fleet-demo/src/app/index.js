@@ -6,25 +6,25 @@ import {createProvenancePanel as createFallbackPanel} from './fallback-provenanc
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
 const chapters = [
-  {title:'A migration in progress',short:'Partial migration',copy:'TRK-104 has moved from Provider A to Provider B. TRK-208 is still on A, so the old integration must stay active. Each vehicle needs its own source setting.'},
-  {title:'The old reading returns',short:'Nightly conflict',copy:'Provider A’s last odometer froze before its device was removed. Nightly imports bring the old reading back alongside Provider B’s current reading. Raw imports show both streams.'},
-  {title:'The shop spots the loop',short:'Repeated maintenance',copy:'Shop technicians notice repeat oil changes and tire rotations within the same week. The financial loss was not quantified. These shop visits illustrate the consequence; the exact old trigger is unknown.'},
-  {title:'Choose the source',short:'Choose the source',copy:'Inspect TRK-104 and choose Provider B for its odometer. Keep TRK-208 on A. Exclusions can apply to an integration, vehicle, field or individual reading. Then recalculate the odometer without changing the original readings or service records.'},
-  {title:'Check the readings again',short:'Verify the result',copy:'Verify TRK-104 uses the source you chose and TRK-208 still uses A. If that source has no usable reading, the odometer stays unresolved. Re-importing the same record or recalculating with the same settings must not duplicate anything.'}
+  {title:'The shop noticed the repeats',short:'Back in the shop',copy:'The same trucks were getting oil changes and tire rotations more than once in the same week. Shop technicians asked why they kept coming back. The extra work cost the customer money; the loss was not quantified.'},
+  {title:'Two providers still connected',short:'A partial migration',copy:'The customer was switching providers. TRK-104 had moved to B, while TRK-208 still used A. Both accounts stayed open. Each vehicle needed its own source setting.'},
+  {title:'The old reading came back nightly',short:'Conflicting readings',copy:'Provider A’s odometer froze before its device was removed. Provider B had current readings. Each night, the system switched between old and current readings. The exact maintenance-trigger rule is unknown.'},
+  {title:'Choose the source',short:'Stop using the old reading',copy:'Choose Provider B for TRK-104’s odometer. Keep TRK-208 on A. Exclude old readings at the integration, vehicle, field or individual-record level. Recalculate without changing the original readings or completed service records.'},
+  {title:'Check before another visit',short:'Verify the readings',copy:'Check that TRK-104 uses B and TRK-208 still uses A. If the selected source has no usable reading, leave it unresolved. Importing the same records again must not duplicate them or create another service entry.'}
 ];
 let scenario, evaluation, domain, scene, panel, sim;
 let mode='then', stage=0, selectedVehicleId='TRK-104', view='iso', follow=false;
 let review=null, notifications=[], commandSequence=0, reviewing=false, reviewSequence=0;
 let lastMetricUpdate=0;
 let ready=false, initialCameraHandled=false, manualCameraUsed=false;
-const chapterSites=['centerpoint','oict','depot','depot','centerpoint'];
+const chapterSites=['depot','depot','depot','depot','depot'];
 const feedback = text => { $('#app-feedback').textContent=text; };
 
 function snapshot(timeSeconds=0,paused=false){
   const resolved=evaluation?.vehicles.find(v=>v.vehicleId==='TRK-104')?.status==='resolved';
-  const shop=stage===2 || (stage>=3 && !resolved);
+  const shop=stage<=2 || (stage>=3 && !resolved);
   // Illustrative repeated visit loop only; it never schedules or modifies service facts.
-  const servicePhase=(timeSeconds%32)/32;
+  const servicePhase=((timeSeconds+13)%32)/32;
   const servicePose=servicePhase<.4?{routeId:'factory-to-depot',progress:servicePhase/.4,status:'en-route-to-service'}:servicePhase<.65?{routeId:'depot-bay',progress:0,status:'workshop'}:{routeId:'depot-to-factory',progress:(servicePhase-.65)/.35,status:'returning'};
   return {timeSeconds,paused,selectedId:selectedVehicleId,stage,issueActive:stage>0&&!resolved,authorityResolved:!!resolved,
     vehicles:[
@@ -52,7 +52,7 @@ function render(){
   $('#canonical-reading').textContent=canonical?.status==='resolved'?`${Math.round(canonical.valueKm/1.609344).toLocaleString('en-US')} mi`:'Unresolved';
   $('#canonical-source').textContent=canonical?.status==='resolved'?`${canonical.sourceId} · derived replay`:'No usable reading from the chosen source';
   $('#integrity-count').textContent=scenario?`${scenario.readings.length} readings kept`:'Raw records kept';
-  if(panel&&scenario)panel.update({mode,selectedVehicleId,readings:scenario.readings,policies:scenario.policies,exclusions:scenario.exclusions,decisions:evaluation.decisions,serviceHistory:scenario.serviceFacts||[],review:review?.vehicleId===selectedVehicleId?review:null,configurationVersion:scenario.configVersion,authorityStatus:canonical?.status||'unresolved',canonical,vehicles:scenario.vehicles,notifications,asOf:scenario.asOf,reviewing,assumptions:scenario.fixture?.assumptions||[]});
+  if(panel&&scenario)panel.update({mode,showVehicleSelector:false,selectedVehicleId,readings:scenario.readings,policies:scenario.policies,exclusions:scenario.exclusions,decisions:evaluation.decisions,serviceHistory:scenario.serviceFacts||[],review:review?.vehicleId===selectedVehicleId?review:null,configurationVersion:scenario.configVersion,authorityStatus:canonical?.status||'unresolved',canonical,vehicles:scenario.vehicles,notifications,asOf:scenario.asOf,reviewing,assumptions:scenario.fixture?.assumptions||[]});
   if(scene&&sim){const s=sim.getState();scene.update(snapshot(s.timeSeconds,s.paused));}
 }
 function focusChapter(){if(!follow)scene?.setFocus(chapterSites[stage]);}
