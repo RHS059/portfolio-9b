@@ -141,3 +141,14 @@ test('new sidebar scenes start at the top but same-scene updates keep reading po
  const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();const api=window.__fleetDemo,body=host.root.querySelector('#sidebar-story-body');
  api.seekStory(6,.2);body.scrollTop=220;api.seekStory(6,.3);assert.equal(body.scrollTop,220);host.root.querySelector('#start-story-manual').dispatchEvent(new Event('click'));assert.equal(api.getState().stage,7);assert.equal(body.scrollTop,0);controller.dispose();
 });
+
+
+test('icon playback toggles accessible state without replacing SVGs and all camera views stay available',async t=>{
+ const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();host.flush();
+ const api=window.__fleetDemo,button=host.root.querySelector('#pause'),play=host.root.querySelectorAll('[data-playback-icon="play"]'),pause=host.root.querySelectorAll('[data-playback-icon="pause"]');
+ assert.equal(api.getState().view,'iso');assert.equal(host.root.querySelector('[data-view="iso"]').getAttribute('aria-pressed'),'true');assert.equal(host.root.querySelector('#overview'),null);assert.equal(host.root.querySelector('#follow'),null);
+ assert.equal(play.length,2);assert.equal(pause.length,2);assert.ok(play.every(icon=>!icon.hidden));assert.ok(pause.every(icon=>icon.hidden));
+ button.dispatchEvent(new Event('click'));assert.equal(button.getAttribute('aria-label'),'Pause story');assert.equal(button.getAttribute('title'),'Pause story');assert.ok(play.every(icon=>icon.hidden));assert.ok(pause.every(icon=>!icon.hidden));assert.equal(host.root.querySelector('#camera-controls').hidden,false);
+ for(const view of ['2d','3d','iso']){host.root.querySelector(`[data-view="${view}"]`).dispatchEvent(new Event('click'));assert.equal(api.getState().view,view);assert.equal(api.getState().exploring,true);assert.equal(api.getState().simulation.paused,true);assert.equal(host.root.querySelector(`[data-view="${view}"]`).getAttribute('aria-pressed'),'true');}
+ assert.equal(button.getAttribute('aria-label'),'Play story');assert.ok(play.every(icon=>!icon.hidden));assert.ok(pause.every(icon=>icon.hidden));controller.dispose();
+});

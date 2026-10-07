@@ -45,17 +45,16 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     if(!control||!advance||typeof globalThis.getComputedStyle!=='function')return;
     control.style.removeProperty('--mobile-playback-bottom');
     const computed=getComputedStyle(control);if(computed.display==='none'||computed.position!=='fixed')return;
-    const rect=control.getBoundingClientRect(),region=advance.getBoundingClientRect();
-    const bottom=floatingPlaybackBottom({viewportHeight:doc.documentElement.clientHeight||window.innerHeight,bottom:Number.parseFloat(computed.bottom)||14,height:rect.height,left:rect.left,right:rect.right,region});
+    const rect=control.getBoundingClientRect(),regions=[advance.getBoundingClientRect(),$('#camera-controls')?.getBoundingClientRect()];
+    const bottom=floatingPlaybackBottom({viewportHeight:doc.documentElement.clientHeight||window.innerHeight,bottom:Number.parseFloat(computed.bottom)||14,height:rect.height,left:rect.left,right:rect.right,regions});
     control.style.setProperty('--mobile-playback-bottom',`${bottom}px`);
   }
   function renderPlayback(){
     const paused=sim?.getState().paused??true;$('.workspace').dataset.playing=String(!paused);
-    $('#mobile-pause').textContent=paused?'▶ Play story':'Ⅱ Pause story';$('#mobile-pause').setAttribute('aria-label',paused?'Play story':'Pause story');$('#mobile-pause').setAttribute('aria-pressed',String(!paused));$('#mobile-pause').disabled=!ready;
-    $('#pause').textContent=paused?'▶ Play':'Ⅱ Pause';$('#pause').setAttribute('aria-label',paused?'Play story':'Pause story');$('#pause').setAttribute('aria-pressed',String(!paused));
-    $('#camera-controls').hidden=!paused&&!exploring;
+    $$('#pause, #mobile-pause').forEach(button=>{const label=paused?'Play story':'Pause story';button.setAttribute('aria-label',label);button.setAttribute('title',label);button.setAttribute('aria-pressed',String(!paused));button.disabled=!ready;});
+    $$('[data-playback-icon]').forEach(icon=>{icon.hidden=(icon.dataset.playbackIcon==='play')!==paused;});
     $('#start-story').disabled=!ready||stage===STORY_SCENES.length-1;$('#start-story-manual').disabled=!ready||stage===STORY_SCENES.length-1;$('#pause').disabled=!ready;$('#story-progress').disabled=!ready;
-    $$('[data-scene-index], [data-view], [data-focus], #overview, #follow').forEach(button=>{button.disabled=!ready;});
+    $$('[data-scene-index], [data-view]').forEach(button=>{button.disabled=!ready;});
     $('#playback-status').textContent=exploring?(paused?'Manual view · paused':'Manual view · playing'):story.complete?'End of story':paused?(reducedMotion.matches?'Paused · reduced motion':'Paused · explore at your pace'):'Autoplay · pause anytime';
     positionMobilePlayback();
   }
@@ -66,7 +65,6 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     scene?.setFollow(follow);
     if(stage===8){scene?.setView(view);scene?.setFocus(null);}
     else scene?.setView(view,{focusId:stage<=1?'TRK-104':'depot'});
-    $('#follow').setAttribute('aria-pressed',String(follow));
   }
   function renderStory(){
     const workspace=$('.workspace');workspace.dataset.intro=String(intro);workspace.dataset.scene=story.id;workspace.dataset.exploring=String(exploring);
@@ -85,7 +83,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     });
     $('#story-position').textContent=`${String(stage+1).padStart(2,'0')} / 09 · ${story.label}`;
     $('#previous-chapter').disabled=!ready||stage===0;
-    $('#next-chapter').textContent='Next →';$('#next-chapter').disabled=!ready||stage===8;$('#next-chapter').setAttribute('aria-label','Next scene');
+    $('#next-chapter').disabled=!ready||stage===8;$('#next-chapter').setAttribute('aria-label','Next scene');
     $$('[data-story-overlay]').forEach(element=>{element.hidden=exploring||element.dataset.storyOverlay!==story.id;});
     $$('[data-scene-index]').forEach(button=>{const index=Number(button.dataset.sceneIndex);button.setAttribute('aria-current',index===stage?'step':'false');button.dataset.complete=String(index<stage);});
     renderPlayback();
@@ -129,7 +127,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   }
   function togglePlayback(){if(!sim)return;if(story.complete&&!exploring)sim.seek(0);setPaused(!sim.getState().paused);}
   function enterManualView(){setPaused(true);exploring=true;renderStory();}
-  function focusFacility(id){enterManualView();follow=false;scene?.setFollow(false);scene?.setFocus(id);$('#follow').setAttribute('aria-pressed','false');}
+  function focusFacility(id){enterManualView();follow=false;scene?.setFollow(false);scene?.setFocus(id);}
   function selectEntity(id){setPaused(true);if(['oict','centerpoint','depot'].includes(id)){focusFacility(id);return;}selectVehicle(id);}
   function selectVehicle(id){if(!['TRK-104','TRK-208'].includes(id))return;selectedVehicleId=id;scene?.setFocus(id);render();}
   function openDialog(id){
@@ -176,10 +174,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     on($('#run-story-review'),'click',()=>{mode='today';openDialog('#source-dialog');render();void handleAction({type:'review-imports'});});
     on($('#source-close'),'click',()=>closeDialog());
     $$('[data-view]').forEach(button=>on(button,'click',()=>{enterManualView();view=button.dataset.view;$$('[data-view]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));scene?.setView(view);}));
-    $$('[data-focus]').forEach(button=>on(button,'click',()=>focusFacility(button.dataset.focus)));
-    on($('#overview'),'click',()=>focusFacility(null));
-    on($('#follow'),'click',()=>{enterManualView();follow=!follow;scene?.setFollow(follow);if(follow)scene?.setFocus(selectedVehicleId);$('#follow').setAttribute('aria-pressed',String(follow));});
-    on($('#world'),'pointerdown',()=>{enterManualView();follow=false;scene?.setFollow(false);$('#follow').setAttribute('aria-pressed','false');});
+    on($('#world'),'pointerdown',()=>{enterManualView();follow=false;scene?.setFollow(false);});
     on($('#world'),'wheel',event=>{enterManualView();forwardSceneLabelWheel(event,$('#world .maplibregl-canvas-container'));},{passive:false});
     on(doc,'keydown',event=>{
       if(activeDialog){

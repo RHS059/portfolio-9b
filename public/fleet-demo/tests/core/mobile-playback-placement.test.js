@@ -16,3 +16,10 @@ test('invalid or cramped geometry preserves the safe-area inset',()=>{
  assert.equal(floatingPlaybackBottom({...input,region:bounds(NaN,800)}),14);assert.equal(floatingPlaybackBottom({}),14);
  const position=floatingPlaybackBottom({viewportHeight:200,bottom:70,height:46,left:120,right:270,region:bounds(5,100)});assert.ok(position>=70);
 });
+
+test('floating playback clears the camera icons on narrow phones and all supplied regions',()=>{
+ for(const width of [320,390]){
+  const left=(width-48)/2,right=left+48,regions=[{top:660,bottom:710,left:24,right:width-24},{top:770,bottom:826,left:width-182,right:width-28}];
+  for(const order of [regions,[...regions].reverse()]){const bottom=floatingPlaybackBottom({viewportHeight:844,bottom:14,height:48,left,right,regions:order});const top=844-bottom-48,low=top+48;assert.ok(top>=8);assert.ok(low<=830);for(const region of regions)assert.ok(right<=region.left||left>=region.right||low<=region.top||top>=region.bottom);}
+ }
+});

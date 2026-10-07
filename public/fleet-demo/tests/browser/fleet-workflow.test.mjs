@@ -108,10 +108,9 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
       const next=await state(page);assert.equal(canonical(next).reason,'authoritative-reading-excluded');assert.equal(canonical(next).readingId,null);
       assert.equal(canonical(next,'TRK-208').status,'resolved');unchanged(next,initial);
     });
-    await run('vehicle selection and view/follow controls do not mutate domain',async()=>{
+    await run('vehicle selection and view controls do not mutate domain',async()=>{
       const prior=await state(page);await chooseVehicle(page,'TRK-208');if(!(await state(page)).simulation.paused)await page.locator('#pause').click();await page.locator('[data-view="iso"]').click();
       for(const view of ['2d','3d','iso'])await page.locator(`[data-view="${view}"]`).click();
-      await page.locator('#follow').click();await page.locator('#follow').click();
       const next=await state(page);assert.equal(next.selectedVehicleId,'TRK-208');assert.deepEqual(next.scenario,prior.scenario);
     });
     await run('pause and resume control scene time without mutating records',async()=>{

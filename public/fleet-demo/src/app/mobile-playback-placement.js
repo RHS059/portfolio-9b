@@ -1,6 +1,7 @@
-/** Keep the floating pause reachable without covering the persistent mode choices. */
-export function floatingPlaybackBottom({viewportHeight,bottom=14,height=46,left=0,right=0,region,gap=12}={}) {
+/** Keep the floating pause reachable without covering persistent choices or the scene view controls. */
+export function floatingPlaybackBottom({viewportHeight,bottom=14,height=46,left=0,right=0,region,regions,gap=12}={}) {
   const base=Math.max(0,Number.isFinite(bottom)?bottom:14);
+  if(Array.isArray(regions))return [...regions].filter(Boolean).sort((a,b)=>b.top-a.top).reduce((position,region)=>floatingPlaybackBottom({viewportHeight,bottom:position,height,left,right,region,gap}),base);
   if(!Number.isFinite(viewportHeight)||viewportHeight<=0||!Number.isFinite(height)||height<=0||!region)return base;
   if(![region.top,region.bottom,region.left,region.right].every(Number.isFinite))return base;
   const low=viewportHeight-base,high=low-height;

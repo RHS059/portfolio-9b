@@ -10,3 +10,21 @@ export async function enterCameraView(page,selector='[data-view="iso"]'){
   await page.waitForFunction(()=>!window.__fleetDemo.getMetrics().cameraMoving);
 }
 export async function reloadStory(page){await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo?.getState?.());await waitForStoryText(page);}
+const siteNames={oict:'OICT · Oakland port',centerpoint:'Drone factory',depot:'Depot / workshop'};
+/** A site is selected through its actual map label, zooming out with the wheel if needed. */
+export async function focusSceneSite(page,id){
+  if(!siteNames[id])throw new Error(`Unknown scene site ${id}`);
+  await closeStoryDialogs(page);await pauseScene(page);
+  const label=page.locator('.fleet-scene-label').filter({hasText:siteNames[id]});
+  for(let step=0;step<12&&!await label.isVisible();step++){
+    const previous=await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState.zoom),box=await page.locator('#world').boundingBox();await page.mouse.move(box.x+box.width*.5,box.y+box.height*.5);await page.mouse.wheel(0,650);
+    await page.waitForFunction(previous=>{const m=window.__fleetDemo.getMetrics();return m.viewState.zoom<previous-.05&&!m.cameraMoving&&m.mapTilesLoaded;},previous);
+  }
+  await label.click();await page.waitForFunction(id=>window.__fleetDemo.getMetrics().camera.focus===id&&!window.__fleetDemo.getMetrics().cameraMoving,id);
+}
+/** Stop following by the supported manual pan gesture, without changing scene time. */
+export async function stopCameraFollow(page){
+  const box=await page.locator('#world').boundingBox(),x=box.x+box.width*.25,y=box.y+box.height*.35;
+  await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+12,y,{steps:4});await page.mouse.up();
+  await page.waitForFunction(()=>!window.__fleetDemo.getState().follow&&!window.__fleetDemo.getMetrics().cameraMoving);
+}

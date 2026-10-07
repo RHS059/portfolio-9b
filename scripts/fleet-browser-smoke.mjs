@@ -8,14 +8,14 @@ import {ordinaryRoadRouteInfo} from '../public/fleet-demo/src/render/map/cargo-l
 import {exerciseCargoFlow} from './fleet-cargo-browser-checks.mjs';
 import {STORY_TITLE} from '../public/fleet-demo/src/app/story-timeline.js';
 import {createPerformanceProbe,profileRenderingWindows} from './fleet-performance-diagnostics.mjs';
-import {navigateStory,enterCameraView,reloadStory} from './fleet-browser-controls.mjs';
+import {navigateStory,enterCameraView,reloadStory,focusSceneSite} from './fleet-browser-controls.mjs';
 import {checkMapRegion} from '../public/fleet-demo/tests/browser/map-region-checks.mjs';
 import {createRequire} from 'node:module';
 const require=createRequire(path.join(process.env.PLAYWRIGHT_PACKAGE || '/tmp/fleet-browser','package.json'));
 const {chromium}=require('playwright');
 const root=path.resolve('public/fleet-demo'),out=path.resolve(process.env.FLEET_SMOKE_EVIDENCE_DIR||'fleet-browser-evidence');
 await fs.mkdir(out,{recursive:true});
-const mime={'.html':'text/html','.js':'text/javascript','.json':'application/json','.css':'text/css','.webp':'image/webp'};
+const mime={'.html':'text/html','.js':'text/javascript','.json':'application/json','.css':'text/css','.webp':'image/webp','.svg':'image/svg+xml'};
 const server=http.createServer(async(req,res)=>{try{const target=path.resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://local').pathname.replace(/\/$/,'/index.html')));if(!target.startsWith(root+path.sep))throw Error('outside root');const body=await fs.readFile(target);res.writeHead(200,{'content-type':mime[path.extname(target)]||'application/octet-stream'});res.end(body);}catch{res.writeHead(404);res.end('Not found');}});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const url=process.env.FLEET_DEMO_URL||`http://127.0.0.1:${server.address().port}/`;
@@ -52,7 +52,7 @@ try{
  const chooseTruck=async id=>{await openSource();const picker=page.locator('[data-vehicle-select]');if(!await picker.isVisible())await page.getByText('Check another truck',{exact:true}).click();await picker.selectOption(id);await closeSource();};
  await advanceToStage(2);await exploreScene();
  for(const id of ['depot','oict','centerpoint']){
-   phase=`facility-${id}`;await page.locator(`[data-focus="${id}"]`).click();await page.waitForTimeout(750);await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:20000});await page.screenshot({path:path.join(out,`facility-${id}.png`),fullPage:true});
+   phase=`facility-${id}`;await focusSceneSite(page,id);await page.waitForTimeout(750);await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:20000});await page.screenshot({path:path.join(out,`facility-${id}.png`),fullPage:true});
    if(id==='depot'){
      await page.waitForFunction(()=>window.__fleetDemo.getMetrics().vehicleDetail.models.some(v=>v.id==='TRK-104'));
      evidence.vehicleDetail=await page.evaluate(()=>window.__fleetDemo.getMetrics().vehicleDetail);assert.ok(evidence.vehicleDetail.visible<=3);const bayTractor=evidence.vehicleDetail.models.find(v=>v.id==='TRK-104');assert.equal(bayTractor.kind,'truck');assert.equal(bayTractor.variant,'tractor');assert.equal(bayTractor.wheelCount,10);assert.ok(bayTractor.bounds.min[1]>-1,'Workshop contains the tractor without its road trailer');
@@ -60,19 +60,19 @@ try{
    }
    if(id==='centerpoint'){
      await page.waitForFunction(()=>window.__fleetDemo.getMetrics().factoryDetailLevel==='detail');
-     const connected=!!(await state()).cargoProcess,wasPaused=(await state()).simulation.paused;if(connected&&!wasPaused)await page.locator('#pause').click();if(connected){await page.evaluate(()=>window.__fleetDemo.seekScene(0));await page.locator('[data-focus="centerpoint"]').click();}
+     const connected=!!(await state()).cargoProcess,wasPaused=(await state()).simulation.paused;if(connected&&!wasPaused)await page.locator('#pause').click();if(connected){await page.evaluate(()=>window.__fleetDemo.seekScene(0));await focusSceneSite(page,'centerpoint');}
      if(connected)await page.waitForFunction(()=>window.__fleetDemo.getMetrics().factoryAssemblyState.some(cell=>cell.active&&cell.armAction==='assemble-drone'));
      evidence.factoryDetail=await page.evaluate(()=>window.__fleetDemo.getMetrics());assert.ok(evidence.factoryDetail.factoryAssemblyState.length>0);
      if(!connected)assert.ok(evidence.factoryDetail.factoryAssemblyState.every(cell=>cell.progress===0),'Assembly stays idle without an explicit process snapshot');
      await page.screenshot({path:path.join(out,'factory-detail.png'),fullPage:true});evidence.checks.push(connected?'Factory assembly follows the explicit inbound process snapshot':'Factory detail is visible and assembly stays idle without process input');
      if(!connected&&!wasPaused)await page.locator('#pause').click();
      const approachProgress=routeDistance('port-to-factory',1)/routeDistance('delivery',1)-.000001,approachTime=connected?ordinaryRoadRouteInfo().approachTimeSeconds:((approachProgress-.59+1)%1)/.006;
-     await page.evaluate(time=>window.__fleetDemo.seekScene(time),approachTime);await page.locator('[data-focus="centerpoint"]').click();await page.waitForTimeout(750);await page.screenshot({path:path.join(out,'factory-approach-close.png'),fullPage:true});
+     await page.evaluate(time=>window.__fleetDemo.seekScene(time),approachTime);await focusSceneSite(page,'centerpoint');await page.waitForTimeout(750);await page.screenshot({path:path.join(out,'factory-approach-close.png'),fullPage:true});
      const factoryBox=await page.locator('.maplibregl-canvas').boundingBox();await page.mouse.move(factoryBox.x+factoryBox.width*.5,factoryBox.y+factoryBox.height*.5);
      for(let step=0;step<12;step++){if(await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState.zoom<=15.3))break;await page.mouse.wheel(0,550);await page.waitForTimeout(750);}
      await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.mapTilesLoaded&&!m.cameraMoving&&m.viewState.zoom<=15.3&&m.vehicleDetail.visible===0;},undefined,{timeout:20000});
      evidence.factoryOverview=await page.evaluate(()=>window.__fleetDemo.getMetrics());await page.screenshot({path:path.join(out,'factory-approach-overview.png'),fullPage:true});
-     await page.locator('[data-focus="centerpoint"]').click();if(!wasPaused)await page.locator('#pause').click();evidence.checks.push('Factory approach is exercised in close and overview LOD with the scene clock paused');
+     await focusSceneSite(page,'centerpoint');if(!wasPaused)await page.locator('#pause').click();evidence.checks.push('Factory approach is exercised in close and overview LOD with the scene clock paused');
 
    }
    if(id==='oict'&&process.env.REQUIRE_MAPPED_PORT==='1'){
@@ -83,7 +83,7 @@ try{
    }
  }
  if(process.env.REQUIRE_CARGO_FLOW==='1'){assert.ok((await state()).cargoProcess,'Connected process must be enabled');await exerciseCargoFlow({page,evidence,out,setPhase:value=>{phase=value;}});}
- await page.locator('[data-focus="depot"]').click();
+ await focusSceneSite(page,'depot');
  phase='manual-camera';
  const sceneBox=await page.locator('.maplibregl-canvas').boundingBox();
  const mx=sceneBox.x+sceneBox.width*.72,my=sceneBox.y+sceneBox.height*.62;
@@ -125,9 +125,9 @@ try{
  evidence.checks.push('repeated replay and duplicate batch do not duplicate raw/service facts');
  await closeSource();await exploreScene();
  for(const mode of ['2d','3d','iso']){await page.locator(`[data-view="${mode}"]`).click();assert.equal((await state()).view,mode);}
- await page.locator('#follow').click();assert.equal((await state()).follow,true);
+ await navigateStory(page,0);assert.equal((await state()).follow,true);
  await setPaused(true);const paused=(await state()).simulation.timeSeconds;await page.waitForTimeout(200);assert.equal((await state()).simulation.timeSeconds,paused);
- evidence.checks.push('camera modes/follow/pause controls operate without data mutation');
+ evidence.checks.push('camera modes, story follow and pause operate without data mutation');
  await chooseTruck('TRK-208');assert.equal((await state()).selectedVehicleId,'TRK-208');
  await openSource();await page.keyboard.press('Escape');assert.equal(await page.locator('#source-dialog').isVisible(),false);
  await navigateStory(page,0);await reloadStory(page);const reset=await state();assert.equal(reset.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').status,'unresolved');assert.equal(reset.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);assert.equal(reset.follow,true);assert.equal(reset.selectedVehicleId,'TRK-104');assert.equal(reset.simulation.paused,true);
@@ -186,8 +186,8 @@ assert.equal(await page.evaluate(()=>document.querySelector('#start-story-manual
    if(beforeLoss.simulation.paused)assert.equal(recovered.simulation.timeSeconds,beforeLoss.simulation.timeSeconds);
    else assert.ok(recovered.simulation.timeSeconds>beforeLoss.simulation.timeSeconds,'Live simulation continues through recovery');
    evidence.checks.push(`${selector} actual context loss and recovery preserve records, source policy, selection and pause state`);
-   if(selector.includes('three')){await navigateStory(page,0);assert.equal((await state()).simulation.paused,true);await exploreScene();await page.locator('#overview').click();await setPaused(false);assert.equal((await state()).follow,false);}
-   else if(evidence.contextCycles.length===2){await page.locator('#follow').click();await setPaused(false);await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.camera.follow&&m.camera.focus===window.__fleetDemo.getState().selectedVehicleId&&m.viewState.zoom>17&&!m.cameraMoving;});}
+   if(selector.includes('three')){await navigateStory(page,8);await page.waitForFunction(()=>!window.__fleetDemo.getMetrics().cameraMoving);await exploreScene();await setPaused(false);assert.equal((await state()).follow,false);}
+   else if(evidence.contextCycles.length===2){await navigateStory(page,0);await exploreScene();await setPaused(false);await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.camera.follow&&m.camera.focus===window.__fleetDemo.getState().selectedVehicleId&&m.viewState.zoom>17&&!m.cameraMoving;});}
 
  }
  phase='map-region';evidence.mapRegion=await checkMapRegion({browser,url,out,assetBase:process.env.FLEET_DEMO_URL?new URL('/fleet-demo/',url).href:new URL('./',url).href});evidence.checks.push('Workshop-centered map retains a solid interior, Bayer edge and transparent exterior; wholly outside source tiles do not fetch');

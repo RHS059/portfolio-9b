@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import {navigateStory,enterCameraView,pauseScene} from './fleet-browser-controls.mjs';
+import {navigateStory,enterCameraView,pauseScene,stopCameraFollow} from './fleet-browser-controls.mjs';
 
 const counters=['Timestamp','TaskDuration','ScriptDuration','LayoutDuration','RecalcStyleDuration','LayoutCount','RecalcStyleCount','JSHeapUsedSize'];
 const difference=(before,after)=>Object.fromEntries(counters.map(name=>[name,Number.isFinite(before[name])&&Number.isFinite(after[name])?after[name]-before[name]:null]));
@@ -33,7 +33,7 @@ export async function profileRenderingWindows({page,out}){
   try{
     for(const [index,follow]of [true,false,true].entries()){
       await navigateStory(page,0);await enterCameraView(page);
-      if((await page.evaluate(()=>window.__fleetDemo.getState().follow))!==follow)await page.locator('#follow').click();
+      if(!follow)await stopCameraFollow(page);assert.equal(await page.evaluate(()=>window.__fleetDemo.getState().follow),follow);
       await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;});
       await page.waitForTimeout(750);
       await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;});

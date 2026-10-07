@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import {enterCameraView,navigateStory} from './fleet-browser-controls.mjs';
+import {enterCameraView,navigateStory,focusSceneSite} from './fleet-browser-controls.mjs';
 import {cargoTruckPosition} from '../public/fleet-demo/src/render/map/cargo-layout.js';
 import {DETAIL_MODEL_METADATA} from '../public/fleet-demo/src/render/vehicles/detail-model.js';
 
@@ -36,7 +36,7 @@ export async function exerciseCargoFlow({page,evidence,out,setPhase=()=>{}}){
     return m;
   };
   const frameMaterial=async(id,list,site)=>{
-    await page.locator(`[data-focus="${site}"]`).click();
+    await focusSceneSite(page,site);
     await page.waitForFunction(()=>!window.__fleetDemo.getMetrics().cameraMoving);
     if(site==='oict'){
       const box=await page.locator('#world').boundingBox(),x=box.x+box.width/2,y=box.y+box.height/2;
@@ -106,7 +106,7 @@ export async function exerciseCargoFlow({page,evidence,out,setPhase=()=>{}}){
   const materialState=m=>({cargo:m.cargo,products:m.products,trucks:m.trucks,actors:m.actors});
   await page.waitForTimeout(250);
   assert.deepEqual(materialState(await metrics()),materialState(warm),'Pause holds all cargo, carrier and actor poses');
-  await page.locator('[data-focus="centerpoint"]').click();
+  await focusSceneSite(page,'centerpoint');
   await page.waitForFunction(()=>!window.__fleetDemo.getMetrics().cameraMoving);
   await frameMaterial('CARGO-01-B0001','cargo','centerpoint');
   await page.screenshot({path:path.join(out,'cargo-factory-assembly.png'),fullPage:true});
@@ -131,7 +131,7 @@ export async function exerciseCargoFlow({page,evidence,out,setPhase=()=>{}}){
   }
   await seek(opening.time+2.5);await frameMaterial(opening.kit,'cargo','centerpoint');
   await page.screenshot({path:path.join(out,'cargo-box-opening.png'),fullPage:true});
-  await seek(outgoingEnabled?33.5:4.5);await page.locator('[data-focus="oict"]').click();
+  await seek(outgoingEnabled?33.5:4.5);await focusSceneSite(page,'oict');
   await page.waitForFunction(()=>!window.__fleetDemo.getMetrics().cameraMoving);
   await page.screenshot({path:path.join(out,'cargo-ship-unloading.png'),fullPage:true});
   await navigateStory(page,0);

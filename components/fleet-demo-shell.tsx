@@ -153,7 +153,7 @@ export default function FleetDemoShell() {
 
   return <div ref={rootRef} className={`workspace ${styles.root}`} data-intro="true" data-scene="question" data-playing="false">
     <PortfolioShell sidebar={<FleetSidebar />} sidebarClassName={`story-panel ${styles.sidebar}`} sidebarLabel="Fleet case study" mainClassName={styles.main}>
-      <button id="mobile-pause" className={`${portfolio.cta} ${styles.mobilePlayback}`} type="button" aria-label="Play story" aria-pressed="false" disabled>▶ Play story</button>
+      <button id="mobile-pause" className={`${portfolio.cta} ${styles.mobilePlayback}`} type="button" aria-label="Play story" aria-pressed="false" title="Play story" disabled><span data-playback-icon="play"><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false"><use href="/fleet-demo/assets/material-symbols.svg#play_arrow" /></svg></span><span data-playback-icon="pause" hidden><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false"><use href="/fleet-demo/assets/material-symbols.svg#pause" /></svg></span></button>
       <div className={styles.workspaceBody}>
         <section className={`world-panel ${portfolio.card} ${styles.worldPanel}`} aria-label="Interactive fleet story">
           <div className={styles.stageViewport}>
@@ -190,6 +190,11 @@ export default function FleetDemoShell() {
                 <span className={portfolio.eyebrow}>What I learned</span><h2>Good data needs<br />a clear owner.</h2><p>Make the source visible.<br />Make the decision deliberate.<br />Keep the history.</p>
               </div>
             </div>
+            <div id="camera-controls" className={styles.sceneViewControls} role="group" aria-label="Camera view">
+              <button className={portfolio.control} data-view="2d" type="button" aria-label="2D" title="2D map" aria-pressed="false" disabled><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false"><use href="/fleet-demo/assets/material-symbols.svg#map" /></svg></button>
+              <button className={portfolio.control} data-view="3d" type="button" aria-label="3D" title="3D perspective" aria-pressed="false" disabled><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false"><use href="/fleet-demo/assets/material-symbols.svg#view_in_ar" /></svg></button>
+              <button className={portfolio.control} data-view="iso" type="button" aria-label="ISO" title="Isometric 3D" aria-pressed="true" disabled><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false"><use href="/fleet-demo/assets/material-symbols.svg#deployed_code" /></svg></button>
+            </div>
           </div>
           <div className={`story-dock ${styles.storyDock}`} aria-label="Story playback and vehicle context">
             <div className={`impact-strip ${styles.impactStrip}`}>
@@ -202,11 +207,10 @@ export default function FleetDemoShell() {
             <label className={styles.srOnly} htmlFor="story-progress">Scrub through the story</label>
             <input id="story-progress" disabled className={styles.storyProgress} type="range" min="0" max="124" step="0.1" defaultValue="0" aria-valuetext="Scene 1 of 9" />
             <div className={styles.playbackControls}>
-              <button id="previous-chapter" className={portfolio.control} type="button" aria-label="Previous scene" aria-keyshortcuts="ArrowLeft" disabled>← Back</button>
-              <button id="pause" className={portfolio.cta} type="button" aria-label="Play story" aria-keyshortcuts="Space" disabled>▶ Play</button>
-              <button id="next-chapter" className={portfolio.control} type="button" aria-label="Next scene" aria-keyshortcuts="ArrowRight" disabled>Next →</button>
+              <button id="previous-chapter" className={portfolio.control} type="button" aria-label="Previous scene" aria-keyshortcuts="ArrowLeft" title="Previous scene" disabled><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false"><use href="/fleet-demo/assets/material-symbols.svg#skip_previous" /></svg></button>
+              <button id="pause" className={portfolio.cta} type="button" aria-label="Play story" aria-keyshortcuts="Space" title="Play story" disabled><span data-playback-icon="play"><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false"><use href="/fleet-demo/assets/material-symbols.svg#play_arrow" /></svg></span><span data-playback-icon="pause" hidden><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false"><use href="/fleet-demo/assets/material-symbols.svg#pause" /></svg></span></button>
+              <button id="next-chapter" className={portfolio.control} type="button" aria-label="Next scene" aria-keyshortcuts="ArrowRight" title="Next scene" disabled><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false"><use href="/fleet-demo/assets/material-symbols.svg#skip_next" /></svg></button>
             </div>
-            <div id="camera-controls" hidden className={styles.worldToolbar} role="group" aria-label="Camera controls"><button className={portfolio.control} data-view="2d" type="button" aria-pressed="false">2D</button><button className={portfolio.control} data-view="3d" type="button" aria-pressed="false">3D</button><button className={portfolio.control} data-view="iso" type="button" aria-pressed="true">ISO</button><button id="overview" type="button" className={portfolio.control}>Overview</button><button id="follow" type="button" className={portfolio.control} aria-pressed="true">Follow truck</button><button className={portfolio.control} data-focus="depot" type="button">Workshop</button><button className={portfolio.control} data-focus="oict" type="button">OICT</button><button className={portfolio.control} data-focus="centerpoint" type="button">Factory</button></div>
 
           </div>
           <div id="source-dialog" className={styles.sourceDialog} role="dialog" aria-modal="true" aria-labelledby="source-dialog-title" hidden>

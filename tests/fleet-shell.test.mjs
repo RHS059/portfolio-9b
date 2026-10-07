@@ -85,3 +85,22 @@ test('persistent left mode controls are outside the fading content and fleet fac
  assert.ok(app.includes("element:$('#sidebar-story-body')"));assert.match(css,/\.sidebarStoryBody \{[^}]*overflow-y: auto/);
  assert.ok(shell.indexOf('className={`impact-strip')<shell.indexOf('id="story-position"'));assert.doesNotMatch(shell,/id="about-toggle"|id="about-panel"|id="about-close"/);
 });
+
+
+test('Material Symbols are self-hosted official assets with license and provenance',async()=>{
+ const manifest=JSON.parse(await read('public/fleet-demo/assets/material-symbols.source.json'));
+ const sprite=await read('public/fleet-demo/assets/material-symbols.svg');
+ assert.equal(manifest.source,'https://github.com/google/material-design-icons');assert.equal(manifest.set,'Material Symbols Outlined');assert.match(manifest.commit,/^[a-f0-9]{40}$/);assert.equal(manifest.license,'Apache-2.0');assert.match(await read('public/fleet-demo/assets/material-symbols-LICENSE.txt'),/Apache License/);
+ for(const icon of ['skip_previous','play_arrow','pause','skip_next','map','view_in_ar','deployed_code']){assert.ok(sprite.includes(`id="${icon}"`));assert.ok(shell.includes(`material-symbols.svg#${icon}`));assert.ok(standalone.includes(`./assets/material-symbols.svg#${icon}`));assert.ok(manifest.icons.some(item=>item.name===icon&&item.url.includes(manifest.commit)));}
+ assert.doesNotMatch(sprite,/<script|<foreignObject|onload=|href=/i);assert.doesNotMatch(shell,/▶|Ⅱ|← Back|Next →/);
+});
+test('playback is icon-only and the only camera buttons live in the lower-right stage',()=>{
+ const dock=shell.slice(shell.indexOf('className={`story-dock'),shell.indexOf('id="source-dialog"'));
+ assert.doesNotMatch(dock,/camera-controls|data-view|worldToolbar/);assert.doesNotMatch(shell,/id="overview"|id="follow"|data-focus=/);
+ const stage=shell.slice(shell.indexOf('className={styles.stageViewport}'),shell.indexOf('className={`story-dock'));
+ assert.ok(stage.includes('id="camera-controls"'));assert.equal((stage.match(/data-view=/g)||[]).length,3);assert.match(stage,/data-view="iso"[^>]*aria-pressed="true"/);
+ assert.match(css,/\.sceneViewControls \{[^}]*position: absolute[^}]*right: 12px[^}]*bottom: 32px/);
+ assert.match(css,/\.root \.sceneViewControls button \{[^}]*width: 44px; height: 44px/);
+ assert.doesNotMatch(app,/\$\('#follow'\)|\$\('#overview'\)|\$\('#camera-controls'\)\.hidden/);
+ assert.ok(app.includes("view='iso'"));assert.ok(app.includes("icon.hidden=(icon.dataset.playbackIcon==='play')!==paused"));
+});
