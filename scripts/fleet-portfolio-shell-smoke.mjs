@@ -51,6 +51,7 @@ try{
  phase='providers';await seek(3,.5);
  const positions=await page.locator('[data-provider]').evaluateAll(elements=>elements.map(element=>({provider:element.dataset.provider,x:element.getBoundingClientRect().x})));
  assert.ok(positions.find(p=>p.provider==='samsara').x>positions.find(p=>p.provider==='verizon').x);
+ await page.waitForFunction(()=>/blur\(7px\).*brightness\(0\.36\)/.test(getComputedStyle(document.querySelector('#world')).filter),undefined,{timeout:2500});
  assert.match(await page.locator('#world').evaluate(element=>getComputedStyle(element).filter),/blur\(7px\).*brightness\(0\.36\)/);
  assert.match(await page.locator('[data-story-overlay="provider-switch"]').innerText(),/FOR MONTHS/);
  phase='mileage';
