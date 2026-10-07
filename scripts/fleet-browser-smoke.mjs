@@ -3,7 +3,7 @@ import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import {routeDistance} from '../public/fleet-demo/src/render/map/world.js';
+import {routeDistance,toLocal} from '../public/fleet-demo/src/render/map/world.js';
 import {createRequire} from 'node:module';
 const require=createRequire(path.join(process.env.PLAYWRIGHT_PACKAGE || '/tmp/fleet-browser','package.json'));
 const {chromium}=require('playwright');
@@ -148,14 +148,21 @@ assert.equal(await page.evaluate(()=>document.querySelector('#start-story').getB
    cycle.recovered=await page.evaluate(()=>({metrics:window.__fleetDemo.getMetrics(),graphics:window.__fleetGraphicsDiagnostics()}));
    await page.screenshot({path:path.join(out,selector.includes('three')?'04-overlay-recovered.png':`04-map-recovered-${evidence.contextCycles.length}.png`),fullPage:true});
    const viewAfter=await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState);
-   assert.ok(Math.abs(viewAfter.zoom-viewBefore.zoom)<.01);assert.ok(Math.abs(viewAfter.pitch-viewBefore.pitch)<.01);assert.ok(Math.abs(viewAfter.bearing-viewBefore.bearing)<.01);for(let i=0;i<2;i++)assert.ok(Math.abs(viewAfter.center[i]-viewBefore.center[i])<.00001);
+   assert.ok(Math.abs(viewAfter.zoom-viewBefore.zoom)<.01);assert.ok(Math.abs(viewAfter.pitch-viewBefore.pitch)<.01);assert.ok(Math.abs(viewAfter.bearing-viewBefore.bearing)<.01);
+   if(beforeLoss.follow){
+     const tracking=await page.evaluate(()=>{const m=window.__fleetDemo.getMetrics();return{camera:m.camera,target:m.cameraTarget,view:m.viewState};});
+     assert.equal(tracking.camera.focus,'TRK-208');assert.equal(tracking.camera.follow,true);assert.equal(tracking.target.id,'TRK-208');
+     const center=toLocal(tracking.view.center),errorMeters=Math.hypot(center[0]-tracking.target.x,center[1]-tracking.target.y);
+     assert.ok(errorMeters<20,`Recovered camera trails the moving truck by ${errorMeters}m`);cycle.followTracking={...tracking,errorMeters};
+   }else for(let i=0;i<2;i++)assert.ok(Math.abs(viewAfter.center[i]-viewBefore.center[i])<.00001);
    const recovered=await state();
    assert.equal(JSON.stringify(recovered.scenario),JSON.stringify(beforeLoss.scenario),'Recovery preserves readings, services and configuration');
    assert.equal(recovered.intro,beforeLoss.intro);assert.equal(recovered.selectedVehicleId,beforeLoss.selectedVehicleId);assert.equal(recovered.mode,beforeLoss.mode);assert.equal(recovered.view,beforeLoss.view);assert.equal(recovered.follow,beforeLoss.follow);assert.equal(recovered.simulation.paused,beforeLoss.simulation.paused);
    if(beforeLoss.simulation.paused)assert.equal(recovered.simulation.timeSeconds,beforeLoss.simulation.timeSeconds);
    else assert.ok(recovered.simulation.timeSeconds>beforeLoss.simulation.timeSeconds,'Live simulation continues through recovery');
    evidence.checks.push(`${selector} actual context loss and recovery preserve records, source policy, selection and pause state`);
-   if(selector.includes('three')){await page.locator('#reset').click();assert.equal((await state()).simulation.paused,false);}
+   if(selector.includes('three')){await page.locator('#reset').click();assert.equal((await state()).simulation.paused,false);await page.locator('#overview').click();assert.equal((await state()).follow,false);}
+   else if(evidence.contextCycles.length===2){await page.locator('#follow').click();await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.camera.follow&&m.camera.focus==='TRK-208'&&m.viewState.zoom>17&&!m.cameraMoving;});}
 
  }
  phase='legacy-reno';await page.locator('#about-toggle').click();await page.getByRole('link',{name:'Original Reno console ↗'}).click();await page.waitForLoadState('domcontentloaded');await page.getByRole('button',{name:'Live',exact:true}).click();

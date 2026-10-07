@@ -41,3 +41,18 @@ test('same-root remount replaces the old controller and final disposal releases 
  start.dispatchEvent(new Event('click'));assert.equal(window.__fleetDemo.getState().intro,false);
  first.dispose();assert.ok(window.__fleetDemo,'Disposing an old controller cannot remove the new controller');second.dispose();assert.equal(window.__fleetDemo,undefined);assert.equal(host.frames.size,0);assert.equal(start.listeners.get('click').size,0);
 });
+
+test('moving intro traffic keeps distinct route slots through the old collision time and route wraps',async t=>{
+ const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();host.flush();
+ const truth=JSON.stringify(window.__fleetDemo.getState().scenario);
+ for(const seconds of [0,8.75,133,166.6666667,1000,86400]){
+  window.__fleetDemo.seekScene(seconds);
+  const vehicles=window.__fleetDemo.getSceneSnapshot().vehicles.filter(v=>v.routeId==='delivery');
+  const selected=vehicles.find(v=>v.id==='TRK-208');assert.ok(Math.abs(selected.progress-(seconds*.006+.59)%1)<1e-9);
+  for(let i=0;i<vehicles.length;i++)for(let j=i+1;j<vehicles.length;j++){
+   const gap=Math.abs(vehicles[i].progress-vehicles[j].progress),circular=Math.min(gap,1-gap);
+   assert.ok(circular>=1/12-1e-9,`${vehicles[i].id}/${vehicles[j].id} share a route slot at ${seconds}s`);
+  }
+ }
+ assert.equal(JSON.stringify(window.__fleetDemo.getState().scenario),truth);controller.dispose();
+});

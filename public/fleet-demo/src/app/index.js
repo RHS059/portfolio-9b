@@ -42,16 +42,17 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   function snapshot(timeSeconds=0,paused=false){
     const travel=(rate,offset)=>{const distance=timeSeconds*rate+offset;return {progress:distance%1,travelCycle:Math.floor(distance)};};
     const resolved=evaluation?.vehicles.find(v=>v.vehicleId==='TRK-104')?.status==='resolved';
+    const roadTravel=slot=>travel(.006,.59+slot/12);
     const shop=stage<=2 || (stage>=3 && !resolved);
     // Illustrative repeated visit loop only; it never schedules or modifies service facts.
     const servicePhase=((timeSeconds+13)%32)/32;
     const servicePose=servicePhase<.4?{routeId:'factory-to-depot',progress:servicePhase/.4,status:'en-route-to-service'}:servicePhase<.65?{routeId:'depot-bay',progress:0,status:'workshop'}:{routeId:'depot-to-factory',progress:(servicePhase-.65)/.35,status:'returning'};
     return {timeSeconds,paused,selectedId:selectedVehicleId,stage,issueActive:stage>0&&!resolved,authorityResolved:!!resolved,
       vehicles:[
-        {id:'TRK-104',...(shop?(stage===0?{routeId:'depot-bay',progress:0,status:'workshop'}:servicePose):{...travel(.008,.12),routeId:'delivery',status:'moving'})},
-        {id:'TRK-208',...travel(.006,.59),routeId:'delivery',status:'moving'},
-        {id:'VAN-311',model:'van',inspectable:false,...travel(.012,.21),routeId:'delivery',status:'moving'},
-        ...Array.from({length:9},(_,i)=>({id:`TRAFFIC-${String(i+1).padStart(3,'0')}`,inspectable:false,...travel(.008+i*.0004,i*.111),routeId:'delivery',status:'moving'}))
+        {id:'TRK-104',...(shop?(stage===0?{routeId:'depot-bay',progress:0,status:'workshop'}:servicePose):{...roadTravel(11),routeId:'delivery',status:'moving'})},
+        {id:'TRK-208',...roadTravel(0),routeId:'delivery',status:'moving'},
+        {id:'VAN-311',model:'van',inspectable:false,...roadTravel(10),routeId:'delivery',status:'moving'},
+        ...Array.from({length:9},(_,i)=>({id:`TRAFFIC-${String(i+1).padStart(3,'0')}`,inspectable:false,...roadTravel(i+1),routeId:'delivery',status:'moving'}))
       ],facilities:[{id:'oict',label:'OICT container terminal'},{id:'centerpoint',label:'Drone factory'},{id:'depot',label:'Fleet workshop'}]};
   }
   function evaluate(){evaluation=domain.replayReadings(scenario,{asOf:scenario.asOf});}
@@ -72,7 +73,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     const canonical=evaluation?.vehicles.find(v=>v.vehicleId===selectedVehicleId);
     $('#selected-asset').textContent=selectedVehicleId;
     $('#asset-role').textContent=selectedVehicleId==='TRK-104'?'Migrated to Provider B':'Still uses Provider A';
-    const visits=(scenario?.serviceFacts||[]).filter(record=>record.vehicleId===selectedVehicleId).length;$('#service-visits').textContent=String(visits);$('#service-summary').textContent=visits?'Oil change + tire rotation':'Illustrative service history';$('#maintenance-cost').textContent='Amount not provided';$('#maintenance-cost-note').textContent=visits?'Repeat labor and parts':'For the selected truck';
+    const visits=(scenario?.serviceFacts||[]).filter(record=>record.vehicleId===selectedVehicleId).length;$('#service-visits').textContent=String(visits);$('#service-summary').textContent=visits?'Oil change + tire rotation':'Illustrative service history';$('#maintenance-cost').textContent='Amount not provided';$('#maintenance-cost-note').textContent=visits?'Repeat labor and parts':'';
     $('#canonical-reading').textContent=canonical?.status==='resolved'?`${Math.round(canonical.valueKm/1.609344).toLocaleString('en-US')} mi`:'Unresolved';
     $('#canonical-source').textContent=canonical?.status==='resolved'?`Provider ${canonical.sourceId}`:'No usable reading from the chosen source';
     $('#integrity-count').textContent=scenario?`${scenario.readings.length} readings kept`:'Raw records kept';

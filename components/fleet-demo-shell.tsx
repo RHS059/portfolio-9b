@@ -163,7 +163,7 @@ export default function FleetDemoShell() {
           <div className={`impact-strip ${styles.impactStrip}`}>
             <div><span className={portfolio.eyebrow}>Selected truck</span><strong id="selected-asset">TRK-208</strong><small id="asset-role">On delivery</small></div>
             <div><span className={portfolio.eyebrow}>Visits this week</span><strong id="service-visits">—</strong><small id="service-summary">Illustrative service history</small></div>
-            <div><span className={portfolio.eyebrow}>Maintenance cost</span><strong id="maintenance-cost">Amount not provided</strong><small id="maintenance-cost-note">For the selected truck</small></div>
+            <div><span className={portfolio.eyebrow}>Maintenance cost</span><strong id="maintenance-cost">Amount not provided</strong><small id="maintenance-cost-note"></small></div>
           </div>
           </div>
           <div id="about-panel" className={styles.aboutPanel} hidden>
