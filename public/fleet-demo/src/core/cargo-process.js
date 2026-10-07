@@ -143,7 +143,7 @@ function sampleSlot(slot, timeSeconds, outgoingEnabled=true) {
   else if (stage==='storage') {forkliftStage='returning';forkliftMotion=motion(a.storage,a.forkliftPark,progress);}
   const forklift={id:slot.forkliftId,slotId:slot.id,workerId:slot.workerId,bayId:slot.bayId,stage:forkliftStage,
     progress:forkliftMotion.progress,motion:forkliftMotion,cargoId:materialOwner.kind==='forklift'?cargoId:null,
-    carrying:materialOwner.kind==='forklift',forkHeight:stage==='bay-arrival' ? .18+1.05*clamp((progress-.75)/.25) : stage==='forklift-unloading' ? incomingForkHeight(progress) : stage==='storage' ? .975-.795*clamp(progress/.25) : .18,
+    carrying:materialOwner.kind==='forklift',forkHeight:stage==='bay-arrival' ? .18+1.05*clamp((progress-.75)/.25) : stage==='forklift-unloading' ? incomingForkHeight(progress) : stage==='storage' ? (progress<=.25?.975:progress>=.40?.18:.975-.795*smooth((progress-.25)/.15)) : .18,
     forkHeightReference:'cargo-bottom',forkPocketOffset:.095,
     loadPhase:stage==='forklift-unloading'?incomingLoadPhase(progress):'empty',
     grip:materialOwner.kind==='forklift'?1:0,operatorPresent:true,

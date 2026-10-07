@@ -1,9 +1,10 @@
+import {PALLET_FORK_REACH} from './fork-transfer.js';
 import {SITES,toLocal} from './world.js';
 import {ROAD_ROUTE_LNGLAT} from './route-data.js';
 import {CARGO_LAYOUT} from './cargo-layout-data.js';
 import {OICT_GEOGRAPHY} from './oict-geography.js';
 import {createPortLayout} from '../facilities/port/layout.js';
-import {createCargoRoutes,trafficCircuitPhase,ORDINARY_TRAFFIC_SLOTS} from './cargo-routes.js';
+import {createCargoRoutes,createPortRouteObstacles,trafficCircuitPhase,ORDINARY_TRAFFIC_SLOTS} from './cargo-routes.js';
 export {CARGO_LAYOUT};
 const port=SITES.find(s=>s.id==='oict'),factory=SITES.find(s=>s.id==='centerpoint');
 const clamp=t=>Math.max(0,Math.min(1,Number.isFinite(t)?t:0));
@@ -27,7 +28,7 @@ export const CARGO_ROUTE_CONFIGS=CARGO_LAYOUT.slots.map(slot=>({
  bayPose:(()=>{const p=localAt(factory,slot.factory.truckRoot);return{x:p[0],y:p[1],z:p[2],heading:slot.factory.truckHeading};})(),
  roadPoints:publicRoad,portBoundary:{point:localAt(port,[...portLayout.origin,0]),landward:portLayout.landward},
  buildingBounds:{min:localAt(factory,CARGO_LAYOUT.factory.buildingBounds.min),max:localAt(factory,CARGO_LAYOUT.factory.buildingBounds.max)},
- obstacles:[{min:localAt(factory,[-123,-113,0]),max:localAt(factory,[-67,-85,8])}],
+ obstacles:[{min:localAt(factory,[-123,-113,0]),max:localAt(factory,[-67,-85,8])},...createPortRouteObstacles(portLayout,port)],
 }));
 const fleetRoad=publicRoad.slice(Math.floor(publicRoad.length/3));
 for(let i=0;i<2;i++){const start=fleetRoad[0],next=fleetRoad[1];CARGO_ROUTE_CONFIGS.push({...CARGO_ROUTE_CONFIGS[i],id:`OUTBOUND-${501+i}`,portPose:{x:start[0],y:start[1],z:.15,heading:Math.atan2(next[0]-start[0],next[1]-start[1])},bayPose:{x:factory.x+[28,56][i],y:factory.y-56.5,z:.15,heading:Math.PI/2},roadPoints:fleetRoad,portBoundary:null});}
@@ -47,7 +48,7 @@ export function staticCargoAnchors(){
   anchors.set(`ship:${slot.shipId}:slot-${n}`,localAt(port,slot.port.shipCargo));anchors.set(`port:${slot.craneId}:transfer`,localAt(port,slot.port.transfer));anchors.set(`port:CARGO-${401+i}:park`,localAt(port,slot.port.truckRoot));
   for(const[key,p]of [['truck',a.truckRoot],['approach',a.approach],['handoff',a.handoff]])anchors.set(`bay:${a.bayId}:${key}`,localAt(factory,p));
   const actual=trailerLoadPose(cargoRouteSet({id:`CARGO-${401+i}`}).baySample);anchors.set(`bay:${a.bayId}:${slot.id}:handoff`,actual.position);anchors.set(`bay:${a.bayId}:handoff`,actual.position);
-  anchors.set(`storage:${slot.id}`,localAt(factory,a.storage));anchors.set(`storage:${slot.id}:robot-park`,localAt(factory,a.robotPark));anchors.set(`bay:${a.bayId}:${slot.id}:forklift-park`,localAt(factory,[a.forkliftPark[0],a.forkliftPark[1]-1.65,.43]));anchors.set(`forklift:FORKLIFT-${n}:stowed-forks`,localAt(factory,[a.forkliftPark[0],a.forkliftPark[1]-1.65,.43]));
+  anchors.set(`storage:${slot.id}`,localAt(factory,a.storage));anchors.set(`storage:${slot.id}:robot-park`,localAt(factory,a.robotPark));anchors.set(`bay:${a.bayId}:${slot.id}:forklift-park`,localAt(factory,[a.forkliftPark[0],a.forkliftPark[1]-PALLET_FORK_REACH,.43]));anchors.set(`forklift:FORKLIFT-${n}:stowed-forks`,localAt(factory,[a.forkliftPark[0],a.forkliftPark[1]-PALLET_FORK_REACH,.43]));
   const dx=[28,56][i%2];anchors.set(`bay:factory-dispatch-0${i%2+1}:vehicle`,factoryPoint(dx,-56.5));anchors.set(`qa:QA-01:${slot.id}:input`,factoryPoint(37,26,1.225));anchors.set(`dispatch:DISPATCH-0${i%2+1}:${slot.id}:staging`,factoryPoint(50+(i%2)*12,-16,1.225));anchors.set(`cell:${cell.id}:dispatch-pickup`,factoryPoint(cell.center[0]-3,cell.center[1]-4,1.225));
   anchors.set(`storage:${slot.id}:robot-pickup`,localAt(factory,[a.storage[0],a.storage[1]-1.8,1.225]));anchors.set(`qa:QA-01:${slot.id}:test`,factoryPoint(42,26,1.225));anchors.set(`qa:QA-01:${slot.id}:output`,factoryPoint(47,26,1.225));anchors.set(`dispatch:DISPATCH-0${i%2+1}:${slot.id}:input`,factoryPoint(50+(i%2)*12,-12,1.225));
   anchors.set(`cell:${cell.id}:receiving-dock`,factoryPoint(cell.input[0],cell.center[1]+4.9,1.225));anchors.set(`qa:QA-01:${slot.id}:bypass-in`,factoryPoint(37,21,1.225));anchors.set(`qa:QA-01:${slot.id}:bypass-out`,factoryPoint(47,21,1.225));

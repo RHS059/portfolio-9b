@@ -132,7 +132,11 @@ lift/extract/lower/carry/raise/insert/place for this incoming profile only. Outg
 loading uses its explicit stage and anchor-based support motion. The renderer
 matches the XY phases, including clearance before lowering and raising before
 insertion. The final pallet support is1.225 m above world ground; custody changes
-to storage only at72 seconds. Empty return then lowers smoothly to0.18 m. These
+to storage only at72 seconds. During the empty storage return, hold0.975 m for
+progress0–0.25 (72–73.5 seconds) while the renderer withdraws the tines2.5 m clear
+of the storage slab. Then smoothstep lower0.975→0.18 m during progress0.25–0.40
+(73.5–74.4 seconds), and remain at0.18 m for the rest of the return. The forklift
+has no cargo throughout this withdrawal; storage custody is unchanged. These
 measured values describe presentation supports only.
 
 ## Timeline

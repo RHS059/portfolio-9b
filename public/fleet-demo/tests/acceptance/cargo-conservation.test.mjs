@@ -76,7 +76,10 @@ test('forklift pickup and release meet the agreed world support heights without 
     close(.25+sample(base+72).forklifts[slot].forkHeight,1.225);
     close(sample(base+72-1e-8).forklifts[slot].forkHeight,sample(base+72).forklifts[slot].forkHeight,1e-6);
     assert.equal(sample(base+72).forklifts[slot].cargoId,null);
-    assert.ok(sample(base+73).forklifts[slot].forkHeight<.975,'Empty fork lowers only after storage custody');
+    // Empty tines must withdraw horizontally before lowering; the old immediate drop crossed the storage slab.
+    close(sample(base+73).forklifts[slot].forkHeight,.975);
+    const lowering=sample(base+74).forklifts[slot].forkHeight;assert.ok(lowering<.975&&lowering>.18,'Empty fork lowers after withdrawal');
+    close(sample(base+74.4).forklifts[slot].forkHeight,.18);
   }
 });
 

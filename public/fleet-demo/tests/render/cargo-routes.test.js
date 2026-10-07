@@ -85,3 +85,17 @@ test('enabled inbound preview has no mixed whole-body contacts through first run
   for(const path of[service,{routeId:'depot-bay',progress:0}]){const p=vehiclePosition(path),poly=cargoFootprints({tractor:p,trailer:p}).tractor;for(const actor of actors){if(Math.hypot(p.x-actor.rig.tractor.x,p.y-actor.rig.tractor.y)>30)continue;actor.poly??=Object.values(cargoFootprints(actor.rig,'box'));assert.equal(actor.poly.some(q=>overlaps(poly,q)),false,`TRK-104/${actor.id} at${time}`);}}
  }
 });
+
+test('port route admission includes every actual column, container-row envelope and moored hull',async()=>{
+ const {createPortRouteObstacles}=await import('../../src/render/map/cargo-routes.js'),{CARGO_ROUTE_CONFIGS,cargoRouteSet}=await import('../../src/render/map/cargo-layout.js');
+ const obstacles=createPortRouteObstacles(portLayout,port);assert.ok(Object.isFrozen(obstacles));assert.equal(obstacles.filter(o=>o.kind==='gantry-column').length,36);assert.equal(obstacles.filter(o=>o.kind==='container-row').length,61);assert.equal(obstacles.filter(o=>o.kind==='moored-hull').length,2);assert.equal(obstacles.length,99);
+ for(const o of obstacles){assert.ok(Object.isFrozen(o));assert.ok(Object.isFrozen(o.polygon));assert.ok(o.polygon.every(p=>Object.isFrozen(p)&&p.every(Number.isFinite)));assert.equal(o.clearanceMeters,.35);}
+ for(const id of['CARGO-401','CARGO-402','CARGO-403','CARGO-404','ORDINARY-PREVIEW-208']){const config=CARGO_ROUTE_CONFIGS.find(c=>c.id===id);assert.equal(config.obstacles.filter(o=>o.kind).length,99,`${id} must admit all actual port obstacles`);assert.deepEqual(cargoRouteSet({id}).checkClearance({stepMeters:.1,trailerStyle:'box'}),[],id);}
+});
+
+test('CARGO404 departure clears both historically penetrated seaward gantry columns with the articulated trailer',async()=>{
+ const {cargoRouteSet}=await import('../../src/render/map/cargo-layout.js'),route=cargoRouteSet({id:'CARGO-404'}),crane=portLayout.cranes.find(c=>c.id==='schematic-gantry-5');
+ for(const x of[-10,10]){const polygon=[[-.6,-.6],[.6,-.6],[.6,.6],[-.6,.6]].map(([dx,dy])=>[port.x+crane.center[0]+portLayout.along[0]*(x+dx)+portLayout.landward[0]*(-13+dy),port.y+crane.center[1]+portLayout.along[1]*(x+dx)+portLayout.landward[1]*(-13+dy)]);
+  for(let i=0;i<=1000;i++){const rig=route.sample('cargo-circuit',.015+i*.000015);assert.equal(cargoIntersectsBounds(rig,{polygon},'box'),false,`gantry5 leg${x},-13 at${i}`);}
+ }
+});

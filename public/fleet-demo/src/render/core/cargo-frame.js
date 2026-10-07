@@ -1,4 +1,4 @@
-import {sampleIncomingForkTransfer} from '../map/fork-transfer.js';
+import {sampleIncomingForkTransfer,sampleIncomingForkReturn,sampleIncomingForkApproach,incomingForkTravel,PALLET_FORK_REACH} from '../map/fork-transfer.js';
 import {forkContactOffset,FORK_CONTACT} from './fork-contact.js';
 import {sampleFloorRoute} from '../map/floor-routes.js';
 import {CARGO_LAYOUT,staticCargoAnchors,cargoTruckRig,cargoRouteSet,trailerLoadPose,localAt,offsetPose,polylineSample,floorMotionPoints} from '../map/cargo-layout.js';
@@ -38,7 +38,8 @@ export function resolveCargoFrame(process,{mounts=[],outputHandoffs={}}={}){
   if(reverse){const transfer=sampleIncomingForkTransfer(a,b,t);x=transfer.x;y=transfer.y;heading=transfer.heading;payloadHeading=transfer.payloadHeading;travelMeters=transfer.travelMeters;}
   if(actor.stage==='dispatch-approaching')heading=Math.PI*(1-t*t*(3-2*t));
   if(actor.stage==='outbound-loading'){heading=Math.PI*t*t*(3-2*t);payloadHeading=heading+yaw(a.heading,b.heading-Math.PI,t);}
-  const support=[x,y,supportZ],root=[x-1.65*Math.sin(heading),y-1.65*Math.cos(heading),.25];
+  if(actor.stage==='approaching'){const q=sampleIncomingForkApproach(a,b,t);x=q.x;y=q.y;heading=q.heading;payloadHeading=heading-Math.PI;travelMeters=q.travelMeters;}if(actor.stage==='returning'){const q=sampleIncomingForkReturn(a,b,t);x=q.x;y=q.y;heading=q.heading;payloadHeading=heading-Math.PI;travelMeters=q.travelMeters;}const support=[x,y,supportZ],root=[x-PALLET_FORK_REACH*Math.sin(heading),y-PALLET_FORK_REACH*Math.cos(heading),.25];
+  if(!outgoing&&slot){const kit=process.cargo.find(c=>c.slotId===slot.id),park=get(`bay:${slot.factory.bayId}:${slot.id}:forklift-park`,actor),bay=get(`bay:${slot.factory.bayId}:handoff`,actor),storage=get(`storage:${slot.id}`,actor);travelMeters=incomingForkTravel(park,bay,storage,actor.stage,travelMeters,kit?.cycleIndex||0,['robot-transport','box-opening','drone-assembly','complete'].includes(kit?.stage));}
   const result={...actor,kind:'forklift',position:root,heading,support:pose(support,payloadHeading),forkContactOffset:forkContactOffset(actor),liftHeight:supportZ-.25+forkContactOffset(actor)-FORK_CONTACT.tineTopLocalZ,travelMeters};actors.push(result);anchors.set(`forklift:${actor.id}:stowed-forks`,pose([root[0],root[1],.43]));
  }
  for(const actor of process.floorRobots){const m=motion(actor);if(!m)continue;const points=floorMotionPoints(actor,m.a.position,m.b.position),p=sampleFloorRoute(points,m.t);actors.push({...actor,kind:'amr',position:[p.x,p.y,.25],heading:p.heading,support:pose([p.x,p.y,1.225],p.heading+yaw(m.a.heading,m.b.heading,m.t)),travelMeters:p.presentationDistanceMeters});}

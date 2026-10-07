@@ -495,3 +495,18 @@ test('fork lift profile joins are smooth and preserve all receiving stage and cu
     assert.equal(stored.forklifts[slot.index].cargoId,null);assert.equal(stored.forklifts[slot.index].carrying,false);
   }
 });
+
+test('empty forks withdraw above storage before lowering, including the verified slot03 slab contact',()=>{
+  for(const outgoingEnabled of [true,false])for(const slot of CARGO_SLOTS){
+    const snapshot=p=>sampleCargoProcess(slot.offsetSeconds+72+p*6,{outgoingEnabled});
+    for(const p of [0,.05,.10,.20,.25]){
+      const s=snapshot(p),fork=s.forklifts[slot.index];assert.equal(fork.forkHeight,.975,`lowered before withdrawal at ${p}`);
+      assert.equal(fork.cargoId,null);assert.equal(fork.carrying,false);assert.equal(s.cargo[slot.index].owner.kind,'storage');
+    }
+    assert.ok(Math.abs(snapshot(.325).forklifts[slot.index].forkHeight-.5775)<1e-12);
+    for(const p of [.40,.50,.75,.999])assert.equal(snapshot(p).forklifts[slot.index].forkHeight,.18);
+    for(const p of [.25,.40]){const h=q=>snapshot(q).forklifts[slot.index].forkHeight,e=1e-6;assert.ok(Math.abs(h(p-e)-h(p))<1e-8);assert.ok(Math.abs(h(p+e)-h(p))<1e-8);}
+  }
+  const verified=sampleCargoProcess(136.3,{outgoingEnabled:false});
+  assert.equal(verified.cargo[2].id,'CARGO-03-B0001');assert.equal(verified.cargo[2].owner.kind,'storage');assert.equal(verified.forklifts[2].forkHeight,.975);
+});

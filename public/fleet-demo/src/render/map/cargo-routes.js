@@ -1,5 +1,6 @@
 import {buildTrailerTrack,articulatePose} from '../core/trailer-kinematics.js';
 import {DETAIL_MODEL_METADATA,TRACTOR_TRAILER_ANCHORS} from '../vehicles/detail-model.js';
+import {createPortProcessLayouts} from '../facilities/port/process-layout.js';
 const TAU=Math.PI*2,wrap=a=>Math.atan2(Math.sin(a),Math.cos(a)),mod=a=>(a%TAU+TAU)%TAU;
 const clamp=p=>Math.max(0,Math.min(1,Number.isFinite(p)?p:0));
 const distance=(a,b)=>Math.hypot(b[0]-a[0],b[1]-a[1]);
@@ -73,10 +74,30 @@ function dubinsCandidates(start,end,radius=24){
  return candidates.sort((a,b)=>a.length-b.length);
 }
 function corners(pose,metadata){const {min,max}=metadata.bounds||metadata;return[[min[0],min[1]],[max[0],min[1]],[max[0],max[1]],[min[0],max[1]]].map(([x,y])=>[pose.x+x*Math.cos(pose.heading)+y*Math.sin(pose.heading),pose.y-x*Math.sin(pose.heading)+y*Math.cos(pose.heading)]);}
-function rectangleIntersects(poly,box){const other=[[box.min[0],box.min[1]],[box.max[0],box.min[1]],[box.max[0],box.max[1]],[box.min[0],box.max[1]]],axes=[[1,0],[0,1]];for(let i=0;i<2;i++){const a=poly[i],b=poly[i+1];axes.push([-(b[1]-a[1]),b[0]-a[0]]);}return axes.every(([x,y])=>{const pa=poly.map(p=>p[0]*x+p[1]*y),pb=other.map(p=>p[0]*x+p[1]*y);return Math.max(...pa)>Math.min(...pb)+1e-8&&Math.max(...pb)>Math.min(...pa)+1e-8;});}
+function polygonBounds(poly){return{min:[Math.min(...poly.map(p=>p[0])),Math.min(...poly.map(p=>p[1]))],max:[Math.max(...poly.map(p=>p[0])),Math.max(...poly.map(p=>p[1]))]};}
+function polygonIntersects(a,b,padding=0){for(const poly of[a,b])for(let i=0;i<poly.length;i++){const q=poly[(i+1)%poly.length],x=q[1]-poly[i][1],y=poly[i][0]-q[0],margin=padding*Math.hypot(x,y),pa=a.map(p=>p[0]*x+p[1]*y),pb=b.map(p=>p[0]*x+p[1]*y);if(Math.max(...pa)<=Math.min(...pb)-margin||Math.max(...pb)<=Math.min(...pa)-margin)return false;}return true;}
+function prepareObstacle(box){if(box.landward&&box.point)return box;const polygon=box.polygon||[[box.min[0],box.min[1]],[box.max[0],box.min[1]],[box.max[0],box.max[1]],[box.min[0],box.max[1]]];return{...box,...polygonBounds(polygon),polygon};}
+function preparedFootprints(sample,trailerStyle='flatbed'){return Object.values(cargoFootprints(sample,trailerStyle)).map(polygon=>({polygon,...polygonBounds(polygon)}));}
+function footprintsIntersect(parts,box){if(box.landward&&box.point)return parts.some(({polygon})=>polygon.some(p=>(p[0]-box.point[0])*box.landward[0]+(p[1]-box.point[1])*box.landward[1]<(box.clearanceMeters??.25)));
+ const margin=box.clearanceMeters??0;return parts.some(part=>part.max[0]>=box.min[0]-margin&&part.min[0]<=box.max[0]+margin&&part.max[1]>=box.min[1]-margin&&part.min[1]<=box.max[1]+margin&&polygonIntersects(part.polygon,box.polygon,margin));}
 export function cargoFootprints(sample,trailerStyle='flatbed'){return{tractor:corners(sample.tractor,DETAIL_MODEL_METADATA.tractor),trailer:corners(sample.trailer,trailerStyle==='box'?DETAIL_MODEL_METADATA.boxTrailer:DETAIL_MODEL_METADATA.flatbedTrailer)};}
-export function cargoIntersectsBounds(sample,bounds,trailerStyle='flatbed'){const footprint=cargoFootprints(sample,trailerStyle);if(bounds.landward&&bounds.point)return Object.values(footprint).some(poly=>poly.some(p=>(p[0]-bounds.point[0])*bounds.landward[0]+(p[1]-bounds.point[1])*bounds.landward[1]<(bounds.clearanceMeters??.25)));return Object.values(footprint).some(poly=>rectangleIntersects(poly,bounds));}
-function connector(start,end,obstacles){for(const radius of [24,30,18])for(const path of dubinsCandidates(start,end,radius)){let clear=true;for(let d=0;d<=path.length;d+=.75){const pose=rootPose(path.sample(d));if(obstacles.some(box=>cargoIntersectsBounds(articulatePose(pose),box))){clear=false;break;}}if(clear)return path;}throw new Error('No exterior cargo connector avoids the supplied buildings');}
+export function cargoIntersectsBounds(sample,bounds,trailerStyle='flatbed'){return footprintsIntersect(preparedFootprints(sample,trailerStyle),prepareObstacle(bounds));}
+/** Actual ground-level port solids, all transformed from the shared layout.
+ * Overhead beams start at36m and do not intersect these vehicle envelopes.
+ * Container rows deliberately use their full conservative authored envelopes.
+ */
+export function createPortRouteObstacles(layout,site,{clearanceMeters=.35}={}){
+ const world=(crane,x,y)=>[site.x+crane.center[0]+layout.along[0]*x+layout.landward[0]*y,site.y+crane.center[1]+layout.along[1]*x+layout.landward[1]*y];
+ const legs=layout.cranes.flatMap(crane=>[-10,10].flatMap(x=>[-13,13].map(y=>({id:`${crane.id}:leg:${x}:${y}`,kind:'gantry-column',polygon:[[-.6,-.6],[.6,-.6],[.6,.6],[-.6,.6]].map(([dx,dy])=>world(crane,x+dx,y+dy)),clearanceMeters}))));
+ const rows=layout.rows.map(row=>({id:row.id,kind:'container-row',polygon:row.corners.map(p=>[site.x+p[0],site.y+p[1]]),clearanceMeters}));
+ const hulls=createPortProcessLayouts(layout).map(berth=>({id:`${berth.id}:hull`,kind:'moored-hull',polygon:berth.ship.corners.map(p=>[site.x+p[0],site.y+p[1]]),clearanceMeters}));
+ return Object.freeze([...legs,...rows,...hulls].map(obstacle=>Object.freeze({...obstacle,polygon:Object.freeze(obstacle.polygon.map(Object.freeze))})));
+}
+function connector(start,end,obstacles){for(const radius of [24,30,18])for(const path of dubinsCandidates(start,end,radius)){
+ const trace=buildTrailerTrack(p=>rootPose(path.sample(p*path.length)),path.length,{stepMeters:.2,initialHeading:start.heading});let clear=true;
+ for(let d=0;d<=path.length;d+=.2){const state=trace.sample(d/path.length,rootPose(path.sample(d))),parts=preparedFootprints(state);if(obstacles.some(box=>footprintsIntersect(parts,box))){clear=false;break;}}
+ if(clear)return path;
+ }throw new Error('No exterior cargo connector avoids the supplied buildings and port obstacles');}
 /**
  * Build one closed, forward-moving drive-axle trajectory for the complete cargo run.
  * The public-road portion comes only from roadPoints. Final connectors are authored
@@ -93,7 +114,7 @@ export function createCargoRoutes({portPose,bayPose,roadPoints,buildingBounds,ob
  if(!portPose||!bayPose||!Array.isArray(roadPoints)||roadPoints.length<2||!buildingBounds)throw new TypeError('Cargo routes require port/bay poses, road points and factory bounds');
  if(!Number.isFinite(roadLaneOffsetMeters)||roadLaneOffsetMeters<0||roadLaneOffsetMeters>ROAD_LANE_OFFSET_METERS)throw new RangeError('Lane offsets must remain within the authored 1.9 meter half-width');
  if(Math.abs(wrap(bayPose.heading-Math.PI/2))>1e-6)throw new RangeError('South-apron cargo bays must face east for the pull-through maneuver');
- const boxes=[buildingBounds,...obstacles.map(o=>o.bounds||o),...(portBoundary?[portBoundary]:[])],factoryX=(buildingBounds.min[0]+buildingBounds.max[0])/2,factoryY=(buildingBounds.min[1]+buildingBounds.max[1])/2;
+ const boxes=[buildingBounds,...obstacles.map(o=>o.bounds||o),...(portBoundary?[portBoundary]:[])].map(prepareObstacle),factoryX=(buildingBounds.min[0]+buildingBounds.max[0])/2,factoryY=(buildingBounds.min[1]+buildingBounds.max[1])/2;
  const port=axlePose(portPose),bay=axlePose(bayPose),approach={...bay,x:bay.x-10.5},centerRoad=roundedPolyline(simplify(roadPoints),24),road=rightHandLane(centerRoad,roadLaneOffsetMeters),roadStart=road.sample(0),roadEnd=road.sample(road.length);
  const west={x:factoryX-155,y:factoryY+30,z:.15,heading:Math.PI};
  const portExit=advance(port,30),portEntry=advance(port,-120);
@@ -124,5 +145,5 @@ export function createCargoRoutes({portPose,bayPose,roadPoints,buildingBounds,ob
  function points(routeId,stepMeters=4){const span=spans[routeId];if(!span)return null;const n=Math.max(1,Math.ceil((span[1]-span[0])/stepMeters));return Array.from({length:n+1},(_,i)=>{const p=sample(routeId,i/n).tractor;return[p.x,p.y,p.z];});}
  const baySample=sample('cargo-bay'),approachSample=sample('cargo-arrival',0);
  let early=24,late=64;for(let i=0;i<40;i++){const t=(early+late)/2;if(ordinaryDistanceAtSeconds(t,dockMeters,full.length)<dockMeters-10.5)early=t;else late=t;}const ordinaryTimetable=Object.freeze({cycleSeconds:128,leaderDelaySeconds:5,approachLocalSeconds:(early+late)/2,stopLocalSeconds:64});
- return Object.freeze({sample,points,ordinaryTimetable,roadLaneOffsetMeters,publicRoadSpans:Object.freeze(roadSpans),sampleCount:track.sampleCount,storageBytes:track.storageBytes,bayPose:Object.freeze(baySample.tractor),baySample:Object.freeze(baySample),approachPose:Object.freeze(approachSample.tractor),portSample:Object.freeze(sample('cargo-port')),cycleTravel:Object.freeze(cycleTravel),length:full.length,phaseDistances:Object.freeze(Object.fromEntries(Object.entries(spans).map(([id,[a,b]])=>[id,b-a]))),periodicYawError:Math.abs(wrap(end.trailer.heading-start.trailer.heading)),checkClearance({stepMeters=.25,trailerStyle='flatbed'}={}){const failures=[];for(let d=0;d<=full.length;d+=stepMeters){const p=d/full.length,state=track.sample(p,sampleRoot(p));for(let i=0;i<boxes.length;i++)if(cargoIntersectsBounds(state,boxes[i],trailerStyle))failures.push({meters:d,obstacle:i,tractor:state.tractor,trailer:state.trailer});if(failures.length>=20)break;}return failures;}});
+ return Object.freeze({sample,points,ordinaryTimetable,roadLaneOffsetMeters,publicRoadSpans:Object.freeze(roadSpans),sampleCount:track.sampleCount,storageBytes:track.storageBytes,bayPose:Object.freeze(baySample.tractor),baySample:Object.freeze(baySample),approachPose:Object.freeze(approachSample.tractor),portSample:Object.freeze(sample('cargo-port')),cycleTravel:Object.freeze(cycleTravel),length:full.length,phaseDistances:Object.freeze(Object.fromEntries(Object.entries(spans).map(([id,[a,b]])=>[id,b-a]))),periodicYawError:Math.abs(wrap(end.trailer.heading-start.trailer.heading)),checkClearance({stepMeters=.25,trailerStyle='flatbed'}={}){const failures=[];for(let d=0;d<=full.length;d+=stepMeters){const p=d/full.length,state=track.sample(p,sampleRoot(p)),parts=preparedFootprints(state,trailerStyle);for(let i=0;i<boxes.length;i++)if(footprintsIntersect(parts,boxes[i]))failures.push({meters:d,obstacle:i,obstacleId:boxes[i].id,tractor:state.tractor,trailer:state.trailer});if(failures.length>=20)break;}return failures;}});
 }
