@@ -49,7 +49,7 @@ try{
      const approachProgress=routeDistance('port-to-factory',1)/routeDistance('delivery',1)-.000001,approachTime=((approachProgress-.59+1)%1)/.006;
      await page.evaluate(time=>window.__fleetDemo.seekScene(time),approachTime);await page.waitForTimeout(120);await page.screenshot({path:path.join(out,'factory-approach-close.png'),fullPage:true});
      const factoryBox=await page.locator('.maplibregl-canvas').boundingBox();await page.mouse.move(factoryBox.x+factoryBox.width*.5,factoryBox.y+factoryBox.height*.5);
-     for(let step=0;step<6;step++){if(await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState.zoom<=15.3))break;await page.mouse.wheel(0,550);await page.waitForTimeout(750);}
+     for(let step=0;step<12;step++){if(await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState.zoom<=15.3))break;await page.mouse.wheel(0,550);await page.waitForTimeout(750);}
      await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.mapTilesLoaded&&!m.cameraMoving&&m.viewState.zoom<=15.3&&m.vehicleDetail.visible===0;},undefined,{timeout:20000});
      evidence.factoryOverview=await page.evaluate(()=>window.__fleetDemo.getMetrics());await page.screenshot({path:path.join(out,'factory-approach-overview.png'),fullPage:true});
      await page.locator('[data-focus="centerpoint"]').click();if(!wasPaused)await page.locator('#pause').click();evidence.checks.push('Factory approach is exercised in close and overview LOD with the scene clock paused');
