@@ -1,3 +1,4 @@
+import {indexStaticMeshGeometry} from './indexed-geometry.js';
 import {vehiclePresentationPose,vehicleModelVariant} from './presentation-pose.js';
 export const VEHICLE_DETAIL_LIMIT=3;
 export const VEHICLE_DETAIL_MIN_ZOOM=17.5;
@@ -12,7 +13,7 @@ export function selectDetailedVehicles(vehicles,{zoom,center=[0,0],selectedId,mo
 export function createVehicleDetailPool({THREE,scene,createDetailedVehicle,createDetailedTractor,createDetailedTrailer,modelMetadata={},onFailure=()=>{}}){
  const slots=[],failedKinds=new Set();let disposed=false,visible=0;
  function release(slot){scene.remove(slot.api.group);slot.api.dispose();}
- function create(kind,variant){try{let api;if(variant==='articulated'&&createDetailedTractor&&createDetailedTrailer){const tractor=createDetailedTractor({THREE}),trailer=createDetailedTrailer({THREE,style:'flatbed'}),group=new THREE.Group();group.add(tractor.group,trailer.group);group.userData.wheelCount=18;api={group,tractor,trailer,setDistance(){},getDistance:()=>tractor.getDistance(),dispose(){tractor.dispose();trailer.dispose();}};}else api=createDetailedVehicle({THREE,kind,trailerAttached:variant!=='tractor'});if(!api?.group||typeof api.setDistance!=='function'||typeof api.dispose!=='function')throw new Error('Invalid detailed vehicle adapter');scene.add(api.group);return api;}catch(error){failedKinds.add(kind);onFailure(error);return null;}}
+ function create(kind,variant){try{let api;if(variant==='articulated'&&createDetailedTractor&&createDetailedTrailer){const tractor=createDetailedTractor({THREE}),trailer=createDetailedTrailer({THREE,style:'flatbed'}),group=new THREE.Group();group.add(tractor.group,trailer.group);group.userData.wheelCount=18;api={group,tractor,trailer,setDistance(){},getDistance:()=>tractor.getDistance(),dispose(){tractor.dispose();trailer.dispose();}};}else api=createDetailedVehicle({THREE,kind,trailerAttached:variant!=='tractor'});if(!api?.group||typeof api.setDistance!=='function'||typeof api.dispose!=='function')throw new Error('Invalid detailed vehicle adapter');(api.group.userData??={}).geometryIndexing=indexStaticMeshGeometry(THREE,api.group);scene.add(api.group);return api;}catch(error){failedKinds.add(kind);onFailure(error);return null;}}
  return{
   update(vehicles,options){
    if(disposed)return new Set();const desired=selectDetailedVehicles(vehicles,{...options,modelMetadata}),used=new Set(),ids=new Set();for(const slot of slots)slot.api.group.visible=false;
@@ -30,7 +31,7 @@ export function createVehicleDetailPool({THREE,scene,createDetailedVehicle,creat
    }
    visible=ids.size;return ids;
   },
-  getMetrics(){return{capacity:slots.length,visible,limit:VEHICLE_DETAIL_LIMIT,failedKinds:[...failedKinds],models:slots.filter(s=>s.api.group.visible).map(s=>({id:s.id,kind:s.kind,variant:s.variant,wheelCount:s.api.group.userData?.wheelCount??null,bounds:modelMetadata[s.variant]?.bounds||null,groundContact:modelMetadata[s.variant]?.groundContact??null,distance:s.api.getDistance?.()??null}))};},
+  getMetrics(){return{capacity:slots.length,visible,limit:VEHICLE_DETAIL_LIMIT,failedKinds:[...failedKinds],models:slots.filter(s=>s.api.group.visible).map(s=>({id:s.id,kind:s.kind,variant:s.variant,wheelCount:s.api.group.userData?.wheelCount??null,bounds:modelMetadata[s.variant]?.bounds||null,groundContact:modelMetadata[s.variant]?.groundContact??null,distance:s.api.getDistance?.()??null,geometryIndexing:s.api.group.userData.geometryIndexing??null}))};},
   dispose(){if(disposed)return;disposed=true;for(const slot of slots)release(slot);slots.length=0;visible=0;}
  };
 }
