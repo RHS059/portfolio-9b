@@ -11,9 +11,10 @@ const freeze = value => {
   return value;
 };
 const clamp = value => Math.max(0, Math.min(1, value));
+const smooth = value => {const t=clamp(value);return t*t*(3-2*t);};
 const pad = value => String(value).padStart(2, '0');
 export const CARGO_PROCESS_VERSION = 'illustrative-cargo/v1';
-export const CARGO_PROCESS_LIMITS = freeze({shipments:4, ships:2, trucks:4, cranes:4, forklifts:4, floorRobots:4, cells:4, products:4, events:128});
+export const CARGO_PROCESS_LIMITS = freeze({shipments:4, ships:2, trucks:4, cranes:4, forklifts:4, floorRobots:4, cells:4, products:4, qaStations:1, dispatchStaging:2, outboundVehicles:2, outboundCapacity:1, events:128});
 
 let boundary = 0;
 export const CARGO_STAGES = freeze([
@@ -25,17 +26,33 @@ export const CARGO_CYCLE_SECONDS = boundary;
 /** Optional populated presentation. Reset to app time zero reproduces this frame. */
 export const CARGO_PRESENTATION_OFFSET_SECONDS = 102.5;
 const phases = Object.fromEntries(CARGO_STAGES.map(stage => [stage.id, stage]));
+/** Product times share a slot's incoming clock, continuing beyond its kit rollover. */
+export const PRODUCT_STAGES = freeze([
+  ['assembling',94,118], ['ready',118,122], ['qa-transport',122,130], ['qa-testing',130,138],
+  ['dispatch-transport',138,146], ['dispatch-staged',146,152], ['outbound-loading',152,156],
+  ['outbound-loaded',156,158], ['outbound-transit',158,178], ['fleet-received',178,222],
+].map(([id,start,end])=>({id,start,end,duration:end-start})));
+export const OUTBOUND_FLEET_ID = 'outgoing-fleet';
 const cellIds = ['frame-jig','motor-install','propeller-install','final-assembly'];
 export const CARGO_SLOTS = freeze(cellIds.map((cellId, index) => {
   const n = pad(index + 1), slotId = `CARGO-${n}`, shipId = `SHIP-${pad(1 + Math.floor(index / 2))}`;
+  const outboundVehicleId=`OUTBOUND-${501+index%2}`,outboundTrailerId=`TRAILER-${501+index%2}`,dispatchBayId=`factory-dispatch-${pad(index%2+1)}`,dispatchStagingId=`DISPATCH-${pad(index%2+1)}`;
   const truckId = `CARGO-${401 + index}`, trailerId = `TRAILER-${401 + index}`, craneId = `CRANE-${n}`, bayId = `factory-receiving-${pad(index % 2 + 1)}`;
   return {id:slotId, index, offsetSeconds:index * CARGO_CYCLE_SECONDS / 4, shipId, truckId, trailerId, craneId, bayId,
     forkliftId:`FORKLIFT-${n}`, workerId:`WORKER-${n}`, robotId:`AMR-${n}`, cellId,
+    outboundVehicleId,outboundTrailerId,dispatchBayId,dispatchStagingId,qaStationId:'QA-01',
     anchors:{ship:`ship:${shipId}:slot-${n}`, quay:`port:${craneId}:transfer`,
       truckLoad:`trailer:${trailerId}:load`, portTruck:`port:${truckId}:park`,
       bayTruck:`bay:${bayId}:truck`, bayApproach:`bay:${bayId}:approach`, bayHandoff:`bay:${bayId}:handoff`,
-      storage:`storage:${slotId}`, cellInput:`cell:${cellId}:input`, cellOutput:`cell:${cellId}:output`,
+      storage:`storage:${slotId}`, storageRobotPickup:`storage:${slotId}:robot-pickup`, cellInput:`cell:${cellId}:input`, cellOutput:`cell:${cellId}:output`,
       forkliftPark:`bay:${bayId}:${slotId}:forklift-park`, robotPark:`storage:${slotId}:robot-park`,
+      cellDispatchPickup:`cell:${cellId}:dispatch-pickup`,qaInput:`qa:QA-01:${slotId}:input`,
+      qaTest:`qa:QA-01:${slotId}:test`,qaOutput:`qa:QA-01:${slotId}:output`,
+      qaBypassIn:`qa:QA-01:${slotId}:bypass-in`,qaBypassOut:`qa:QA-01:${slotId}:bypass-out`,
+      dispatchStaging:`dispatch:${dispatchStagingId}:${slotId}:staging`,dispatchInput:`dispatch:${dispatchStagingId}:${slotId}:input`,
+      dispatchVehicle:`bay:${dispatchBayId}:vehicle`,outboundLoad:`trailer:${outboundTrailerId}:load`,
+      fleetHandoff:`fleet:${OUTBOUND_FLEET_ID}:${outboundVehicleId}:handoff`,
+      forkliftStowed:`forklift:FORKLIFT-${n}:stowed-forks`,
     },
   };
 }));
@@ -63,8 +80,8 @@ function sampleSlot(slot, timeSeconds) {
   else if (stage === 'truck-loading') {materialOwner=owner('crane',slot.craneId,a.quay);materialMotion=motion(a.quay,a.truckLoad,progress);}
   else if (['truck-loaded','road-transit','bay-arrival'].includes(stage)) {materialOwner=owner('trailer',slot.trailerId,a.truckLoad);materialMotion=resting(a.truckLoad);}
   else if (stage === 'forklift-unloading') {materialOwner=owner('forklift',slot.forkliftId,'forks');materialMotion=motion(a.bayHandoff,a.storage,progress);}
-  else if (stage === 'storage') {materialOwner=owner('storage',slot.id,a.storage);materialMotion=resting(a.storage);}
-  else if (stage === 'robot-transport') {materialOwner=owner('floor-robot',slot.robotId,'payload');materialMotion=motion(a.storage,a.cellInput,progress);}
+  else if (stage === 'storage') {materialOwner=owner('storage',slot.id,a.storage);materialMotion=motion(a.storage,a.storageRobotPickup,smooth(localTime-77));}
+  else if (stage === 'robot-transport') {materialOwner=owner('floor-robot',slot.robotId,'payload');materialMotion=motion(a.storageRobotPickup,a.cellInput,progress);}
   else if (['box-opening','drone-assembly'].includes(stage)) {materialOwner=owner('workcell',slot.cellId,a.cellInput);materialMotion=resting(a.cellInput);}
   else if (stage === 'complete') {materialOwner=owner('consumed',slot.cellId,a.cellInput);materialMotion=resting(a.cellInput);}
 
@@ -76,7 +93,7 @@ function sampleSlot(slot, timeSeconds) {
     robotId:slot.robotId,cellId:slot.cellId,boxOpen,assemblyProgress,productId,
   };
 
-  // After its material is unloaded, the semi closes up and returns EMPTY to port.
+  // After unloading, the open flatbed clears its loading area and returns EMPTY to port.
   // A separate cargo route is selected by semantic endpoints, never the story truck.
   const departure = phases.storage.start + 2, returnEnd = departure + phases['road-transit'].duration;
   let truckStage='port-waiting',truckProgress=0,routeId='cargo-port',fromAnchorId=a.portTruck,toAnchorId=a.portTruck;
@@ -87,13 +104,16 @@ function sampleSlot(slot, timeSeconds) {
   else if (localTime>=phases['bay-arrival'].end && localTime<departure) {truckStage='unloading';routeId='cargo-bay';fromAnchorId=a.bayTruck;toAnchorId=a.bayTruck;}
   else if (localTime>=departure && localTime<returnEnd) {truckStage='empty-return';truckProgress=(localTime-departure)/(returnEnd-departure);routeId='cargo-return';fromAnchorId=a.bayTruck;toAnchorId=a.portTruck;}
   const truckCargo=materialOwner.kind==='trailer'?cargoId:null;
-  const rearDoorOpen=stage==='bay-arrival'?clamp((progress-.75)/.25):stage==='forklift-unloading'?1:stage==='storage'?1-clamp((localTime-phases.storage.start)/2):0;
-  const truck={id:slot.truckId,slotId:slot.id,model:'truck',inspectable:false,stage:truckStage,status:truckStage,
+  const loadAccessProgress=stage==='truck-loading'?1:stage==='bay-arrival'?clamp((progress-.75)/.25):stage==='forklift-unloading'?1:stage==='storage'?1-clamp((localTime-phases.storage.start)/2):0;
+  const secureProgress=stage==='truck-loaded'?progress:stage==='road-transit'?1:stage==='bay-arrival'?1-loadAccessProgress:0;
+  const loadSecured=truckCargo!==null&&secureProgress===1;
+  const travelCycle=cycle+(localTime>=returnEnd?1:0);
+  const truck={id:slot.truckId,slotId:slot.id,model:'truck',bodyStyle:'open-flatbed',inspectable:false,stage:truckStage,status:truckStage,
     routeId,progress:truckProgress,motion:motion(fromAnchorId,toAnchorId,truckProgress),bayId:slot.bayId,
     cargoId:truckCargo,loaded:truckCargo!==null,loadProgress:stage==='truck-loading'?progress:truckCargo?1:0,
-    rearDoorOpen,trailerId:slot.trailerId,trailerAttached:true,reversing:truckStage==='docking',
+    loadAccessProgress,secureProgress,loadSecured,travelCycle,trailerId:slot.trailerId,trailerAttached:true,reversing:false,
     stopped:!['loaded-transit','empty-return','docking'].includes(truckStage),
-    trailer:{id:slot.trailerId,attached:true,cargoId:truckCargo,rearDoorOpen},
+    trailer:{id:slot.trailerId,attached:true,cargoId:truckCargo,loadAccessProgress,secureProgress,loadSecured},
     // The center must remain on this exterior bay anchor throughout unloading.
     stopAnchorId:routeId==='cargo-bay'||truckStage==='parked'?a.bayTruck:null,
   };
@@ -104,12 +124,14 @@ function sampleSlot(slot, timeSeconds) {
   else if (stage==='storage') {forkliftStage='returning';forkliftMotion=motion(a.storage,a.forkliftPark,progress);}
   const forklift={id:slot.forkliftId,slotId:slot.id,workerId:slot.workerId,bayId:slot.bayId,stage:forkliftStage,
     progress:forkliftMotion.progress,motion:forkliftMotion,cargoId:materialOwner.kind==='forklift'?cargoId:null,
-    carrying:materialOwner.kind==='forklift',forkHeight:stage==='bay-arrival' ? .18+1.05*clamp((progress-.75)/.25) : stage==='forklift-unloading' ? (progress<.15?1.23-.68*progress/.15:progress>.85?.55+.425*(progress-.85)/.15:.55) : stage==='storage' ? .975-.795*clamp(progress/.25) : .18,
+    carrying:materialOwner.kind==='forklift',forkHeight:stage==='bay-arrival' ? .18+1.05*clamp((progress-.75)/.25) : stage==='forklift-unloading' ? (progress<=.15?1.23:progress<.30?1.23-.68*(progress-.15)/.15:progress>.85?.55+.425*(progress-.85)/.15:.55) : stage==='storage' ? .975-.795*clamp(progress/.25) : .18,
+    forkHeightReference:'cargo-bottom',forkPocketOffset:.095,
+    loadPhase:stage==='forklift-unloading'?(progress<=.15?'extract':progress<.30?'lower':progress<=.85?'carry':'place'):'empty',
     grip:materialOwner.kind==='forklift'?1:0,operatorPresent:true,
   };
   let robotStage='waiting',robotMotion=resting(a.robotPark);
-  if (stage==='storage') {robotStage='approaching';robotMotion=motion(a.robotPark,a.storage,progress);}
-  else if (stage==='robot-transport') {robotStage='carrying';robotMotion=motion(a.storage,a.cellInput,progress);}
+  if (stage==='storage') {robotStage=localTime<77?'approaching':'waiting-for-transfer';robotMotion=motion(a.robotPark,a.storageRobotPickup,clamp((localTime-72)/5));}
+  else if (stage==='robot-transport') {robotStage='carrying';robotMotion=motion(a.storageRobotPickup,a.cellInput,progress);}
   else if (localTime>=phases['box-opening'].start && localTime<phases['box-opening'].start+10) {robotStage='returning';robotMotion=motion(a.cellInput,a.robotPark,(localTime-phases['box-opening'].start)/10);}
   const floorRobot={id:slot.robotId,slotId:slot.id,stage:robotStage,progress:robotMotion.progress,motion:robotMotion,
     cargoId:materialOwner.kind==='floor-robot'?cargoId:null,payload:materialOwner.kind==='floor-robot'?'parts-kit':null,
@@ -128,11 +150,91 @@ function sampleSlot(slot, timeSeconds) {
     progress:active?clamp((localTime-phases['box-opening'].start)/(phases['drone-assembly'].end-phases['box-opening'].start)):stage==='complete'?1:0,
     boxOpen,assemblyProgress,armAction:stage==='box-opening'?'open-box':stage==='drone-assembly'?'assemble-drone':'park',
   };
-  const product={id:productId,sourceCargoId:cargoId,cellId:slot.cellId,visible:['drone-assembly','complete'].includes(stage),
-    stage:stage==='complete'?'ready':'assembling',progress:assemblyProgress,
-    owner:owner('workcell',slot.cellId,a.cellOutput),attachment:{parentId:slot.cellId,anchorId:a.cellOutput},
+  const product=sampleProduct(slot,timeSeconds);
+  cell.outputProductId=product.visible&&product.owner.kind==='workcell'?product.id:null;
+  cell.outputTransferProgress=product.stage==='ready'?product.stageProgress:0;
+  if(product.stage==='ready')cell.armAction='handoff-output';
+  return {cargo,truck,forklift:outgoingForklift(slot,forklift,product),floorRobot:outgoingRobot(slot,floorRobot,product),crane,cell,product};
+}
+
+/** Retain an outgoing product across kit rollover; replace it only at next assembly. */
+function sampleProduct(slot,timeSeconds) {
+  const elapsed=timeSeconds-slot.offsetSeconds,started=elapsed>=PRODUCT_STAGES[0].start;
+  const cycle=started?Math.floor((elapsed-PRODUCT_STAGES[0].start)/CARGO_CYCLE_SECONDS):0;
+  const age=started?elapsed-cycle*CARGO_CYCLE_SECONDS:Math.max(0,elapsed);
+  const phase=started?PRODUCT_STAGES.find(p=>age<p.end):null,stage=phase?.id||'pending';
+  const stageProgress=phase?clamp((age-phase.start)/phase.duration):0,a=slot.anchors;
+  const sourceCargoId=cargoIdFor(slot,cycle),id=`DRONE-${sourceCargoId}`;
+  let custody=owner('workcell',slot.cellId,a.cellOutput),travel=resting(a.cellOutput);
+  if(stage==='ready')travel=motion(a.cellOutput,a.cellDispatchPickup,stageProgress);
+  else if(stage==='qa-transport'){custody=owner('floor-robot',slot.robotId,'payload');travel=motion(a.cellDispatchPickup,a.qaInput,stageProgress);}
+  else if(stage==='qa-testing'){custody=owner('qa-station',slot.qaStationId,a.qaInput);travel=age<132?motion(a.qaInput,a.qaTest,smooth((age-130)/2)):age<136?resting(a.qaTest):motion(a.qaTest,a.qaOutput,smooth((age-136)/2));}
+  else if(stage==='dispatch-transport'){custody=owner('floor-robot',slot.robotId,'payload');travel=motion(a.qaOutput,a.dispatchInput,stageProgress);}
+  else if(stage==='dispatch-staged'){custody=owner('dispatch-staging',slot.dispatchStagingId,a.dispatchStaging);travel=motion(a.dispatchInput,a.dispatchStaging,smooth((age-146)/2));}
+  else if(stage==='outbound-loading'){custody=owner('forklift',slot.forkliftId,'forks');travel=motion(a.dispatchStaging,a.outboundLoad,stageProgress);}
+  else if(['outbound-loaded','outbound-transit'].includes(stage)){custody=owner('trailer',slot.outboundTrailerId,a.outboundLoad);travel=resting(a.outboundLoad);}
+  else if(stage==='fleet-received'){custody=owner('fleet',OUTBOUND_FLEET_ID,a.fleetHandoff);travel=resting(a.fleetHandoff);}
+  const assemblyProgress=stage==='assembling'?stageProgress:started?1:0;
+  return {id,sourceCargoId,slotId:slot.id,cycleIndex:cycle,transferId:id,cellId:slot.cellId,
+    stage,stageProgress,progress:assemblyProgress,assemblyProgress,lifecycleTimeSeconds:age,
+    visible:started&&stage!=='fleet-received',completed:started&&age>=118,qaPassed:started&&age>=138,
+    owner:custody,carrierId:custody.id,attachment:{parentId:custody.id,anchorId:custody.anchorId},motion:travel,
+    qaStationId:slot.qaStationId,dispatchStagingId:slot.dispatchStagingId,
+    outboundVehicleId:slot.outboundVehicleId,outboundTrailerId:slot.outboundTrailerId,dispatchBayId:slot.dispatchBayId,destinationId:OUTBOUND_FLEET_ID,
   };
-  return {cargo,truck,forklift,floorRobot,crane,cell,product};
+}
+
+/** The existing AMR works the output stream only during its proven idle window. */
+function outgoingRobot(slot,base,product) {
+  const t=product.lifecycleTimeSeconds,a=slot.anchors;
+  if(product.stage==='pending'||t<118||t>=158)return base;
+  let stage,travel;
+  if(t<122){stage='output-approaching';travel=motion(a.robotPark,a.cellDispatchPickup,(t-118)/4);}
+  else if(t<130){stage='qa-transport';travel=product.motion;}
+  else if(t<138){stage='qa-bypass';travel=t<132?motion(a.qaInput,a.qaBypassIn,(t-130)/2):t<136?motion(a.qaBypassIn,a.qaBypassOut,(t-132)/4):motion(a.qaBypassOut,a.qaOutput,(t-136)/2);}
+  else if(t<146){stage='dispatch-transport';travel=product.motion;}
+  else if(t<148){stage='dispatch-transfer';travel=resting(a.dispatchInput);}
+  else{stage='output-returning';travel=motion(a.dispatchInput,a.robotPark,(t-148)/10);}
+  const carrying=product.owner.kind==='floor-robot';
+  return {...base,flow:'outgoing',stage,progress:travel.progress,motion:travel,cargoId:null,
+    productId:carrying?product.id:null,carrying,payload:carrying?'finished-drone':null,lift:carrying?1:0};
+}
+
+/** Outgoing fork supports are resolved from asset anchors, never guessed carrier heights. */
+function outgoingForklift(slot,base,product) {
+  const t=product.lifecycleTimeSeconds,a=slot.anchors;
+  if(product.stage==='pending'||t<146||t>=166)return base;
+  let stage,travel,support;
+  if(t<152){stage='dispatch-approaching';travel=motion(a.forkliftPark,a.dispatchStaging,(t-146)/6);support=motion(a.forkliftStowed,a.dispatchStaging,clamp((t-150)/2));}
+  else if(t<156){stage='outbound-loading';travel=product.motion;support=product.motion;}
+  else{stage='dispatch-returning';travel=motion(a.outboundLoad,a.forkliftPark,(t-156)/10);support=motion(a.outboundLoad,a.forkliftStowed,clamp((t-156)/2));}
+  const carrying=product.owner.kind==='forklift';
+  const {forkHeight,...actor}=base;
+  return {...actor,flow:'outgoing',stage,progress:travel.progress,motion:travel,cargoId:null,
+    productId:carrying?product.id:null,carrying,grip:carrying?1:0,
+    forkHeightMode:'anchors',forkSupportMotion:support};
+}
+
+function sampleOutboundVehicles(products,timeSeconds) {
+  return [0,1].map(index=>{
+    const slot=CARGO_SLOTS[index],id=slot.outboundVehicleId;
+    const active=products.find(p=>p.outboundVehicleId===id&&p.stage!=='pending'&&p.lifecycleTimeSeconds>=146&&p.lifecycleTimeSeconds<200);
+    const a=active?CARGO_SLOTS.find(s=>s.id===active.slotId).anchors:slot.anchors,t=active?.lifecycleTimeSeconds??0;
+    let stage='waiting',routeId='cargo-dispatch-bay',progress=0,travel=resting(a.dispatchVehicle),secureProgress=0;
+    if(active&&t<152){stage='preparing';}
+    else if(active&&t<156){stage='loading';}
+    else if(active&&t<158){stage='securing';secureProgress=(t-156)/2;}
+    else if(active&&t<178){stage='outbound-transit';secureProgress=1;routeId='cargo-dispatch-outbound';progress=(t-158)/20;travel=motion(a.dispatchVehicle,a.fleetHandoff,progress);}
+    else if(active){stage='empty-return';routeId='cargo-dispatch-return';progress=(t-178)/22;travel=motion(a.fleetHandoff,a.dispatchVehicle,progress);}
+    const firstReturn=slot.offsetSeconds+200,travelCycle=timeSeconds<firstReturn?0:Math.floor((timeSeconds-firstReturn)/64)+1;
+    const productIds=active?.owner.kind==='trailer'&&active.owner.id===slot.outboundTrailerId?[active.id]:[];
+    return {id,model:'truck',bodyStyle:'open-flatbed',inspectable:false,trailerAttached:true,trailerId:slot.outboundTrailerId,bayId:slot.dispatchBayId,stage,status:stage,
+      routeId,progress,motion:travel,travelCycle,reversing:false,stopped:routeId==='cargo-dispatch-bay',secureProgress,loadSecured:productIds.length>0&&secureProgress===1,
+      trailer:{id:slot.outboundTrailerId,attached:true,productIds},
+      stopAnchorId:routeId==='cargo-dispatch-bay'?a.dispatchVehicle:null,
+      capacity:CARGO_PROCESS_LIMITS.outboundCapacity,productIds,productId:productIds[0]||null,loaded:productIds.length>0,
+      destinationId:OUTBOUND_FLEET_ID,qaPassed:productIds.length?active.qaPassed:null};
+  });
 }
 
 /**
@@ -145,12 +247,14 @@ function sampleSlot(slot, timeSeconds) {
 export function sampleCargoProcess(timeSeconds=0, {paused=false,presentationOffsetSeconds=0}={}) {
   const time=seconds(timeSeconds),offset=seconds(presentationOffsetSeconds),processTime=seconds(time+offset);
   const slots=CARGO_SLOTS.map(slot=>sampleSlot(slot,processTime));
-  const cargo=slots.map(slot=>slot.cargo);
+  const cargo=slots.map(slot=>slot.cargo),products=slots.map(slot=>slot.product);
+  const qaStations=[{id:'QA-01',capacity:1,productIds:products.filter(p=>p.owner.kind==='qa-station').map(p=>p.id)}];
+  const dispatchStaging=[0,1].map(i=>({id:CARGO_SLOTS[i].dispatchStagingId,bayId:CARGO_SLOTS[i].dispatchBayId,capacity:1,sortKey:'destination-fleet',productIds:products.filter(p=>p.owner.kind==='dispatch-staging'&&p.dispatchStagingId===CARGO_SLOTS[i].dispatchStagingId).map(p=>p.id)}));
   const ships=['SHIP-01','SHIP-02'].map(id=>({id,stage:'berthed',cargoIds:cargo.filter(c=>c.owner.kind==='ship'&&c.owner.id===id).map(c=>c.id)}));
   return freeze({version:CARGO_PROCESS_VERSION,illustrative:true,label:'Illustrative cargo and drone assembly; not dispatch or production records',
     timeSeconds:time,processTimeSeconds:processTime,presentationOffsetSeconds:offset,paused:!!paused,cycleSeconds:CARGO_CYCLE_SECONDS,cargo,ships,
     trucks:slots.map(slot=>slot.truck),cranes:slots.map(slot=>slot.crane),forklifts:slots.map(slot=>slot.forklift),
-    floorRobots:slots.map(slot=>slot.floorRobot),products:slots.map(slot=>slot.product),
+    floorRobots:slots.map(slot=>slot.floorRobot),products,qaStations,dispatchStaging,outboundVehicles:sampleOutboundVehicles(products,processTime),
     factoryAssembly:{cells:slots.map(slot=>slot.cell)},
   });
 }
@@ -180,6 +284,30 @@ export function cargoEventsBetween(fromSeconds, toSeconds, {limit=CARGO_PROCESS_
         type:phase.id==='complete'?'drone-completed':phase.id==='ship'?'shipment-ready':'cargo-stage-entered',owner:cargo.owner,
         ...(phase.id==='complete'?{productId:cargo.productId}:{}),
       });
+    }
+  }
+  latest.sort((a,b)=>a.timeSeconds-b.timeSeconds||a.slotId.localeCompare(b.slotId)||a.id.localeCompare(b.id));
+  const events=capacity?latest.slice(-capacity):[];
+  return freeze({events,omittedCount:total-events.length});
+}
+
+/** Additive finished-product events; same bounded app-clock semantics as cargo events. */
+export function productEventsBetween(fromSeconds,toSeconds,{limit=CARGO_PROCESS_LIMITS.events,presentationOffsetSeconds=0}={}) {
+  const offset=seconds(presentationOffsetSeconds),from=seconds(seconds(fromSeconds)+offset),to=seconds(seconds(toSeconds)+offset);
+  const capacity=Number.isFinite(limit)?Math.max(0,Math.min(CARGO_PROCESS_LIMITS.events,Math.floor(limit))):CARGO_PROCESS_LIMITS.events;
+  if(to<=from)return freeze({events:[],omittedCount:0});
+  const latest=[];let total=0;
+  for(const slot of CARGO_SLOTS)for(const phase of PRODUCT_STAGES){
+    const firstTime=slot.offsetSeconds+phase.start;
+    const firstCycle=Math.max(0,Math.floor((from-firstTime)/CARGO_CYCLE_SECONDS)+1),lastCycle=Math.floor((to-firstTime)/CARGO_CYCLE_SECONDS);
+    if(lastCycle<firstCycle)continue;
+    total+=lastCycle-firstCycle+1;
+    for(let cycle=Math.max(firstCycle,lastCycle-capacity+1);cycle<=lastCycle;cycle++){
+      const at=firstTime+cycle*CARGO_CYCLE_SECONDS,product=sampleProduct(slot,at);
+      latest.push({id:`${product.id}:${phase.id}`,timeSeconds:at-offset,processTimeSeconds:at,
+        productId:product.id,sourceCargoId:product.sourceCargoId,slotId:slot.id,stage:phase.id,
+        type:phase.id==='dispatch-transport'?'product-qa-passed':phase.id==='fleet-received'?'product-fleet-received':'product-stage-entered',
+        owner:product.owner,qaPassed:product.qaPassed});
     }
   }
   latest.sort((a,b)=>a.timeSeconds-b.timeSeconds||a.slotId.localeCompare(b.slotId)||a.id.localeCompare(b.id));
