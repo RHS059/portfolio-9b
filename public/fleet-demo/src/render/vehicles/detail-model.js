@@ -137,8 +137,12 @@ function truckBody(T, a, trailerAttached=true) {
   a.bar('panel',[0,5.30,2.122],[0,6.82,1.878],.012,'hood-center-seam');
   for (const x of [-.8,-.4,0,.4,.8]) a.box('metal',.11,.13,.07,x,4.35,3.76,'roof-marker');
   if(!trailerAttached)return;
+  boxTrailerBody(T,a,true);
+}
+
+function boxTrailerBody(T,a,includeServiceLines=false) {
   // Simple air/electrical lines indicate the tractor/trailer join without a mechanism model.
-  for (const x of [-.25,0,.25]) a.bar('ink',[x,2.22,1.9],[x+.12,1.89,1.4],.025,'trailer-service-line');
+  if(includeServiceLines)for (const x of [-.25,0,.25]) a.bar('ink',[x,2.22,1.9],[x+.12,1.89,1.4],.025,'trailer-service-line');
   // Box trailer: opaque shell, frame, panel seams, rear doors/hinges and retracted supports.
   a.box('paper',2.58,12.15,2.84,0,-4.175,2.73,'box-trailer');
   a.box('panel',2.66,12.21,.10,0,-4.175,4.18,'trailer-roof-rail');
@@ -161,6 +165,41 @@ function truckBody(T, a, trailerAttached=true) {
   }
   a.box('metal',2.25,.16,.13,0,-10.1,.63,'rear-underride-bar');
   for (const x of [-.72,.72]) a.box('ink',.10,.1,.47,x,-10.1,.91,'underride-support');
+}
+
+
+/** Open deck for the shared pallet/crate visual; no baked load and no roof. */
+function flatbedTrailerBody(T,a) {
+  // Taper the forward neck so real independent trailer yaw clears the cab.
+  const deckShape=new T.Shape();
+  [[-1.29,-10.25],[1.29,-10.25],[1.29,-1.5],[.40,1.9],[-.40,1.9],[-1.29,-1.5]].forEach(([x,y],i)=>i?deckShape.lineTo(x,y):deckShape.moveTo(x,y));
+  deckShape.closePath();a.add('panel',new T.ExtrudeGeometry(deckShape,{depth:.12,bevelEnabled:false,steps:1}).translate(0,0,1.21),'flatbed-deck');
+  a.box('metal',2.64,8.75,.14,0,-5.875,1.20,'flatbed-edge-rail');
+  for(const side of [-1,1])a.bar('metal',[side*1.29,-1.5,1.24],[side*.40,1.9,1.24],.035,'flatbed-neck-rail');
+  a.box('metal',.84,.08,.14,0,1.9,1.20,'flatbed-front-rail');
+  for(const y of [1.77,-.65,-3.07,-5.49,-7.91,-10.10]) {
+    a.box('ink',y> -1.5?.75:2.30,.09,.18,0,y,1.06,'flatbed-crossmember');
+    a.box('metal',y> -1.5?.75:2.56,.018,.014,0,y,1.337,'flatbed-deck-seam');
+  }
+  for(const side of [-1,1]) {
+    a.box('ink',.12,8.75,.24,side*.79,-5.875,1.06,'flatbed-frame-rail');
+    for(const y of [-1.7,-4.2,-7.2,-10.05]){
+      a.box('paper',.025,.36,.05,side*1.328,y,1.21,'flatbed-reflector');
+      a.box('ink',.08,.12,.09,side*1.28,y,1.275,'flatbed-tie-down');
+    }
+    a.box('metal',.12,.15,.65,side*.91,.18,.91,'landing-leg');
+    a.box('ink',.36,.40,.08,side*.91,.18,.55,'landing-foot');
+    a.box('ink',.64,.09,.46,side*1.1,-8.95,.41,'trailer-mudflap');
+    a.box('ink',.28,.065,.13,side*.9,-10.30,1.20,'rear-light');
+  }
+  a.box('ink',.55,3.1,.18,0,.08,1.10,'flatbed-neck-spine');
+  a.box('metal',2.25,.16,.13,0,-10.1,.63,'rear-underride-bar');
+  for(const x of [-.72,.72])a.box('ink',.10,.1,.47,x,-10.1,.91,'underride-support');
+}
+function trailerRunningGear(T,a) {
+  for(const y of [-7,-8.3])a.cylinder('ink',.105,2.5,0,y,.55,'x','trailer-axle');
+  a.box('metal',1.0,.95,.035,0,1.28,1.2025,'kingpin-skid-plate');
+  a.cylinder('ink',.06,.18,0,1.28,1.16,'z','trailer-kingpin',12);
 }
 
 function vanBody(T,a) {
@@ -226,21 +265,47 @@ export function detailedWheelLayout(kind='truck',trailerAttached=true) {
  * wheelCenters are axle centers (with radius). groundContacts are the nominal
  * bottom-of-tire support points, NOT axle centers or world-space positions.
  */
-function modelMetadata(kind, min, max, trailerAttached=true) {
-  const wheelCenters = Object.freeze(detailedWheelLayout(kind,trailerAttached).map(wheel => Object.freeze(wheel)));
+function modelMetadata(kind, min, max, trailerAttached=true,extra={}) {
+  return supportMetadata(detailedWheelLayout(kind,trailerAttached),min,max,extra);
+}
+function supportMetadata(layout,min,max,extra={}) {
+  const wheelCenters = Object.freeze(layout.map(wheel => Object.freeze(wheel)));
   const groundContacts = Object.freeze(wheelCenters.map((wheel, wheelIndex) => Object.freeze({
     wheelIndex, x: wheel.x, y: wheel.y, z: wheel.z - wheel.radius,
   })));
   return Object.freeze({
     bounds: Object.freeze({min: Object.freeze(min), max: Object.freeze(max)}),
     boundsToleranceMeters: 1e-5, groundContact: DETAIL_GROUND_CONTACT,
-    wheelCenters, groundContacts,
+    wheelCenters, groundContacts, ...extra,
   });
+}
+const frozenPoint=(x,y,z)=>Object.freeze([x,y,z]);
+export const TRACTOR_TRAILER_ANCHORS=Object.freeze({
+  tractor:Object.freeze({fifthWheel:frozenPoint(0,1.28,1.195),steerAxle:frozenPoint(0,5.78,.55),driveAxle:frozenPoint(0,.53,.55),wheelbase:5.25}),
+  trailer:Object.freeze({kingpin:frozenPoint(0,0,1.195),axle:frozenPoint(0,-8.93,.55),wheelbase:8.93}),
+});
+export const FLATBED_CARGO_METADATA=Object.freeze({
+  supportOrigin:'pallet-bottom-center',palletLongAxis:'+X',
+  palletDimensions:Object.freeze([1.2,1,.19]),cartonDimensions:Object.freeze([.805,.605,.487]),
+  acceptedPalletYaw:Object.freeze([0,Math.PI/2,Math.PI,-Math.PI/2]),
+  deck:Object.freeze({min:frozenPoint(-1.29,-11.53,1.33),max:frozenPoint(1.29,-2.78,1.33)}),
+  deckOutline:Object.freeze([[-1.29,-11.53],[1.29,-11.53],[1.29,-2.78],[.40,.62],[-.40,.62],[-1.29,-2.78]].map(p=>Object.freeze(p))),
+  // Rear pallet is directly accessible from the trailer rear. Extra slots are
+  // placement candidates, not an inventory or autonomous load/unload sequence.
+  slots:Object.freeze([-10.38,-8,-5.6,-3.5].map((y,i)=>Object.freeze({
+    id:`deck-pallet-${i+1}`,support:frozenPoint(0,y,1.33),loadTop:frozenPoint(0,y,2.007),
+    forkPocket:frozenPoint(0,y,1.425),pickBounds:Object.freeze({min:frozenPoint(-.6,y-.5,1.33),max:frozenPoint(.6,y+.5,2.007)}),
+  }))),
+});
+export function detailedTrailerWheelLayout(){
+  return detailedWheelLayout('truck',true).slice(10).map(w=>({...w,y:w.y-1.28}));
 }
 export const DETAIL_MODEL_METADATA = Object.freeze({
   truck: modelMetadata('truck', [-1.73, -10.389, .05], [1.73, 7.4555, 4.23]),
-  tractor: modelMetadata('truck', [-1.73, -.81, .05], [1.73, 7.4555, 3.82], false),
+  tractor: modelMetadata('truck', [-1.73, -.81, .05], [1.73, 7.4555, 3.82], false,{anchors:TRACTOR_TRAILER_ANCHORS.tractor,pickAnchor:frozenPoint(0,4,1.8)}),
   van: modelMetadata('van', [-1.475, -2.7, .05], [1.475, 2.69, 2.94]),
+  boxTrailer:supportMetadata(detailedTrailerWheelLayout(),[-1.502,-11.669,.05],[1.502,.705,4.23],{anchors:TRACTOR_TRAILER_ANCHORS.trailer,pickAnchor:frozenPoint(0,-5.455,2.73)}),
+  flatbedTrailer:supportMetadata(detailedTrailerWheelLayout(),[-1.502,-11.6125,.05],[1.502,.66,1.344],{anchors:TRACTOR_TRAILER_ANCHORS.trailer,pickAnchor:frozenPoint(0,-5.455,1.33),cargo:FLATBED_CARGO_METADATA}),
 });
 
 /** Caller owns near/far selection and a bounded pool. Never create one per distant vehicle.
@@ -253,15 +318,19 @@ export function createDetailedVehicle({THREE:T,kind='truck',trailerAttached=true
   if(!T?.InstancedMesh) throw new TypeError('Detailed vehicles require Three r128');
   kind=kind==='van'?'van':'truck';
   const modelKey=kind==='truck'&&!trailerAttached?'tractor':kind;
-  const group=new T.Group(); group.name=`detailed-${modelKey}`;
   const body=author(T); (kind==='truck'?truckBody:vanBody)(T,body,trailerAttached);
+  return buildDetailedModel(T,{kind,modelKey,body,layout:detailedWheelLayout(kind,trailerAttached),metadata:DETAIL_MODEL_METADATA[modelKey],trailerAttached});
+}
+
+function buildDetailedModel(T,{kind,modelKey,body,layout,metadata,trailerAttached=false}) {
+  const group=new T.Group();group.name=`detailed-${modelKey}`;
   const resources=[];
   for(const [key,parts] of body.buckets) {
     const geometry=mergeParts(T,parts),material=new T.MeshBasicMaterial({color:DETAIL_PALETTE[key],side:T.DoubleSide});
     const mesh=new T.Mesh(geometry,material);mesh.name=`${kind}-body-${key}`;
     group.add(mesh);resources.push(geometry,material);
   }
-  const authoredWheels=wheelGeometry(T),layout=detailedWheelLayout(kind,trailerAttached),batches=[];
+  const authoredWheels=wheelGeometry(T),batches=[];
   for(const [key,parts] of authoredWheels.buckets) {
     const geometry=mergeParts(T,parts),material=new T.MeshBasicMaterial({color:DETAIL_PALETTE[key],side:T.DoubleSide});
     const mesh=new T.InstancedMesh(geometry,material,layout.length); mesh.name=`${kind}-wheels-${key}`;
@@ -284,12 +353,34 @@ export function createDetailedVehicle({THREE:T,kind='truck',trailerAttached=true
     for(const batch of batches)batch.instanceMatrix.needsUpdate=true;
   }
   group.userData={kind,trailerAttached:kind==='truck'&&trailerAttached,detailLevel:'close',wheelCount:layout.length,wheelRadius:layout[0].radius,
-    ...DETAIL_MODEL_METADATA[modelKey],
+    ...metadata,
     features:Object.freeze([...new Set([...body.features,...authoredWheels.features])]),drawCalls:group.children.length};
   setDistance(0);
   return {group,setDistance,wheelBatches:batches,wheelLayout:layout,
-    getDistance:()=>distance,
+    metadata, getDistance:()=>distance,
     // Final scene cleanup can alternatively traverse the group, but must not do both.
     dispose(){if(disposed)return;disposed=true;resources.forEach(resource=>resource.dispose());group.parent?.remove(group);},
   };
+}
+
+/** Standalone tractor preserves the f76c601 maintenance/no-trailer contract. */
+export function createDetailedTractor({THREE:T}={}){
+  const model=createDetailedVehicle({THREE:T,kind:'truck',trailerAttached:false});
+  model.group.userData.articulatedPart='tractor';return model;
+}
+/** Trailer root = kingpin XY ground projection, +Y forward, +Z up.
+ * A3 supplies the rigid pose from its path/articulation solver every frame.
+ * Place root so metadata.anchors.kingpin exactly meets the tractor fifthWheel.
+ * No delayed following, steering, cargo spawning or ownership state lives here.
+ */
+export function createDetailedTrailer({THREE:T,style='flatbed'}={}){
+  if(!T?.InstancedMesh)throw new TypeError('Detailed trailers require Three r128');
+  if(style!=='flatbed'&&style!=='box')throw new TypeError('Unknown trailer style');
+  const body=author(T);(style==='box'?boxTrailerBody:flatbedTrailerBody)(T,body);
+  trailerRunningGear(T,body);
+  for(const parts of body.buckets.values())for(const geometry of parts)geometry.translate(0,-1.28,0);
+  const modelKey=style==='box'?'boxTrailer':'flatbedTrailer';
+  const model=buildDetailedModel(T,{kind:'trailer',modelKey,body,layout:detailedTrailerWheelLayout(),metadata:DETAIL_MODEL_METADATA[modelKey]});
+  model.group.userData.trailerStyle=style;model.group.userData.articulatedPart='trailer';
+  return model;
 }
