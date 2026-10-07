@@ -105,7 +105,7 @@ try{
  evidence.checks.push('guided initial state: migrated vehicle unresolved, unmigrated vehicle A');
  assert.equal(await page.locator('#project-info').isVisible(),true);assert.equal(await page.locator('#story-content').isVisible(),false);assert.equal(initial.intro,true);assert.equal((await page.locator('#intro-panel h1').innerText()).replace(/\s+/g,' ').trim(),STORY_TITLE);assert.ok((await page.locator('#project-info').innerText()).includes('UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager'));
  assert.equal(await page.evaluate(()=>{const info=document.querySelector('#project-info').getBoundingClientRect(),world=document.querySelector('.world-panel').getBoundingClientRect();return info.right<=world.left;}),true);
- await page.locator('#start-story').click();assert.equal((await state()).selectedVehicleId,'TRK-104');assert.equal((await state()).follow,true);assert.equal(await page.locator('#source-inspector').isVisible(),false);await advanceToStage(2);assert.equal((await state()).follow,false);await openSource();assert.equal(await page.locator('#source-inspector').isVisible(),true);
+ await page.locator('#next-chapter').click();assert.equal((await state()).selectedVehicleId,'TRK-104');assert.equal((await state()).follow,true);assert.equal(await page.locator('#source-inspector').isVisible(),false);await advanceToStage(2);assert.equal((await state()).follow,false);await openSource();assert.equal(await page.locator('#source-inspector').isVisible(),true);
  evidence.checks.push('left opening metadata and teaser transition into the story and source inspector');
  await openReview();
  await page.locator('[data-action="review-imports"]').click();
@@ -144,8 +144,8 @@ try{
  phase='responsive-390';await page.setViewportSize({width:390,height:844});
  await page.screenshot({path:path.join(out,'03-mobile.png'),fullPage:true});
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
-assert.equal(await page.evaluate(()=>document.querySelector('#start-story-manual').getBoundingClientRect().bottom<=document.querySelector('.world-panel').getBoundingClientRect().top),true);
- evidence.checks.push('390px opening places project metadata and both Next choices before the scene without overflow');
+assert.equal(await page.evaluate(()=>{const bar=document.querySelector('#story-transport').getBoundingClientRect();return bar.top>=0&&bar.bottom<=innerHeight+1;}),true);
+ evidence.checks.push('390px opening preserves project metadata and keeps the single transport inside the viewport');
  await page.setViewportSize({width:1600,height:1000});
  await openSource();
  await page.locator('[data-action="set-authority"][data-source="B"]').click();

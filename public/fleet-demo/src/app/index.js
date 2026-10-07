@@ -4,7 +4,6 @@ import {createSimulation} from '../core/simulation.js';
 import {sampleCargoProcess,CARGO_PRESENTATION_OFFSET_SECONDS} from '../core/cargo-process.js';
 import {sampleOrdinaryTraffic} from '../render/map/cargo-routes.js';
 import {STORY_SCENES,STORY_DURATION,sampleStory,sceneTime,sampleMileage,sampleCost} from './story-timeline.js';
-import {floatingPlaybackBottom} from './mobile-playback-placement.js';
 import {createStoryTextTransition} from './story-text-transition.js';
 import {reviewFixture} from './review-adapter.js';
 import {createProvenancePanel as createFallbackPanel} from './fallback-provenance.js';
@@ -40,23 +39,13 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   }
   function evaluate(){evaluation=domain.replayReadings(scenario,{asOf:scenario.asOf});}
   function setPaused(paused){sim?.setPaused(paused);renderPlayback();}
-  function positionMobilePlayback(){
-    const control=$('#mobile-pause'),advance=$('#story-advance-controls');
-    if(!control||!advance||typeof globalThis.getComputedStyle!=='function')return;
-    control.style.removeProperty('--mobile-playback-bottom');
-    const computed=getComputedStyle(control);if(computed.display==='none'||computed.position!=='fixed')return;
-    const rect=control.getBoundingClientRect(),regions=[advance.getBoundingClientRect(),$('#camera-controls')?.getBoundingClientRect()];
-    const bottom=floatingPlaybackBottom({viewportHeight:doc.documentElement.clientHeight||window.innerHeight,bottom:Number.parseFloat(computed.bottom)||14,height:rect.height,left:rect.left,right:rect.right,regions});
-    control.style.setProperty('--mobile-playback-bottom',`${bottom}px`);
-  }
   function renderPlayback(){
     const paused=sim?.getState().paused??true;$('.workspace').dataset.playing=String(!paused);
-    $$('#pause, #mobile-pause').forEach(button=>{const label=paused?'Play story':'Pause story';button.setAttribute('aria-label',label);button.setAttribute('title',label);button.setAttribute('aria-pressed',String(!paused));button.disabled=!ready;});
+    $$('#pause').forEach(button=>{const label=paused?'Play story':'Pause story';button.setAttribute('aria-label',label);button.setAttribute('title',label);button.setAttribute('aria-pressed',String(!paused));button.disabled=!ready;});
     $$('[data-playback-icon]').forEach(icon=>{icon.hidden=(icon.dataset.playbackIcon==='play')!==paused;});
-    $('#start-story').disabled=!ready||stage===STORY_SCENES.length-1;$('#start-story-manual').disabled=!ready||stage===STORY_SCENES.length-1;$('#pause').disabled=!ready;$('#story-progress').disabled=!ready;
+    $('#pause').disabled=!ready;$('#story-progress').disabled=!ready;
     $$('[data-scene-index], [data-view]').forEach(button=>{button.disabled=!ready;});
     $('#playback-status').textContent=exploring?(paused?'Manual view · paused':'Manual view · playing'):story.complete?'End of story':paused?(reducedMotion.matches?'Paused · reduced motion':'Paused · explore at your pace'):'Autoplay · pause anytime';
-    positionMobilePlayback();
   }
   function applySceneCamera(){
     if(exploring)return;
@@ -79,16 +68,19 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     $('#open-source-controls').hidden=beatIndex!==6;$('#run-story-review').hidden=beatIndex!==7;
     const takeaways={6:'<strong>90% faster</strong><p>Data issue resolution went from weeks to hours.</p>'};
     $('#chapter-takeaway').innerHTML=takeaways[beatIndex]||'';
-    const body=$('#sidebar-story-body');if(body.dataset.scene!==beat.id){body.scrollTop=0;body.dataset.scene=beat.id;}positionMobilePlayback();
+    const body=$('#sidebar-story-body');if(body.dataset.scene!==beat.id){body.scrollTop=0;body.dataset.scene=beat.id;}
     });
     $('#story-position').textContent=`${String(stage+1).padStart(2,'0')} / 09 · ${story.label}`;
-    $('#previous-chapter').disabled=!ready||stage===0;
-    $('#next-chapter').disabled=!ready||stage===8;$('#next-chapter').setAttribute('aria-label','Next scene');
+    $('#previous-chapter').disabled=!ready||stage===0;$('#previous-chapter').hidden=stage===0;
+    $('#next-chapter').disabled=!ready||stage===8;$('#next-chapter').hidden=stage===8;$('#next-chapter').setAttribute('aria-label','Next scene');
     $$('[data-story-overlay]').forEach(element=>{element.hidden=exploring||element.dataset.storyOverlay!==story.id;});
     $$('[data-scene-index]').forEach(button=>{const index=Number(button.dataset.sceneIndex);button.setAttribute('aria-current',index===stage?'step':'false');button.dataset.complete=String(index<stage);});
     renderPlayback();
   }
   function renderPresentation(){
+    const clockTime=seconds=>`${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,'0')}`;
+    $('#story-elapsed').textContent=clockTime(story.timeSeconds);$('#story-duration').textContent=clockTime(STORY_DURATION);
+    $('#story-progress').style.backgroundImage=`linear-gradient(to right,#fff ${story.timeSeconds/STORY_DURATION*100}%,#ffffff40 ${story.timeSeconds/STORY_DURATION*100}%)`;
     $('#story-progress').value=String(story.timeSeconds);$('#story-progress').setAttribute('aria-valuetext',`Scene ${stage+1} of 9: ${story.label}, ${Math.round(story.progress*100)} percent`);
     $('#selected-asset').textContent=selectedVehicleId;$('#asset-role').textContent=stage<2?'On the road':stage<6?'Back in the workshop':'Odometer source';
     if(stage===4){const mileage=sampleMileage(story.elapsedSeconds);$('#mileage-day').textContent=String(mileage.day);$('#mileage-current').textContent=mileage.current.toLocaleString('en-US');$('#mileage-value').textContent=mileage.display.toLocaleString('en-US');$('#mileage-alert').textContent=mileage.maintenanceDue?'Preventive maintenance appears due. Again.':mileage.atCurrent?'Current reading imported':'Stale reading imported again';$('#mileage-alert').dataset.due=String(mileage.maintenanceDue);}
@@ -158,18 +150,12 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   }
   function bind(){
     $('#source-dialog').hidden=true;$('.workspace').dataset.dialogOpen='false';
-    // One mobile control stays reachable until the full playback control is on screen.
-    if(typeof IntersectionObserver==='function'){
-      const observer=new IntersectionObserver(entries=>{if(disposed)return;const entry=entries.find(item=>item.target===$('#pause'));if(entry){$('.workspace').dataset.playbackVisible=String(entry.isIntersecting&&entry.intersectionRatio>=.5);positionMobilePlayback();}},{threshold:[0,.5,1]});
-      observer.observe($('#pause'));cleanups.push(()=>observer.disconnect());
-    }
-    on(window,'scroll',positionMobilePlayback,{passive:true});
     $('#scene-steps').innerHTML=STORY_SCENES.map(item=>`<button type="button" data-scene-index="${item.index}" aria-label="Scene ${item.index+1}: ${item.label}" title="${item.label}">${String(item.index+1).padStart(2,'0')}</button>`).join('');
     $('#story-progress').max=String(STORY_DURATION);
-    on($('#start-story'),'click',()=>{if(!ready||stage>=STORY_SCENES.length-1)return;setChapter(stage+1);setPaused(false);});on($('#start-story-manual'),'click',()=>{if(ready&&stage<STORY_SCENES.length-1)setChapter(stage+1);});on($('#previous-chapter'),'click',()=>setChapter(stage-1));on($('#next-chapter'),'click',()=>setChapter(stage+1));
+    on($('#previous-chapter'),'click',()=>setChapter(stage-1));on($('#next-chapter'),'click',()=>setChapter(stage+1));
     $$('[data-scene-index]').forEach(button=>on(button,'click',()=>setChapter(Number(button.dataset.sceneIndex))));
     on($('#story-progress'),'input',event=>{if(!ready)return;exploring=false;setPaused(true);sim?.seek(Number(event.target.value));render();applySceneCamera();});
-    on($('#mobile-pause'),'click',togglePlayback);on($('#pause'),'click',togglePlayback);
+    on($('#pause'),'click',togglePlayback);
     on($('#open-source-controls'),'click',()=>{mode='then';openDialog('#source-dialog');render();});
     on($('#run-story-review'),'click',()=>{mode='today';openDialog('#source-dialog');render();void handleAction({type:'review-imports'});});
     on($('#source-close'),'click',()=>closeDialog());
@@ -202,7 +188,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     }catch(error){if(disposed)return;if($('#scene-loading'))$('#scene-loading').textContent=`Scene unavailable: ${error.message}. Story playback and source controls are still usable.`;}
     if(disposed)return;ready=true;
     sim=createSimulation({onTick:syncClock});sim.setPaused(true);render();
-    on(window,'resize',()=>{scene?.resize();positionMobilePlayback();});
+    on(window,'resize',()=>{scene?.resize();});
     let suspendedPauseState=null;
     on(window,'pagehide',event=>{if(event.persisted){suspendedPauseState=sim?.getState().paused??true;setPaused(true);}else dispose();});
     on(window,'pageshow',event=>{if(event.persisted&&suspendedPauseState!==null){setPaused(suspendedPauseState);suspendedPauseState=null;scene?.resize();render();}});

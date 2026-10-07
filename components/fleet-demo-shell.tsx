@@ -116,10 +116,6 @@ function FleetSidebar() {
       </div>
     </div>
     </div>
-    <div id="story-advance-controls" className={styles.advanceControls}>
-        <button id="start-story" className={portfolio.cta} type="button" disabled>Next Slide: Auto</button>
-        <button id="start-story-manual" className={portfolio.control} type="button" disabled>Next Slide: Manual</button>
-    </div>
   </>
 }
 export default function FleetDemoShell() {
@@ -153,7 +149,6 @@ export default function FleetDemoShell() {
 
   return <div ref={rootRef} className={`workspace ${styles.root}`} data-intro="true" data-scene="question" data-playing="false">
     <PortfolioShell sidebar={<FleetSidebar />} sidebarClassName={`story-panel ${styles.sidebar}`} sidebarLabel="Fleet case study" mainClassName={styles.main}>
-      <button id="mobile-pause" className={`${portfolio.cta} ${styles.mobilePlayback}`} type="button" aria-label="Play story" aria-pressed="false" title="Play story" disabled><span data-playback-icon="play"><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="play_arrow"><path d="M320-200v-560l440 280-440 280Zm80-280Zm0 134 210-134-210-134v268Z" /></svg></span><span data-playback-icon="pause" hidden><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="pause"><path d="M520-200v-560h240v560H520Zm-320 0v-560h240v560H200Zm400-80h80v-400h-80v400Zm-320 0h80v-400h-80v400Zm0-400v400-400Zm320 0v400-400Z" /></svg></span></button>
       <div className={styles.workspaceBody}>
         <section className={`world-panel ${portfolio.card} ${styles.worldPanel}`} aria-label="Interactive fleet story">
           <div className={styles.stageViewport}>
@@ -204,12 +199,17 @@ export default function FleetDemoShell() {
             </div>
             <div className={styles.timelineHeader}><span id="story-position" className={portfolio.eyebrow}>01 / 09 · The question</span><span id="playback-status">Preparing story</span></div>
             <div id="scene-steps" className={styles.sceneSteps} aria-label="Choose a scene" />
-            <label className={styles.srOnly} htmlFor="story-progress">Scrub through the story</label>
-            <input id="story-progress" disabled className={styles.storyProgress} type="range" min="0" max="124" step="0.1" defaultValue="0" aria-valuetext="Scene 1 of 9" />
-            <div className={styles.playbackControls}>
-              <button id="previous-chapter" className={portfolio.control} type="button" aria-label="Previous scene" aria-keyshortcuts="ArrowLeft" title="Previous scene" disabled><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="skip_previous"><path d="M220-240v-480h80v480h-80Zm520 0L380-480l360-240v480Zm-80-240Zm0 90v-180l-136 90 136 90Z" /></svg></button>
-              <button id="pause" className={portfolio.cta} type="button" aria-label="Play story" aria-keyshortcuts="Space" title="Play story" disabled><span data-playback-icon="play"><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="play_arrow"><path d="M320-200v-560l440 280-440 280Zm80-280Zm0 134 210-134-210-134v268Z" /></svg></span><span data-playback-icon="pause" hidden><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="pause"><path d="M520-200v-560h240v560H520Zm-320 0v-560h240v560H200Zm400-80h80v-400h-80v400Zm-320 0h80v-400h-80v400Zm0-400v400-400Zm320 0v400-400Z" /></svg></span></button>
-              <button id="next-chapter" className={portfolio.control} type="button" aria-label="Next scene" aria-keyshortcuts="ArrowRight" title="Next scene" disabled><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="skip_next"><path d="M660-240v-480h80v480h-80Zm-440 0v-480l360 240-360 240Zm80-240Zm0 90 136-90-136-90v180Z" /></svg></button>
+            <div id="story-transport" className={styles.storyTransport} role="group" aria-label="Story playback">
+              <label className={styles.srOnly} htmlFor="story-progress">Scrub through the story</label>
+              <input id="story-progress" disabled className={styles.storyProgress} type="range" min="0" max="124" step="0.1" defaultValue="0" aria-valuetext="Scene 1 of 9" />
+              <div className={styles.transportRow}>
+                <div className={styles.playbackControls}>
+                  <button id="previous-chapter" className={portfolio.control} type="button" aria-label="Previous scene" aria-keyshortcuts="ArrowLeft" title="Previous scene" disabled hidden><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="skip_previous"><path d="M220-240v-480h80v480h-80Zm520 0L380-480l360-240v480Zm-80-240Zm0 90v-180l-136 90 136 90Z" /></svg></button>
+                  <button id="pause" className={portfolio.cta} type="button" aria-label="Play story" aria-keyshortcuts="Space" title="Play story" disabled><span data-playback-icon="play"><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="play_arrow"><path d="M320-200v-560l440 280-440 280Zm80-280Zm0 134 210-134-210-134v268Z" /></svg></span><span data-playback-icon="pause" hidden><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="pause"><path d="M520-200v-560h240v560H520Zm-320 0v-560h240v560H200Zm400-80h80v-400h-80v400Zm-320 0h80v-400h-80v400Zm0-400v400-400Zm320 0v400-400Z" /></svg></span></button>
+                  <button id="next-chapter" className={portfolio.control} type="button" aria-label="Next scene" aria-keyshortcuts="ArrowRight" title="Next scene" disabled><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="skip_next"><path d="M660-240v-480h80v480h-80Zm-440 0v-480l360 240-360 240Zm80-240Zm0 90 136-90-136-90v180Z" /></svg></button>
+                </div>
+                <span className={styles.playbackTime} aria-label="Playback time"><span id="story-elapsed">0:00</span><span aria-hidden="true"> / </span><span id="story-duration">2:04</span></span>
+              </div>
             </div>
 
           </div>

@@ -30,12 +30,12 @@ function setup(t,{reduce=false}={}){
 }
 test('disposing before imports resolve prevents a late scene and removes control listeners',async t=>{
  const host=setup(t),controller=mountFleetDemo({root:host.root});controller.dispose();await controller.ready;await host.settle();
- assert.equal(host.frames.size,0);assert.equal(window.__fleetDemo,undefined);assert.equal(host.root.querySelector('#start-story').listeners.get('click').size,0);
- host.root.querySelector('#start-story').dispatchEvent(new Event('click'));assert.equal(host.root.dataset.intro,'true');controller.dispose();
+ assert.equal(host.frames.size,0);assert.equal(window.__fleetDemo,undefined);assert.equal(host.root.querySelector('#next-chapter').listeners.get('click').size,0);
+ host.root.querySelector('#next-chapter').dispatchEvent(new Event('click'));assert.equal(host.root.dataset.intro,'true');controller.dispose();
 });
 test('same-root remount replaces the old controller and final disposal releases animation and handlers',async t=>{
  const host=setup(t),first=mountFleetDemo({root:host.root});await first.ready;await host.settle();host.flush();
- const start=host.root.querySelector('#start-story');assert.equal(start.listeners.get('click').size,1);start.dispatchEvent(new Event('click'));assert.equal(window.__fleetDemo.getState().intro,false);
+ const start=host.root.querySelector('#next-chapter');assert.equal(start.listeners.get('click').size,1);start.dispatchEvent(new Event('click'));assert.equal(window.__fleetDemo.getState().intro,false);
  const original=window.__fleetDemo,second=mountFleetDemo({root:host.root});await second.ready;await host.settle();host.flush();
  assert.notEqual(window.__fleetDemo,original);assert.equal(window.__fleetDemo.getState().intro,true);assert.equal(start.listeners.get('click').size,1);
  start.dispatchEvent(new Event('click'));assert.equal(window.__fleetDemo.getState().intro,false);
@@ -82,7 +82,7 @@ test('manual map controls suppress overlays while Pause preserves readable story
 
 test('autoplay advances by the simulation clock and stops at the ending',async t=>{
  const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();const api=window.__fleetDemo;
- assert.equal(api.getState().simulation.paused,true);host.root.querySelector('#start-story').dispatchEvent(new Event('click'));assert.equal(api.getState().stage,1);assert.equal(api.getState().simulation.paused,false);
+ assert.equal(api.getState().simulation.paused,true);host.root.querySelector('#pause').dispatchEvent(new Event('click'));assert.equal(api.getState().stage,0);assert.equal(api.getState().simulation.paused,false);
  for(const [time,index] of [[11.99,1],[25.99,2],[35.99,3],[47.99,4],[65.99,5],[81.99,6],[99.99,7],[113.99,8]]){
   api.seekScene(time);if(api.getState().simulation.paused)host.root.querySelector('#pause').dispatchEvent(new Event('click'));
   for(let attempt=0;attempt<20&&api.getState().stage!==index;attempt++)await new Promise(resolve=>setTimeout(resolve,20));
@@ -94,7 +94,7 @@ test('autoplay advances by the simulation clock and stops at the ending',async t
 
 test('reduced motion and tab visibility preserve deliberate pause state',async t=>{
  const host=setup(t,{reduce:true}),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();const api=window.__fleetDemo;
- assert.equal(api.getState().simulation.paused,true);host.root.querySelector('#start-story-manual').dispatchEvent(new Event('click'));assert.equal(api.getState().stage,1);assert.equal(api.getState().simulation.paused,true);host.root.querySelector('#previous-chapter').dispatchEvent(new Event('click'));host.root.querySelector('#start-story').dispatchEvent(new Event('click'));assert.equal(api.getState().simulation.paused,false);
+ assert.equal(api.getState().simulation.paused,true);host.root.querySelector('#next-chapter').dispatchEvent(new Event('click'));assert.equal(api.getState().stage,1);assert.equal(api.getState().simulation.paused,true);host.root.querySelector('#previous-chapter').dispatchEvent(new Event('click'));host.root.querySelector('#pause').dispatchEvent(new Event('click'));assert.equal(api.getState().simulation.paused,false);
  host.document.hidden=true;host.document.dispatchEvent(new Event('visibilitychange'));assert.equal(api.getState().simulation.paused,true);
  host.document.hidden=false;host.document.dispatchEvent(new Event('visibilitychange'));assert.equal(api.getState().simulation.paused,false);
  const change=new Event('change');change.matches=true;host.media.dispatchEvent(change);assert.equal(api.getState().simulation.paused,true);
@@ -102,18 +102,12 @@ test('reduced motion and tab visibility preserve deliberate pause state',async t
  controller.dispose();
 });
 
-test('mobile playback uses the same clock, feature-detects visibility and disconnects its observer',async t=>{
- const previous=Object.getOwnPropertyDescriptor(globalThis,'IntersectionObserver');let observed=null,callback=null,disconnected=0;
- globalThis.IntersectionObserver=class{constructor(listener){callback=listener;}observe(element){observed=element;}disconnect(){disconnected++;}};
- t.after(()=>{if(previous)Object.defineProperty(globalThis,'IntersectionObserver',previous);else delete globalThis.IntersectionObserver;});
- const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();const api=window.__fleetDemo,mobile=host.root.querySelector('#mobile-pause');
- assert.equal(observed,host.root.querySelector('#pause'));assert.equal(mobile.disabled,false);assert.equal(api.getState().simulation.paused,true);host.root.querySelector('#start-story').dispatchEvent(new Event('click'));assert.equal(api.getState().simulation.paused,false);
- mobile.dispatchEvent(new Event('click'));assert.equal(api.getState().simulation.paused,true);assert.equal(mobile.getAttribute('aria-label'),'Play story');
- callback([{target:observed,isIntersecting:true,intersectionRatio:1}]);assert.equal(host.root.dataset.playbackVisible,'true');callback([{target:observed,isIntersecting:false,intersectionRatio:0}]);assert.equal(host.root.dataset.playbackVisible,'false');
- api.seekStory(6,.5);host.root.querySelector('#open-source-controls').dispatchEvent(new Event('click'));assert.equal(host.root.dataset.dialogOpen,'true');host.root.querySelector('#source-close').dispatchEvent(new Event('click'));assert.equal(host.root.dataset.dialogOpen,'false');
- controller.dispose();assert.equal(disconnected,1);assert.equal(mobile.listeners.get('click').size,0);
+test('one transport controls the clock and remains outside modal input',async t=>{
+ const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();const api=window.__fleetDemo,play=host.root.querySelector('#pause');
+ assert.equal(host.root.querySelector('#mobile-pause'),null);assert.equal(host.root.querySelector('#start-story'),null);assert.equal(host.root.querySelector('#start-story-manual'),null);assert.equal(play.disabled,false);
+ play.dispatchEvent(new Event('click'));assert.equal(api.getState().simulation.paused,false);play.dispatchEvent(new Event('click'));assert.equal(api.getState().simulation.paused,true);
+ api.seekStory(6,.5);host.root.querySelector('#open-source-controls').dispatchEvent(new Event('click'));assert.equal(host.root.dataset.dialogOpen,'true');host.root.querySelector('#source-close').dispatchEvent(new Event('click'));assert.equal(host.root.dataset.dialogOpen,'false');controller.dispose();assert.equal(play.listeners.get('click').size,0);
 });
-
 
 test('sidebar relocation keeps animated content unique and receipt totals unchanged',async t=>{
  const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();const api=window.__fleetDemo;
@@ -124,22 +118,22 @@ test('sidebar relocation keeps animated content unique and receipt totals unchan
 });
 
 
-test('left Auto and Manual remain available after timeline interaction and advance the current scene',async t=>{
- const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();const api=window.__fleetDemo,auto=host.root.querySelector('#start-story'),manual=host.root.querySelector('#start-story-manual');
- for(const stage of [0,2,4,6]){api.seekStory(stage,.3);assert.equal(auto.hidden,false);assert.equal(manual.hidden,false);assert.equal(auto.disabled,false);auto.dispatchEvent(new Event('click'));assert.equal(api.getState().stage,stage+1);assert.equal(api.getState().simulation.paused,false);api.seekStory(stage,.3);manual.dispatchEvent(new Event('click'));assert.equal(api.getState().stage,stage+1);assert.equal(api.getState().simulation.paused,true);}
- api.seekStory(8);assert.equal(auto.disabled,true);assert.equal(manual.disabled,true);assert.equal(auto.hidden,false);assert.equal(manual.hidden,false);assert.equal(host.root.querySelector('#about-panel'),null);assert.equal(host.root.querySelector('#about-toggle'),null);controller.dispose();
+test('transport hides only unavailable edge controls and scrubbing updates elapsed time',async t=>{
+ const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();const api=window.__fleetDemo,back=host.root.querySelector('#previous-chapter'),forward=host.root.querySelector('#next-chapter'),slider=host.root.querySelector('#story-progress');
+ for(let stage=0;stage<9;stage++){api.seekStory(stage,.3);assert.equal(back.hidden,stage===0);assert.equal(forward.hidden,stage===8);assert.equal(host.root.querySelector('#pause').hidden,false);}
+ for(const [time,elapsed,stage] of [[0,'0:00',0],[12,'0:12',1],[66,'1:06',5],[124,'2:04',8]]){slider.value=String(time);slider.dispatchEvent(new Event('input'));assert.equal(api.getState().stage,stage);assert.equal(host.root.querySelector('#story-elapsed').textContent,elapsed);assert.equal(host.root.querySelector('#story-duration').textContent,'2:04');assert.equal(api.getState().simulation.paused,true);assert.equal(back.hidden,stage===0);assert.equal(forward.hidden,stage===8);}
+ host.root.querySelector('#pause').dispatchEvent(new Event('click'));assert.equal(api.getState().stage,0);assert.equal(api.getState().simulation.paused,false);assert.equal(back.hidden,true);assert.equal(forward.hidden,false);controller.dispose();
 });
 
-
-test('advance choices are disabled until ready and cannot lose an early click',async t=>{
- const host=setup(t),controller=mountFleetDemo({root:host.root}),auto=host.root.querySelector('#start-story'),manual=host.root.querySelector('#start-story-manual');
- assert.equal(auto.disabled,true);assert.equal(manual.disabled,true);auto.dispatchEvent(new Event('click'));manual.dispatchEvent(new Event('click'));assert.equal(host.root.dataset.intro,'true');
- await controller.ready;await host.settle();assert.equal(auto.disabled,false);assert.equal(manual.disabled,false);assert.equal(window.__fleetDemo.getState().stage,0);assert.equal(window.__fleetDemo.getState().simulation.paused,true);auto.dispatchEvent(new Event('click'));assert.equal(window.__fleetDemo.getState().stage,1);assert.equal(window.__fleetDemo.getState().simulation.paused,false);controller.dispose();
+test('transport is disabled until ready and cannot lose an early click',async t=>{
+ const host=setup(t),controller=mountFleetDemo({root:host.root}),play=host.root.querySelector('#pause'),forward=host.root.querySelector('#next-chapter');
+ assert.equal(play.disabled,true);assert.equal(forward.disabled,true);play.dispatchEvent(new Event('click'));forward.dispatchEvent(new Event('click'));assert.equal(host.root.dataset.intro,'true');
+ await controller.ready;await host.settle();assert.equal(play.disabled,false);assert.equal(forward.disabled,false);assert.equal(window.__fleetDemo.getState().stage,0);assert.equal(window.__fleetDemo.getState().simulation.paused,true);play.dispatchEvent(new Event('click'));assert.equal(window.__fleetDemo.getState().stage,0);assert.equal(window.__fleetDemo.getState().simulation.paused,false);controller.dispose();
 });
 
 test('new sidebar scenes start at the top but same-scene updates keep reading position',async t=>{
  const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();const api=window.__fleetDemo,body=host.root.querySelector('#sidebar-story-body');
- api.seekStory(6,.2);body.scrollTop=220;api.seekStory(6,.3);assert.equal(body.scrollTop,220);host.root.querySelector('#start-story-manual').dispatchEvent(new Event('click'));assert.equal(api.getState().stage,7);assert.equal(body.scrollTop,0);controller.dispose();
+ api.seekStory(6,.2);body.scrollTop=220;api.seekStory(6,.3);assert.equal(body.scrollTop,220);host.root.querySelector('#next-chapter').dispatchEvent(new Event('click'));assert.equal(api.getState().stage,7);assert.equal(body.scrollTop,0);controller.dispose();
 });
 
 
@@ -147,7 +141,7 @@ test('icon playback toggles accessible state without replacing SVGs and all came
  const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();host.flush();
  const api=window.__fleetDemo,button=host.root.querySelector('#pause'),play=host.root.querySelectorAll('[data-playback-icon="play"]'),pause=host.root.querySelectorAll('[data-playback-icon="pause"]');
  assert.equal(api.getState().view,'iso');assert.equal(host.root.querySelector('[data-view="iso"]').getAttribute('aria-pressed'),'true');assert.equal(host.root.querySelector('#overview'),null);assert.equal(host.root.querySelector('#follow'),null);
- assert.equal(play.length,2);assert.equal(pause.length,2);assert.ok(play.every(icon=>!icon.hidden));assert.ok(pause.every(icon=>icon.hidden));
+ assert.equal(play.length,1);assert.equal(pause.length,1);assert.ok(play.every(icon=>!icon.hidden));assert.ok(pause.every(icon=>icon.hidden));
  button.dispatchEvent(new Event('click'));assert.equal(button.getAttribute('aria-label'),'Pause story');assert.equal(button.getAttribute('title'),'Pause story');assert.ok(play.every(icon=>icon.hidden));assert.ok(pause.every(icon=>!icon.hidden));assert.equal(host.root.querySelector('#camera-controls').hidden,false);
  for(const view of ['2d','3d','iso']){host.root.querySelector(`[data-view="${view}"]`).dispatchEvent(new Event('click'));assert.equal(api.getState().view,view);assert.equal(api.getState().exploring,true);assert.equal(api.getState().simulation.paused,true);assert.equal(host.root.querySelector(`[data-view="${view}"]`).getAttribute('aria-pressed'),'true');}
  assert.equal(button.getAttribute('aria-label'),'Play story');assert.ok(play.every(icon=>!icon.hidden));assert.ok(pause.every(icon=>icon.hidden));controller.dispose();

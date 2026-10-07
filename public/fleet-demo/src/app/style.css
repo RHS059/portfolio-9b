@@ -102,7 +102,6 @@
 .root button { -webkit-tap-highlight-color: transparent; }
 .root :is(button,input,select,summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .sidebar { min-width: 0; }
-.root button.mobilePlayback { display: none; }
 .introPanel { display: flex; flex-direction: column; flex: 1; gap: 20px; }
 .introPanel > p { margin: 0; }
 .projectInfo dl { display: grid; gap: 14px; margin: 0; }
@@ -203,9 +202,22 @@
 .sceneSteps button { flex: 1; min-width: 0; height: 26px; border: 0; background: transparent; color: var(--muted); border-top: 3px solid var(--sidebar-rule); font-size: 9px; cursor: pointer; }
 .sceneSteps button[aria-current="step"] { color: var(--accent); border-top-color: var(--accent); }
 .sceneSteps button[data-complete="true"] { border-top-color: var(--muted); }
-.storyProgress { display: block; width: calc(100% - 36px); margin: 3px 18px 7px; accent-color: var(--accent); height: 14px; cursor: pointer; }
-.playbackControls { display: flex; align-items: center; gap: 8px; padding: 6px 18px 15px; }
-.root .playbackControls button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; min-width: 44px; padding: 0; }
+.storyTransport { background: var(--ink); color: #fff; margin: 7px 12px 12px; padding: 5px 12px 6px; border-radius: 6px; }
+.storyProgress { display: block; appearance: none; -webkit-appearance: none; width: 100%; height: 18px; margin: 0; padding: 0; border: 0; background-color: transparent; background-image: linear-gradient(to right,#fff 0%,#ffffff40 0%); background-size: 100% 3px; background-position: center; background-repeat: no-repeat; cursor: pointer; }
+.storyProgress::-webkit-slider-runnable-track { height: 3px; background: transparent; }
+.storyProgress::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 10px; height: 10px; margin-top: -3.5px; border: 0; border-radius: 50%; background: #fff; }
+.storyProgress::-moz-range-track { height: 3px; background: transparent; }
+.storyProgress::-moz-range-thumb { width: 10px; height: 10px; border: 0; border-radius: 50%; background: #fff; }
+.transportRow { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; min-height: 44px; }
+.playbackControls { grid-column: 2; display: grid; grid-template-columns: repeat(3,44px); align-items: center; gap: 5px; }
+.root .playbackControls button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; min-width: 44px; padding: 0; color: #fff; background: transparent; border: 0; border-radius: 50%; }
+.root .playbackControls button:hover:not(:disabled) { background: #ffffff20; color: #fff; }
+.root .playbackControls #previous-chapter { grid-column: 1; }
+.root .playbackControls #pause { grid-column: 2; background: #ffffff12; }
+.root .playbackControls #next-chapter { grid-column: 3; }
+.playbackTime { grid-column: 3; justify-self: end; white-space: nowrap; font-size: 11px; line-height: 1; font-variant-numeric: tabular-nums; color: #ffffffb3; }
+.playbackTime > span:first-child { color: #fff; }
+.root[data-dialog-open="true"] .storyTransport { visibility: hidden; }
 .materialSymbol { display: block; flex: none; width: 24px; height: 24px; fill: currentColor; }
 .impactStrip { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; border-top: 1px solid var(--sidebar-rule); padding: 17px 18px; min-height: 114px; }
 .impactStrip > div { display: grid; grid-template-rows: 23px 30px 28px; gap: 2px; min-width: 0; }
@@ -233,8 +245,9 @@
 .root .fp-panel button:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
 @media (max-width: 1100px) { .storyOverlays { padding: 22px; } .device { width: 160px; height: 190px; } }
 @media (max-width: 900px) {
-  .root button.mobilePlayback { display: flex; position: fixed; z-index: 8; left: 50%; bottom: max(14px, env(safe-area-inset-bottom), var(--mobile-playback-bottom, 0px)); transform: translateX(-50%); align-items: center; justify-content: center; width: 48px; min-width: 48px; height: 48px; padding: 0; border-radius: 999px; box-shadow: 0 4px 22px color-mix(in srgb,var(--ink) 22%,transparent); }
-  .root[data-playback-visible="true"] button.mobilePlayback, .root[data-dialog-open="true"] button.mobilePlayback { display: none; }
+  .storyTransport { position: fixed; z-index: 8; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); margin: 0; box-shadow: 0 5px 24px #0003; }
+  .root { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
+  .playbackTime { font-size: 10px; }
   .introPanel { gap: 20px; } .introCta { margin-top: 6px; max-width: none; }
   .storyContent { min-height: 330px; gap: 20px; } .chapterIntro > p { margin-bottom: 24px; }
   .root .main { min-height: 0; } .stageViewport { min-height: 560px; }
@@ -251,7 +264,6 @@
   .deviceBrand img { max-width: 96px; } .providerPlus { font-size: 20px; }
   .mileageValues { gap: 16px; font-size: 28px; } .mileageOverlay > p { font-size: 12px; }
   .costDays { gap: 3px; } .costDays > span { min-height: 36px; font-size: 8px; }
-  .playbackControls { gap: 6px; padding: 6px 12px 12px; flex-wrap: wrap; }
 
   .timelineHeader { padding: 0 12px; } .timelineHeader > span:first-child { font-size: 9px; }
   .timelineHeader > span:last-child { font-size: 9px; } .sceneSteps { padding-left: 12px; padding-right: 12px; }
@@ -325,13 +337,10 @@
 @media (max-width: 900px) { .sidebar .sidebarScene { max-width: 520px; } .sidebar .mileageValues { justify-content: flex-start; gap: 28px; } .sidebar .odometer > span { font-size: 62px; } }
 @media (max-width: 480px) { .receipt { padding: 24px 20px 28px; } .storyOverlays .receiptHeader h2 { font-size: 20px; } .receiptDuplicate > strong { font-size: 21px; } }
 
-/* The paused opening already has its two explicit playback choices. */
-.root[data-intro="true"][data-playing="false"] button.mobilePlayback { display: none; }
 
-/* Keep the requested left-hand mode choices outside the fading story content. */
+/* Keep the left story readable while scene copy fades. */
 .root .sidebar { gap: 20px; overflow: hidden; }
 .sidebarStoryBody { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; }
-.advanceControls { display: grid; flex: none; gap: 8px; border-top: 1px solid var(--sidebar-rule); padding-top: 16px; }
 .storyDock { padding-top: 0; }
 .impactStrip { border-top: 0; border-bottom: 1px solid var(--sidebar-rule); }
 .root .timelineHeader { padding-top: 15px; }

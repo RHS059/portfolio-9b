@@ -67,10 +67,10 @@ test('story camera sets follow before the atomic focus/view so orientation canno
 });
 
 
-test('intro offers explicit Auto and Manual choices without Explore or Replay buttons',()=>{
- assert.match(shell,/id="start-story" className=\{portfolio.cta\} type="button" disabled>Next Slide: Auto/);assert.match(shell,/id="start-story-manual" className=\{portfolio.control\} type="button" disabled>Next Slide: Manual/);
- assert.doesNotMatch(shell,/id="(?:explore-scene|reset|story-replay)"|Explore scene|Replay/);assert.ok(app.includes("$('#next-chapter').disabled=!ready||stage===8"));
- assert.ok(app.includes("on($('#start-story'),'click',()=>{if(!ready||stage>=STORY_SCENES.length-1)return;setChapter(stage+1);setPaused(false);})"));assert.ok(app.includes("on($('#start-story-manual'),'click',()=>{if(ready&&stage<STORY_SCENES.length-1)setChapter(stage+1);})"));
+test('one standard transport replaces Auto/Manual and the duplicate mobile control',()=>{
+ for(const markup of [shell,standalone]){assert.doesNotMatch(markup,/id="(?:start-story|start-story-manual|story-advance-controls|mobile-pause|explore-scene|reset|story-replay)"|Next Slide:|Explore scene/);assert.equal((markup.match(/id="story-transport"/g)||[]).length,1);assert.equal((markup.match(/id="pause"/g)||[]).length,1);assert.match(markup,/id="story-elapsed">0:00/);assert.match(markup,/id="story-duration">2:04/);}
+ assert.ok(app.includes("$('#previous-chapter').hidden=stage===0"));assert.ok(app.includes("$('#next-chapter').hidden=stage===8"));assert.doesNotMatch(app,/IntersectionObserver|positionMobilePlayback|floatingPlaybackBottom/);
+ assert.match(css,/\.transportRow \{[^}]*grid-template-columns: minmax\(0,1fr\) auto minmax\(0,1fr\)/);assert.match(css,/\.playbackControls \{[^}]*grid-template-columns: repeat\(3,44px\)/);assert.match(css,/#pause\) \{ grid-column: 2/);assert.match(css,/\.storyTransport \{ position: fixed/);
 });
 
 test('receipt uses aligned paper service lines without fabricated shop, tax or payment facts',()=>{
@@ -80,12 +80,10 @@ test('receipt uses aligned paper service lines without fabricated shop, tax or p
 });
 
 
-test('persistent left mode controls are outside the fading content and fleet facts precede timeline',()=>{
- const body=shell.slice(shell.indexOf('id="sidebar-story-body"'),shell.indexOf('id="story-advance-controls"'));assert.doesNotMatch(body,/id="start-story"|id="start-story-manual"/);
+test('fleet facts precede timeline and the left story keeps its scrolling fade container',()=>{
  assert.ok(app.includes("element:$('#sidebar-story-body')"));assert.match(css,/\.sidebarStoryBody \{[^}]*overflow-y: auto/);
- assert.ok(shell.indexOf('className={`impact-strip')<shell.indexOf('id="story-position"'));assert.doesNotMatch(shell,/id="about-toggle"|id="about-panel"|id="about-close"/);
+ assert.ok(shell.indexOf('className={`impact-strip')<shell.indexOf('id="story-position"'));assert.ok(shell.indexOf('id="story-position"')<shell.indexOf('id="story-transport"'));assert.doesNotMatch(shell,/id="about-toggle"|id="about-panel"|id="about-close"/);
 });
-
 
 test('Material Symbols are self-hosted official assets with license and provenance',async()=>{
  const manifest=JSON.parse(await read('public/fleet-demo/assets/material-symbols.source.json'));
