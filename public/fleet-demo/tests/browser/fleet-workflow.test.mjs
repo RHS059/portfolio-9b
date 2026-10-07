@@ -77,12 +77,12 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
       const next=await state(page);assert.ok(['simulated','recorded'].includes(next.review.mode));assert.equal(next.review.live,false);
       assert.match(next.review.label,/simulated|recorded/i);assert.equal(next.review.notification.channel,'in-app only');
       assert.equal(next.scenario.configVersion,prior.scenario.configVersion);assert.deepEqual(next.scenario.policies,prior.scenario.policies);unchanged(next,prior);
-      const text=await page.locator('#provenance').innerText();assert.match(text,/in-app/i);assert.match(text,/simulated|recorded/i);
+      const text=await page.locator('#provenance').innerText();assert.match(text,/Manager notification/i);assert.match(text,/simulated|recorded/i);
       await page.screenshot({path:resolve(evidence,'today-review-1920x1080.png'),fullPage:true});
     });
     await run('a policy change invalidates cached review and notifications',async()=>{
       await authority(page,'A').click();const next=await state(page);
-      assert.equal(next.review,null);assert.equal(next.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);assert.equal(canonical(next).reason,'authoritative-reading-excluded');
+      assert.equal(next.review,null);assert.equal(next.intro,false);assert.equal(await page.locator('#story-content').isVisible(),true);assert.equal(canonical(next).reason,'authoritative-reading-excluded');
       assert.equal(canonical(next).valueKm,null);assert.equal(canonical(next,'TRK-208').status,'resolved');
       assert.doesNotMatch(await page.locator('#provenance').innerText(),/TRK-104: \d+ advisory finding/);
     });

@@ -7,7 +7,7 @@ on:
     paths: ['public/fleet-demo/**', 'app/fleet-demo/**', 'scripts/fleet-browser-smoke.mjs', '.github/workflows/fleet-demo-tests.yml']
 concurrency:
   group: fleet-demo-${{ github.head_ref || github.ref_name }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 permissions:
   contents: read
 jobs:
