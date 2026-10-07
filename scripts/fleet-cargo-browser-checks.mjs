@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
+import {cargoTruckPosition} from '../public/fleet-demo/src/render/map/cargo-layout.js';
+import {DETAIL_MODEL_METADATA} from '../public/fleet-demo/src/render/vehicles/detail-model.js';
 
 /** Browser checks for the connected scene, called only after its adapter is enabled. */
 export async function exerciseCargoFlow({page,evidence,out,setPhase=()=>{}}){
@@ -33,6 +35,11 @@ export async function exerciseCargoFlow({page,evidence,out,setPhase=()=>{}}){
   const frameMaterial=async(id,list,site)=>{
     await page.locator(`[data-focus="${site}"]`).click();
     await page.waitForFunction(()=>!window.__fleetDemo.getMetrics().cameraMoving);
+    if(site==='oict'){
+      const box=await page.locator('#world').boundingBox(),x=box.x+box.width/2,y=box.y+box.height/2;
+      await page.mouse.move(x,y);await page.mouse.down({button:'right'});await page.mouse.move(x+170,y,{steps:12});await page.mouse.up({button:'right'});
+      await page.waitForFunction(()=>!window.__fleetDemo.getMetrics().cameraMoving);
+    }
     for(let step=0;step<12;step++){
       const point=await page.evaluate(({id,list})=>{const item=window.__fleetDemo.getMetrics().cargoProcessRender[list].find(x=>x.id===id);return window.__fleetDemo.projectScenePoint(item.position);},{id,list});
       const box=await page.locator('#world').boundingBox();
@@ -49,6 +56,19 @@ export async function exerciseCargoFlow({page,evidence,out,setPhase=()=>{}}){
     assert.ok(await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState.zoom>=21),'Contact captures need inspection-scale framing');
   };
   const capture=async(name)=>{await page.screenshot({path:path.join(out,name),fullPage:true});return name;};
+  const inspectCarrier=async trailerId=>{
+    if(!trailerId)return null;
+    const current=await state(),actor=[...current.cargoProcess.trucks,...current.cargoProcess.outboundVehicles].find(t=>t.trailerId===trailerId);
+    assert.ok(actor,`Missing carrier for ${trailerId}`);
+    await page.waitForFunction(id=>window.__fleetDemo.getMetrics().vehicleDetail.models.some(m=>m.id===id&&m.variant==='articulated'),actor.id,{timeout:10000});
+    const rig=cargoTruckPosition(actor).rig,corners=[];
+    for(const [part,kind]of [['tractor','tractor'],['trailer','flatbedTrailer']]){
+      const pose=rig[part],bounds=DETAIL_MODEL_METADATA[kind].bounds,c=Math.cos(pose.heading),s=Math.sin(pose.heading);
+      for(const x of[bounds.min[0],bounds.max[0]])for(const y of[bounds.min[1],bounds.max[1]])for(const z of[bounds.min[2],bounds.max[2]])corners.push({part,world:[pose.x+x*c+y*s,pose.y-x*s+y*c,pose.z+z]});
+    }
+    const projected=await page.evaluate(points=>points.map(p=>({...p,screen:window.__fleetDemo.projectScenePoint(p.world)})),corners);
+    return {id:actor.id,trailerId,retainedDetailedModel:true,projectedCorners:projected};
+  };
   setPhase('connected-cargo');
   evidence.cargoHandoffs=[];
   const pairs=outgoingEnabled?[
@@ -68,6 +88,7 @@ export async function exerciseCargoFlow({page,evidence,out,setPhase=()=>{}}){
   for(const pair of pairs){
     const before=(await seek(pair.time-.01))[pair.list].find(x=>x.id===pair.id);
     await frameMaterial(pair.id,pair.list,pair.site);
+    const carrier=await inspectCarrier(before.owner.kind==='trailer'?before.owner.id:pair.parent.startsWith('TRAILER-')?pair.parent:null);
     const beforeCapture=await capture(`cargo-${pair.name}-before.png`);
     const after=(await seek(pair.time))[pair.list].find(x=>x.id===pair.id);
     const afterCapture=await capture(`cargo-${pair.name}-after.png`);
@@ -75,7 +96,7 @@ export async function exerciseCargoFlow({page,evidence,out,setPhase=()=>{}}){
     assert.equal(before.owner.kind,pair.from);assert.equal(after.owner.kind,pair.to);assert.equal(after.parentId,pair.parent);
     const distance=Math.hypot(...after.position.map((v,i)=>v-before.position[i]));
     assert.ok(distance<.05,`${pair.id} moved ${distance}m during its final 10ms handoff`);
-    evidence.cargoHandoffs.push({id:pair.id,timeSeconds:pair.time,before,after,distanceMeters:distance,captures:[beforeCapture,afterCapture]});
+    evidence.cargoHandoffs.push({id:pair.id,timeSeconds:pair.time,before,after,carrier,distanceMeters:distance,captures:[beforeCapture,afterCapture]});
   }
   if(outgoingEnabled){const outbound=await seek(55.5),carrier=outbound.trucks.find(t=>t.id==='OUTBOUND-501');assert.ok(carrier?.loaded);assert.equal(carrier.secureProgress,1);assert.equal(carrier.stopped,false);}
   const warm=await seek(0);
