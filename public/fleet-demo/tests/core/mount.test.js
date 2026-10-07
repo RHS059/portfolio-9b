@@ -104,3 +104,15 @@ test('reduced motion and tab visibility preserve deliberate pause state',async t
  host.document.hidden=true;host.document.dispatchEvent(new Event('visibilitychange'));host.document.hidden=false;host.document.dispatchEvent(new Event('visibilitychange'));assert.equal(api.getState().simulation.paused,true);
  controller.dispose();
 });
+
+test('mobile playback uses the same clock, feature-detects visibility and disconnects its observer',async t=>{
+ const previous=Object.getOwnPropertyDescriptor(globalThis,'IntersectionObserver');let observed=null,callback=null,disconnected=0;
+ globalThis.IntersectionObserver=class{constructor(listener){callback=listener;}observe(element){observed=element;}disconnect(){disconnected++;}};
+ t.after(()=>{if(previous)Object.defineProperty(globalThis,'IntersectionObserver',previous);else delete globalThis.IntersectionObserver;});
+ const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();const api=window.__fleetDemo,mobile=host.root.querySelector('#mobile-pause');
+ assert.equal(observed,host.root.querySelector('#pause'));assert.equal(mobile.disabled,false);assert.equal(api.getState().simulation.paused,false);
+ mobile.dispatchEvent(new Event('click'));assert.equal(api.getState().simulation.paused,true);assert.equal(mobile.getAttribute('aria-label'),'Play story');
+ callback([{target:observed,isIntersecting:true,intersectionRatio:1}]);assert.equal(host.root.dataset.playbackVisible,'true');callback([{target:observed,isIntersecting:false,intersectionRatio:0}]);assert.equal(host.root.dataset.playbackVisible,'false');
+ host.root.querySelector('#about-toggle').dispatchEvent(new Event('click'));assert.equal(host.root.dataset.dialogOpen,'true');host.root.querySelector('#about-close').dispatchEvent(new Event('click'));assert.equal(host.root.dataset.dialogOpen,'false');
+ controller.dispose();assert.equal(disconnected,1);assert.equal(mobile.listeners.get('click').size,0);
+});

@@ -38,6 +38,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   function setPaused(paused){sim?.setPaused(paused);renderPlayback();}
   function renderPlayback(){
     const paused=sim?.getState().paused??true;$('.workspace').dataset.playing=String(!paused);
+    $('#mobile-pause').textContent=paused?'▶ Play story':'Ⅱ Pause story';$('#mobile-pause').setAttribute('aria-label',paused?'Play story':'Pause story');$('#mobile-pause').setAttribute('aria-pressed',String(!paused));$('#mobile-pause').disabled=!ready;
     $('#pause').textContent=paused?'▶ Play':'Ⅱ Pause';$('#pause').setAttribute('aria-label',paused?'Play story':'Pause story');$('#pause').setAttribute('aria-pressed',String(!paused));
     $('#run-status').textContent=paused?'Story and scene paused':'Story and scene playing';
     $('#playback-status').textContent=exploring?(paused?'Exploring scene · paused':'Exploring scene · playing'):story.complete?'End of story':paused?(reducedMotion.matches?'Paused · reduced motion':'Paused · explore at your pace'):'Autoplay · pause anytime';
@@ -113,9 +114,9 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   function selectEntity(id){setPaused(true);if(['oict','centerpoint','depot'].includes(id)){focusFacility(id);return;}selectVehicle(id);}
   function selectVehicle(id){if(!['TRK-104','TRK-208'].includes(id))return;selectedVehicleId=id;scene?.setFocus(id);render();}
   function openDialog(id){
-    setPaused(true);if(activeDialog)closeDialog(false);dialogReturnFocus=doc.activeElement;activeDialog=$(id);activeDialog.hidden=false;$('#about-toggle').setAttribute('aria-expanded',String(id==='#about-panel'));activeDialog.querySelector('button')?.focus();
+    setPaused(true);if(activeDialog)closeDialog(false);dialogReturnFocus=doc.activeElement;activeDialog=$(id);activeDialog.hidden=false;$('.workspace').dataset.dialogOpen='true';$('#about-toggle').setAttribute('aria-expanded',String(id==='#about-panel'));activeDialog.querySelector('button')?.focus();
   }
-  function closeDialog(restore=true){if(!activeDialog)return;activeDialog.hidden=true;activeDialog=null;$('#about-toggle').setAttribute('aria-expanded','false');if(restore&&dialogReturnFocus?.isConnected)dialogReturnFocus.focus({preventScroll:true});dialogReturnFocus=null;}
+  function closeDialog(restore=true){if(!activeDialog)return;activeDialog.hidden=true;activeDialog=null;$('.workspace').dataset.dialogOpen='false';$('#about-toggle').setAttribute('aria-expanded','false');if(restore&&dialogReturnFocus?.isConnected)dialogReturnFocus.focus({preventScroll:true});dialogReturnFocus=null;}
   async function handleAction(action){
     if(disposed||!ready)return;
     try{
@@ -139,6 +140,12 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     }catch(error){reviewing=false;feedback(`${error.code||'Unable to apply change'}: ${error.message}`);render();}
   }
   function bind(){
+    $('#source-dialog').hidden=true;$('#about-panel').hidden=true;$('.workspace').dataset.dialogOpen='false';
+    // One mobile control stays reachable until the full playback control is on screen.
+    if(typeof IntersectionObserver==='function'){
+      const observer=new IntersectionObserver(entries=>{if(disposed)return;const entry=entries.find(item=>item.target===$('#pause'));if(entry)$('.workspace').dataset.playbackVisible=String(entry.isIntersecting&&entry.intersectionRatio>=.5);},{threshold:[0,.5,1]});
+      observer.observe($('#pause'));cleanups.push(()=>observer.disconnect());
+    }
     $('#scene-steps').innerHTML=STORY_SCENES.map(item=>`<button type="button" data-scene-index="${item.index}" aria-label="Scene ${item.index+1}: ${item.label}" title="${item.label}">${String(item.index+1).padStart(2,'0')}</button>`).join('');
     $('#cost-days').innerHTML=Array.from({length:14},(_,index)=>`<span data-cost-day="${index+1}" data-visit="${[1,4,8,12].includes(index+1)}">${index+1}</span>`).join('');
     $('#story-progress').max=String(STORY_DURATION);
@@ -146,7 +153,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     $$('[data-scene-index]').forEach(button=>on(button,'click',()=>setChapter(Number(button.dataset.sceneIndex))));
     on($('#story-progress'),'input',event=>{setPaused(true);sim?.seek(Number(event.target.value));});
     on($('#explore-scene'),'click',()=>{closeDialog(false);setPaused(true);exploring=!exploring;render();if(!exploring)applySceneCamera();});
-    on($('#pause'),'click',togglePlayback);on($('#reset'),'click',replay);on($('#story-replay'),'click',replay);
+    on($('#mobile-pause'),'click',togglePlayback);on($('#pause'),'click',togglePlayback);on($('#reset'),'click',replay);on($('#story-replay'),'click',replay);
     on($('#service-unit-cost'),'focus',()=>setPaused(true));on($('#service-unit-cost'),'input',event=>{const value=event.target.value;serviceCost=value===''?null:Math.max(0,Math.min(100000,Number(value)));renderPresentation();});
     on($('#open-source-controls'),'click',()=>{mode='then';openDialog('#source-dialog');render();});
     on($('#run-story-review'),'click',()=>{mode='today';openDialog('#source-dialog');render();void handleAction({type:'review-imports'});});

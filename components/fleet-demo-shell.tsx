@@ -121,6 +121,7 @@ export default function FleetDemoShell() {
 
   return <div ref={rootRef} className={`workspace ${styles.root}`} data-intro="true" data-scene="question" data-playing="false">
     <PortfolioShell sidebar={<FleetSidebar />} sidebarClassName={`story-panel ${styles.sidebar}`} sidebarLabel="Fleet case study" mainClassName={styles.main}>
+      <button id="mobile-pause" className={`${portfolio.cta} ${styles.mobilePlayback}`} type="button" aria-label="Play story" aria-pressed="false" disabled>▶ Play story</button>
       <div className={styles.workspaceBody}>
         <section className={`world-panel ${portfolio.card} ${styles.worldPanel}`} aria-label="Interactive fleet story">
           <div className={styles.stageViewport}>

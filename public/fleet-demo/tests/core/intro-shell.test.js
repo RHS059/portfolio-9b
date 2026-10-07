@@ -9,6 +9,12 @@ test('standalone bootstrap selector resolves the declared story root',()=>{
  const classes=[...html.matchAll(/class="([^"]+)"/g)].map(match=>match[1].split(/\s+/));
  assert.ok(classes.some(tokens=>tokens.includes(selector.slice(1))),`Missing bootstrap root ${selector}`);
 });
+test('standalone Reno link resolves beside the demo when served at any base path',async()=>{
+ const href=html.match(/href="([^"]+)"[^>]*>Original Reno console/)?.[1];
+ assert.ok(href&&!href.startsWith('/'),'Standalone legacy navigation uses the current demo directory');
+ const legacy=await readFile(new URL(href,new URL('../../index.html',import.meta.url)),'utf8');
+ assert.match(legacy,/Live/);
+});
 test('opening places project name, unchanged project information, teaser and Next in the left panel',()=>{
  const intro=html.slice(html.indexOf('<aside '),html.indexOf('<div id="story-content"'));
  const fields=['UX Designer','User research, systems design, workflow architecture, integration logic, prototyping, and cross-functional collaboration','Figma-style wireframing, whiteboarding, API and integration workflows','UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager','2019 – 2022','Data issue resolution improved by 90%, from weeks to hours'];

@@ -4,6 +4,7 @@
 .root button { -webkit-tap-highlight-color: transparent; }
 .root :is(button,input,select,summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .sidebar { min-width: 0; }
+.root button.mobilePlayback { display: none; }
 .introPanel { display: flex; flex-direction: column; flex: 1; gap: 20px; }
 .introPanel > p { margin: 0; }
 .projectInfo dl { display: grid; gap: 14px; margin: 0; }
@@ -136,6 +137,8 @@
 .root :global(.fp-panel button:hover:not(:disabled)) { color: var(--accent); border-color: var(--accent); }
 @media (max-width: 1100px) { .storyOverlays { padding: 22px; } .device { width: 160px; height: 190px; } }
 @media (max-width: 900px) {
+  .root button.mobilePlayback { display: flex; position: fixed; z-index: 8; left: 50%; bottom: max(14px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: auto; min-width: 148px; min-height: 46px; padding: 12px 18px; border-radius: 999px; box-shadow: 0 4px 22px color-mix(in srgb,var(--ink) 22%,transparent); }
+  .root[data-playback-visible="true"] button.mobilePlayback, .root[data-dialog-open="true"] button.mobilePlayback { display: none; }
   .introPanel { gap: 20px; } .introCta { margin-top: 6px; max-width: none; }
   .storyContent { min-height: 330px; gap: 20px; } .chapterIntro > p { margin-bottom: 24px; }
   .root .main { min-height: 0; } .stageViewport { min-height: 560px; }
