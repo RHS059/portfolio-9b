@@ -52,7 +52,7 @@ export function renderProvenance(model, {idPrefix = 'fleet-provenance', scope = 
  * Native ES-module component; dispatches the frozen v1 commands only.
  * The app owns version checks, effective dating, data writes and review providers.
  */
-export function createProvenancePanel({container,onAction} = {}) {
+export function createProvenancePanel({container,onAction,theme} = {}) {
   if (!container?.ownerDocument || typeof onAction !== 'function') throw new TypeError('A DOM container and onAction callback are required.');
   const doc = container.ownerDocument, root = doc.createElement('div');
   const idPrefix = `fleet-provenance-${++instanceCount}`;
@@ -69,6 +69,14 @@ export function createProvenancePanel({container,onAction} = {}) {
     const opened = [...root.querySelectorAll('details[open][data-details-key]')].map(el => el.dataset.detailsKey);
     const scrollTop = container.scrollTop;
     root.innerHTML = renderProvenance(model,{idPrefix,scope,error});
+    // The native portfolio supplies its real shared CSS module classes. Without
+    // a theme this remains the original standalone component.
+    if (theme?.controlClassName) {
+      for (const button of root.querySelectorAll('button')) button.classList.add('fp-native-control',...theme.controlClassName.split(/\s+/).filter(Boolean));
+    }
+    if (theme?.eyebrowClassName) {
+      for (const label of root.querySelectorAll('.fp-kicker')) label.classList.add(...theme.eyebrowClassName.split(/\s+/).filter(Boolean));
+    }
     for (const el of root.querySelectorAll('details[data-details-key]')) if (opened.includes(el.dataset.detailsKey)) el.open=true;
     root.setAttribute('aria-busy',String(pending || !!model.reviewing));
     if (pending) for (const el of root.querySelectorAll('button[data-action],select')) el.disabled=true;

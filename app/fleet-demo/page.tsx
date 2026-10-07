@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import FleetDemoShell from "@/components/fleet-demo-shell"
 
 export const metadata: Metadata = {
   title: "Fleet maintenance case study | Reid Slaughter",
@@ -6,15 +7,5 @@ export const metadata: Metadata = {
 }
 
 export default function FleetDemoPage() {
-  return (
-    <main className="min-h-screen w-full bg-[#eeede7]">
-      <h1 className="sr-only">Fleet maintenance interactive case study</h1>
-      <iframe
-        title="Fleet maintenance working demo"
-        src="/fleet-demo/index.html"
-        className="h-screen w-full border-0"
-        allow="fullscreen"
-      />
-    </main>
-  )
+  return <FleetDemoShell />
 }

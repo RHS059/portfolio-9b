@@ -84,7 +84,7 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
       await authority(page,'A').click();const next=await state(page);
       assert.equal(next.review,null);assert.equal(next.intro,false);assert.equal(await page.locator('#story-content').isVisible(),true);assert.equal(canonical(next).reason,'authoritative-reading-excluded');
       assert.equal(canonical(next).valueKm,null);assert.equal(canonical(next,'TRK-208').status,'resolved');
-      assert.doesNotMatch(await page.locator('#provenance').innerText(),/TRK-104: \d+ advisory finding/);
+      assert.equal(await page.locator('#provenance .fp-notification').count(),0);
     });
     await run('fresh reset plus stale A authority stays unresolved despite available B readings',async()=>{
       await page.locator('#reset').click();await openInspector(page);await authority(page,'A').click();const next=await state(page);

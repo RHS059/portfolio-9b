@@ -1,6 +1,6 @@
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const miles = row => row.unit === 'km' ? row.value / 1.609344 : row.value;
-export function createProvenancePanel({container,onAction}) {
+export function createProvenancePanel({container,onAction,theme={}}) {
   let model;
   const listener = event => {
     const button = event.target.closest('button[data-action]');
@@ -30,6 +30,7 @@ export function createProvenancePanel({container,onAction}) {
         <div class="evidence-card"><h3>Shop visits this week</h3>${services.map(s=>`<p><strong>${escape(s.work)}</strong><br>${escape(s.recordedAt)}</p>`).join('')||'<p>No visits recorded for this vehicle.</p>'}<details><summary>Service record details</summary><p>These service examples are synthetic. The exact historic PM trigger is unknown. Reviews do not create work orders or erase visits.</p>${services.map(s=>`<p>${escape(s.id)}</p>`).join('')}</details></div>
         ${model.notifications.map(n=>`<div class="success-tag"><strong>Manager notification</strong><br>${escape(n.text)}<br><small>${escape(n.recipient)}</small></div>`).join('')}
       </div>`;
+      if(theme.controlClassName)for(const control of container.querySelectorAll('button,select'))control.classList.add(...theme.controlClassName.split(/\s+/).filter(Boolean));
     },
     dispose(){container.removeEventListener('click',listener);container.replaceChildren();}
   };

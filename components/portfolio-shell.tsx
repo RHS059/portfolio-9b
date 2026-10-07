@@ -4,15 +4,27 @@ import PortfolioLinks from "./portfolio-links"
 import AnimatedLink from "./animated-link"
 import styles from "./portfolio-home.module.css"
 
-type Props = { children: ReactNode; leaving?: boolean; reading?: boolean; alignTop?: boolean; sidebarContent?: ReactNode }
+type Props = {
+  children: ReactNode
+  leaving?: boolean
+  reading?: boolean
+  alignTop?: boolean
+  sidebarContent?: ReactNode
+  /** Replace the sidebar contents while preserving the portfolio's real layout. */
+  sidebar?: ReactNode
+  sidebarClassName?: string
+  sidebarLabel?: string
+  mainClassName?: string
+}
 
-export default function PortfolioShell({ children, leaving = false, reading = false, alignTop = false, sidebarContent }: Props) {
+export default function PortfolioShell({ children, leaving = false, reading = false, alignTop = false, sidebarContent, sidebar, sidebarClassName = "", sidebarLabel, mainClassName = "" }: Props) {
   const Name = reading ? "p" : "h1"
   return (
     <div className={`${styles.page} font-sans`}>
       <div className={styles.grid}>
         <div className={`${styles["side-wrap"]} ${styles["route-panel"]} ${leaving ? styles["route-panel-leaving"] : ""}`}>
-          <aside className={styles.side}>
+          <aside className={`${styles.side} ${sidebarClassName}`} aria-label={sidebarLabel}>
+            {sidebar ?? <>
             <div>
               <Name className={styles.name}>Reid Slaughter</Name>
               <p className={styles.role}>Product Designer &amp; Design Engineer</p>
@@ -47,9 +59,10 @@ export default function PortfolioShell({ children, leaving = false, reading = fa
               <p className={styles.strong}>I&apos;m looking for design engineering and product design roles.</p>
             </div>
             {sidebarContent}
+            </>}
           </aside>
         </div>
-        <main id="work" className={`${reading ? styles.reading : styles.stack} ${alignTop ? styles.readingTop : ""} ${styles["route-panel"]} ${leaving ? styles["route-panel-leaving"] : ""}`}>
+        <main id="work" className={`${reading ? styles.reading : styles.stack} ${alignTop ? styles.readingTop : ""} ${styles["route-panel"]} ${leaving ? styles["route-panel-leaving"] : ""} ${mainClassName}`}>
           {children}
         </main>
         <footer className={styles.foot}>

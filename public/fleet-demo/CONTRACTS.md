@@ -27,3 +27,17 @@ Interiors, robots, production activity and service movement are illustrative. Si
 ## Domain
 
 `src/domain/readings/index.js` exports immutable fixture creation/import, per-vehicle effective-dated source policy, four exclusion scopes, deterministic evaluation/replay, and review-provider boundaries. See `src/domain/readings/README.md` for exact signatures. Missing or unusable readings from the chosen source remain unresolved; there is no newest-import, largest-value or alternate-source fallback. Duplicate imports and repeated replay are idempotent. Raw readings and completed service facts are preserved.
+
+## Native route lifecycle
+
+`src/app/index.js` exports `mountFleetDemo({root, theme?})`, returning
+`{ready: Promise, dispose()}`. Selectors stay within `root`; remounting the same
+root disposes its previous controller. Disposing before asynchronous imports
+finish prevents a late scene, and final disposal releases input listeners,
+review callbacks, simulation and renderer resources.
+
+`src/app/bridge.js` registers `window.FleetDemoModule` without mounting. The
+portfolio's React route owns its controller lifetime. `bootstrap.js` mounts the
+standalone HTML page. Optional `controlClassName` and `eyebrowClassName` theme
+values connect generated controls to the portfolio's shared styles; they do not
+change source policy or record handling.

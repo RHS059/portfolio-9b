@@ -6,12 +6,12 @@ import os from 'node:os';
 import {createRequire} from 'node:module';
 const require=createRequire(path.join(process.env.PLAYWRIGHT_PACKAGE || '/tmp/fleet-browser','package.json'));
 const {chromium}=require('playwright');
-const root=path.resolve('public/fleet-demo'),out=path.resolve('fleet-browser-evidence');
+const root=path.resolve('public/fleet-demo'),out=path.resolve(process.env.FLEET_SMOKE_EVIDENCE_DIR||'fleet-browser-evidence');
 await fs.mkdir(out,{recursive:true});
 const mime={'.html':'text/html','.js':'text/javascript','.json':'application/json','.css':'text/css','.webp':'image/webp'};
 const server=http.createServer(async(req,res)=>{try{const target=path.resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://local').pathname.replace(/\/$/,'/index.html')));if(!target.startsWith(root+path.sep))throw Error('outside root');const body=await fs.readFile(target);res.writeHead(200,{'content-type':mime[path.extname(target)]||'application/octet-stream'});res.end(body);}catch{res.writeHead(404);res.end('Not found');}});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-const url=`http://127.0.0.1:${server.address().port}/`;
+const url=process.env.FLEET_DEMO_URL||`http://127.0.0.1:${server.address().port}/`;
 let browser,page,phase='bootstrap';const evidence={url,browserConfiguration:'Playwright Chromium defaults; detected renderer is recorded separately',startedAt:new Date().toISOString(),checks:[],errors:[],console:[],contextCycles:[],notes:['CI Chromium software rendering is functional evidence, not named-hardware GPU performance.']};
 try{
  browser=await chromium.launch({headless:true});
