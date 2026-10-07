@@ -318,15 +318,17 @@ test('shared outbound travelCycle advances every completed64-second trip, includ
   assert.equal(sampleCargoProcess(200-CARGO_PRESENTATION_OFFSET_SECONDS,offset).outboundVehicles[0].travelCycle,1);
 });
 
-test('incoming forks engage measured pockets, extract level, then lower clear of the trailer',()=>{
-  for(const p of [0,.05,.1,.15]){
-    const f=first('forklift-unloading',p).forklifts[0];assert.equal(f.forkHeight,1.23);assert.equal(f.loadPhase,'extract');
-    assert.equal(f.forkHeightReference,'cargo-bottom');assert.equal(f.forkPocketOffset,.095);
-    assert.equal(f.forkHeight+.25+f.forkPocketOffset,1.575,'fork contact is the pallet pocket above its1.48m bottom');
+test('incoming forks lift clear before extraction and raise before storage insertion',()=>{
+  const samples=[[0,1.23,'lift'],[.025,1.29,'lift'],[.05,1.35,'extract'],[.125,1.35,'extract'],[.20,1.35,'lower'],[.25,.95,'lower'],[.30,.55,'carry'],[.50,.55,'carry'],[.70,.55,'raise'],[.75,.8225,'raise'],[.80,1.095,'insert'],[.90,1.095,'insert'],[.95,1.095,'place'],[.975,1.035,'place']];
+  for(const outgoingEnabled of [true,false])for(const [p,height,phase] of samples){
+    const s=sampleCargoProcess(at('forklift-unloading',p),{outgoingEnabled}),f=s.forklifts[0];
+    assert.ok(Math.abs(f.forkHeight-height)<1e-10,`height at ${p}`);assert.equal(f.loadPhase,phase);
+    assert.equal(f.forkHeightReference,'cargo-bottom');assert.equal(f.forkPocketOffset,.095,'pocket metadata identifies entry, not loaded contact');
+    assert.equal(f.cargoId,s.cargo[0].id);assert.equal(s.cargo[0].owner.kind,'forklift');
   }
-  assert.ok(Math.abs(first('forklift-unloading',.225).forklifts[0].forkHeight-.89)<1e-12);
-  assert.equal(first('forklift-unloading',.30).forklifts[0].forkHeight,.55);
-  assert.equal(first('forklift-unloading',.85).forklifts[0].forkHeight,.55);
+  const pickup=first('forklift-unloading',0).forklifts[0],raised=first('forklift-unloading',.05).forklifts[0];
+  assert.equal(pickup.forkHeight+.25,1.48);assert.ok(Math.abs(raised.forkHeight+.25-1.60)<1e-12);
+  assert.ok(Math.abs(pickup.forkHeight+.25+.14-1.62)<1e-12,'renderer-loaded contact lies .14m above pallet bottom');
   assert.equal(first('storage',0).forklifts[0].forkHeight,.975);
 });
 
@@ -476,4 +478,20 @@ test('inbound-only adapter keeps one clock, preserves paused holds and resets th
   assert.deepEqual(process.snapshotAt(512),complete);assert.equal(process.snapshotAt(512,{outgoingEnabled:true}).outgoingEnabled,true);
   process.reset();process.resume();assert.deepEqual(process.getSnapshot(),initial);
   process.tick(512);assert.deepEqual(process.getSnapshot().products,complete.products);assert.equal(process.getSnapshot().timeSeconds,512);
+});
+
+test('fork lift profile joins are smooth and preserve all receiving stage and custody boundaries',()=>{
+  const height=p=>sampleCargoProcess(62+10*p).forklifts[0].forkHeight,epsilon=1e-6;
+  for(const boundary of [.05,.20,.30,.70,.80,.95]){
+    const middle=height(boundary),left=height(boundary-epsilon),right=height(boundary+epsilon);
+    assert.ok(Math.abs(left-middle)<1e-8);assert.ok(Math.abs(right-middle)<1e-8);
+  }
+  for(const outgoingEnabled of [true,false])for(const slot of CARGO_SLOTS){
+    const base=slot.offsetSeconds,before=sampleCargoProcess(base+62-1e-7,{outgoingEnabled}),pickup=sampleCargoProcess(base+62,{outgoingEnabled}),placement=sampleCargoProcess(base+72-1e-7,{outgoingEnabled}),stored=sampleCargoProcess(base+72,{outgoingEnabled});
+    assert.equal(before.cargo[slot.index].owner.kind,'trailer');assert.equal(pickup.cargo[slot.index].owner.kind,'forklift');
+    assert.ok(Math.abs(before.forklifts[slot.index].forkHeight-pickup.forklifts[slot.index].forkHeight)<1e-6);
+    assert.equal(placement.cargo[slot.index].owner.kind,'forklift');assert.equal(stored.cargo[slot.index].owner.kind,'storage');
+    assert.ok(Math.abs(placement.forklifts[slot.index].forkHeight-stored.forklifts[slot.index].forkHeight)<1e-8);
+    assert.equal(stored.forklifts[slot.index].cargoId,null);assert.equal(stored.forklifts[slot.index].carrying,false);
+  }
 });

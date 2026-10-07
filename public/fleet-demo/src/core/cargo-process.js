@@ -72,6 +72,20 @@ function phaseAt(slot, timeSeconds) {
   return {cycle,localTime,waiting,stage:definition.id,progress:waiting ? 0 : clamp((localTime-definition.start)/definition.duration)};
 }
 
+/** Cargo-bottom support above the floor; contact geometry belongs to the renderer. */
+function incomingForkHeight(progress) {
+  if(progress<.05)return 1.23+.12*smooth(progress/.05);
+  if(progress<.20)return 1.35;
+  if(progress<.30)return 1.35-.80*smooth((progress-.20)/.10);
+  if(progress<.70)return .55;
+  if(progress<.80)return .55+.545*smooth((progress-.70)/.10);
+  if(progress<.95)return 1.095;
+  return 1.095-.12*smooth((progress-.95)/.05);
+}
+function incomingLoadPhase(progress) {
+  return progress<.05?'lift':progress<.20?'extract':progress<.30?'lower':progress<.70?'carry':progress<.80?'raise':progress<.95?'insert':'place';
+}
+
 function sampleSlot(slot, timeSeconds, outgoingEnabled=true) {
   // An inbound preview completes once, then holds this fixture's real output.
   const sampleTime=outgoingEnabled?timeSeconds:Math.min(timeSeconds,slot.offsetSeconds+phases['drone-assembly'].end);
@@ -129,9 +143,9 @@ function sampleSlot(slot, timeSeconds, outgoingEnabled=true) {
   else if (stage==='storage') {forkliftStage='returning';forkliftMotion=motion(a.storage,a.forkliftPark,progress);}
   const forklift={id:slot.forkliftId,slotId:slot.id,workerId:slot.workerId,bayId:slot.bayId,stage:forkliftStage,
     progress:forkliftMotion.progress,motion:forkliftMotion,cargoId:materialOwner.kind==='forklift'?cargoId:null,
-    carrying:materialOwner.kind==='forklift',forkHeight:stage==='bay-arrival' ? .18+1.05*clamp((progress-.75)/.25) : stage==='forklift-unloading' ? (progress<=.15?1.23:progress<.30?1.23-.68*(progress-.15)/.15:progress>.85?.55+.425*(progress-.85)/.15:.55) : stage==='storage' ? .975-.795*clamp(progress/.25) : .18,
+    carrying:materialOwner.kind==='forklift',forkHeight:stage==='bay-arrival' ? .18+1.05*clamp((progress-.75)/.25) : stage==='forklift-unloading' ? incomingForkHeight(progress) : stage==='storage' ? .975-.795*clamp(progress/.25) : .18,
     forkHeightReference:'cargo-bottom',forkPocketOffset:.095,
-    loadPhase:stage==='forklift-unloading'?(progress<=.15?'extract':progress<.30?'lower':progress<=.85?'carry':'place'):'empty',
+    loadPhase:stage==='forklift-unloading'?incomingLoadPhase(progress):'empty',
     grip:materialOwner.kind==='forklift'?1:0,operatorPresent:true,
   };
   let robotStage='waiting',robotMotion=resting(a.robotPark);

@@ -110,15 +110,30 @@ expose `workerId`, `operatorPresent`, `forkHeight` in authored meters and `grip`
 Floor robots expose `carrying`, `payload`, and `lift`. Incoming `forkHeight` is
 explicitly a cargo-bottom support above the floor (`forkHeightReference:'cargo-bottom'`),
 not the top of the fork mesh. Its 1.23 m pickup value plus the 0.25 m receiving
-floor places the pallet bottom at 1.48 m. The actual fork contact is the measured
-pallet pocket 0.095 m higher (`forkPocketOffset`); the renderer adds that offset
-when setting the asset's lift height.
+floor places the pallet bottom at 1.48 m. `forkPocketOffset:0.095` describes entry
+into the pocket only. Actual loaded contact is 0.14 m above pallet bottom. The
+renderer interpolates entry to loaded contact during the final15% of the approach,
+reaching the board underside at62 seconds while the trailer still supports cargo.
+Only then does the cargo lift. Empty release reverses that contact adjustment;
+the renderer owns the measured tine-top shim and raycast verification.
 
-For unloading, hold 1.23 m through the first 15% while extracting the pallet;
-only then lower to 0.55 m over 15–30%, travel at 0.55 m through 85%, and raise to
-0.975 m over 85–100%. The final pallet support is 1.225 m above world ground.
-`loadPhase` names extract/lower/carry/place. Empty return lowers smoothly to
-0.18 m. These measured values describe presentation supports only.
+The normalized incoming unloading profile remains within62–72 seconds:
+
+- 0–0.05: lift cargo-bottom support 1.23→1.35 m, stationary over the trailer
+- 0.05–0.20: hold1.35 m while extracting clear of the trailer
+- 0.20–0.30: lower1.35→0.55 m after extraction
+- 0.30–0.70: hold0.55 m during travel
+- 0.70–0.80: raise0.55→1.095 m before storage insertion
+- 0.80–0.95: hold1.095 m while inserting above the storage support
+- 0.95–1.00: lower1.095→0.975 m onto storage, without horizontal movement
+
+Each height change uses smoothstep with zero endpoint speed. `loadPhase` names
+lift/extract/lower/carry/raise/insert/place for this incoming profile only. Outgoing
+loading uses its explicit stage and anchor-based support motion. The renderer
+matches the XY phases, including clearance before lowering and raising before
+insertion. The final pallet support is1.225 m above world ground; custody changes
+to storage only at72 seconds. Empty return then lowers smoothly to0.18 m. These
+measured values describe presentation supports only.
 
 ## Timeline
 
