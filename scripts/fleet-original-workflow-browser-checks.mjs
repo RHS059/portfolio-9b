@@ -17,6 +17,9 @@ export async function checkOriginalWorkflow(page,{capture=async()=>{}}={}){
  await page.locator('#open-original-workflow').click();
  const dialog=page.locator('[data-original-workflow-dialog]');
  assert.equal(await dialog.isVisible(),true);assert.equal((await state()).simulation.paused,true);
+ const desktopBox=await dialog.boundingBox(),desktopViewport=page.viewportSize();
+ assert.ok(Math.abs(desktopBox.x-(desktopViewport.width-desktopBox.width)/2)<=1.5,'Modal is horizontally centered');
+ assert.ok(Math.abs(desktopBox.y-(desktopViewport.height-desktopBox.height)/2)<=1.5,'Modal is vertically centered');
  assert.equal(await page.locator('#story-transport').isVisible(),false);
  await dialog.locator('[data-original-play]').click();
  assert.equal(await dialog.locator('[data-original-play]').innerText(),'Play loop');

@@ -44,3 +44,17 @@ test('local-only module retains the integrator cleanups and creates no preview c
   const code=await readFile(new URL('../../src/ui/original-workflow/index.js',import.meta.url),'utf8');assert.doesNotMatch(code,/\bfetch\s*\(|XMLHttpRequest|localStorage|sessionStorage|domain\/|reviewImports|createSimulatedReviewProvider|Sample records · changes stay in this demo/);
   assert.match(code,/status\.className='ow-sr'/);const preview=code.slice(code.indexOf('export function createOriginalWorkflowPreview'),code.indexOf('export function createOriginalWorkflow('));assert.doesNotMatch(preview,/requestAnimationFrame|setTimeout|setInterval|createWorkflowPlayback/);assert.match(code,/doc\.removeEventListener\('visibilitychange',visibility\)/);assert.match(code,/preference\?\.removeEventListener/);
 });
+
+
+test('SVG cursor uses a real visibility attribute for reduced motion and manual playback',async t=>{
+ const {installDomHost}=await import('../render/dom-host.js');
+ const {createOriginalWorkflowPreview}=await import('../../src/ui/original-workflow/index.js');
+ const {document}=installDomHost(t),create=document.createElement;
+ document.createElement=tag=>{const node=create(tag);node.ownerDocument=document;node.appendChild=child=>{node.append(child);return child;};return node;};
+ document.createElementNS=(_,tag)=>document.createElement(tag);
+ const container=document.createElement('div'),preview=createOriginalWorkflowPreview({container});
+ const cursor=container.querySelector('svg');assert.equal(cursor.getAttribute('visibility'),'hidden');
+ preview.render(7,{paused:false,reducedMotion:false});assert.equal(cursor.getAttribute('visibility'),'visible');
+ preview.render(7,{paused:true,reducedMotion:true});assert.equal(cursor.getAttribute('visibility'),'hidden');
+ preview.dispose();
+});

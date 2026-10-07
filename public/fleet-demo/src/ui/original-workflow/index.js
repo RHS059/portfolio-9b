@@ -18,9 +18,9 @@ function createSurface(container,{preview=false,idPrefix}={}){
     status.className='ow-sr';status.dataset.originalStatus='';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
     for(const element of [play,reset,status])controls.appendChild(element);root.appendChild(controls);
   }
-  container.appendChild(root);let lastKey='',lastState=null;
+  container.appendChild(root);let lastKey='',lastState=null,cursorVisible=false;
   function positionCursor(){
-    if(!lastState||cursor.hidden)return;const target=screen.querySelector(`[data-ow-target="${lastState.cursorTarget}"]`);if(!target)return;
+    if(!lastState||!cursorVisible)return;const target=screen.querySelector(`[data-ow-target="${lastState.cursorTarget}"]`);if(!target)return;
     const rect=target.getBoundingClientRect(),base=shell.getBoundingClientRect();
     cursor.style.transform=`translate(${Math.max(0,rect.left-base.left+shell.scrollLeft+Math.min(rect.width*.52,250))}px,${Math.max(0,rect.top-base.top+shell.scrollTop+rect.height*.55)}px)`;
   }
@@ -28,7 +28,7 @@ function createSurface(container,{preview=false,idPrefix}={}){
   return {
     root,screen,shell,
     render(state,{playing=false,showCursor=true,focusKey=null}={}){
-      lastState=state;shell.dataset.playing=String(playing);cursor.hidden=!showCursor;const key=JSON.stringify(state);
+      lastState=state;shell.dataset.playing=String(playing);cursorVisible=showCursor;cursor.setAttribute('visibility',showCursor?'visible':'hidden');const key=JSON.stringify(state);
       if(key!==lastKey){lastKey=key;screen.innerHTML=renderWorkflowScreen(state,{preview,idPrefix});if(focusKey)screen.querySelector(`[data-ow-key="${focusKey}"]`)?.focus({preventScroll:true});}
       if(play){play.textContent=playing?'Pause loop':'Play loop';play.setAttribute('aria-pressed',String(playing));}
       if(status)status.textContent=state.notice||phaseDescription(state);positionCursor();
