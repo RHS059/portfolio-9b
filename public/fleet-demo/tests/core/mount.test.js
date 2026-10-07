@@ -110,7 +110,7 @@ test('mobile playback uses the same clock, feature-detects visibility and discon
  assert.equal(observed,host.root.querySelector('#pause'));assert.equal(mobile.disabled,false);assert.equal(api.getState().simulation.paused,true);host.root.querySelector('#start-story').dispatchEvent(new Event('click'));assert.equal(api.getState().simulation.paused,false);
  mobile.dispatchEvent(new Event('click'));assert.equal(api.getState().simulation.paused,true);assert.equal(mobile.getAttribute('aria-label'),'Play story');
  callback([{target:observed,isIntersecting:true,intersectionRatio:1}]);assert.equal(host.root.dataset.playbackVisible,'true');callback([{target:observed,isIntersecting:false,intersectionRatio:0}]);assert.equal(host.root.dataset.playbackVisible,'false');
- host.root.querySelector('#about-toggle').dispatchEvent(new Event('click'));assert.equal(host.root.dataset.dialogOpen,'true');host.root.querySelector('#about-close').dispatchEvent(new Event('click'));assert.equal(host.root.dataset.dialogOpen,'false');
+ api.seekStory(6,.5);host.root.querySelector('#open-source-controls').dispatchEvent(new Event('click'));assert.equal(host.root.dataset.dialogOpen,'true');host.root.querySelector('#source-close').dispatchEvent(new Event('click'));assert.equal(host.root.dataset.dialogOpen,'false');
  controller.dispose();assert.equal(disconnected,1);assert.equal(mobile.listeners.get('click').size,0);
 });
 
@@ -121,4 +121,11 @@ test('sidebar relocation keeps animated content unique and receipt totals unchan
  for(const [index,id] of Object.entries(sideScenes)){api.seekStory(Number(index),.5);assert.equal(host.root.querySelector('#sidebar-scenes').hidden,false);assert.equal(host.root.querySelector(`[data-story-sidebar="${id}"]`).hidden,false);assert.equal(host.root.querySelector(`[data-story-overlay="${id}"]`),null);assert.equal(host.root.querySelector('#chapter-number').hidden,Number(index)===6);}
  api.seekStory(4,2/18);assert.equal(host.root.querySelector('#mileage-value').textContent,'50,000');api.seekStory(5,.75);assert.equal(host.root.querySelector('#cost-total').textContent,'$700.00');assert.equal(host.root.querySelector('#cost-duplicate').textContent,'$350.00');assert.equal(host.root.querySelector('#maintenance-cost').textContent,'$350');
  for(const id of ['reset','explore-scene','story-replay'])assert.equal(host.root.querySelector('#'+id),null);controller.dispose();
+});
+
+
+test('left Auto and Manual remain available after timeline interaction and advance the current scene',async t=>{
+ const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();const api=window.__fleetDemo,auto=host.root.querySelector('#start-story'),manual=host.root.querySelector('#start-story-manual');
+ for(const stage of [0,2,4,6]){api.seekStory(stage,.3);assert.equal(auto.hidden,false);assert.equal(manual.hidden,false);assert.equal(auto.disabled,false);auto.dispatchEvent(new Event('click'));assert.equal(api.getState().stage,stage+1);assert.equal(api.getState().simulation.paused,false);api.seekStory(stage,.3);manual.dispatchEvent(new Event('click'));assert.equal(api.getState().stage,stage+1);assert.equal(api.getState().simulation.paused,true);}
+ api.seekStory(8);assert.equal(auto.disabled,true);assert.equal(manual.disabled,true);assert.equal(auto.hidden,false);assert.equal(manual.hidden,false);assert.equal(host.root.querySelector('#about-panel'),null);assert.equal(host.root.querySelector('#about-toggle'),null);controller.dispose();
 });

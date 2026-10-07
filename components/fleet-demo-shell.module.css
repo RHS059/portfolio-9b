@@ -231,3 +231,12 @@
 
 /* The paused opening already has its two explicit playback choices. */
 .root[data-intro="true"][data-playing="false"] button.mobilePlayback { display: none; }
+
+/* Keep the requested left-hand mode choices outside the fading story content. */
+.root .sidebar { gap: 20px; overflow: hidden; }
+.sidebarStoryBody { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; }
+.advanceControls { display: grid; flex: none; gap: 8px; border-top: 1px solid var(--sidebar-rule); padding-top: 16px; }
+.storyDock { padding-top: 0; }
+.impactStrip { border-top: 0; border-bottom: 1px solid var(--sidebar-rule); }
+.root .timelineHeader { padding-top: 15px; }
+@media (max-width: 900px) { .sidebarStoryBody { flex: none; overflow: visible; } .root .sidebar { overflow: visible; } }

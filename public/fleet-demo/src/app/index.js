@@ -20,10 +20,10 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   const $=selector=>root.matches?.(selector)?root:root.querySelector(selector),$$=selector=>[...root.querySelectorAll(selector)];
   let disposed=false,debugAPI,scenario,evaluation,domain,scene,panel,sim,ready=false;
   let story=sampleStory(0),stage=0,intro=true,mode='then',selectedVehicleId='TRK-104',view='iso',follow=true;
-  let review=null,notifications=[],commandSequence=0,reviewing=false,reviewSequence=0,lastMetricUpdate=0;
+  let review=null,notifications=[],commandSequence=0,reviewing=false,reviewSequence=0;
   let exploring=false,activeDialog=null,dialogReturnFocus=null,visibilityPauseState=null;
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
-  const sidebarTransition=createStoryTextTransition({element:$('.story-panel'),reducedMotion:()=>reducedMotion.matches});
+  const sidebarTransition=createStoryTextTransition({element:$('#sidebar-story-body'),reducedMotion:()=>reducedMotion.matches});
   function on(target,type,listener,options){if(!target)throw new Error(`Missing Fleet control for ${type}`);target.addEventListener(type,listener,options);cleanups.push(()=>target.removeEventListener(type,listener,options));}
   function dispose(){if(disposed)return;disposed=true;ready=false;reviewSequence++;for(const remove of cleanups.splice(0))remove();sidebarTransition.dispose();sim?.dispose();scene?.dispose();panel?.dispose();if(window.__fleetDemo===debugAPI)delete window.__fleetDemo;if(mountedControllers.get(root)?.dispose===dispose)mountedControllers.delete(root);}
   const feedback=text=>{$('#app-feedback').textContent=text;};
@@ -43,8 +43,8 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     const paused=sim?.getState().paused??true;$('.workspace').dataset.playing=String(!paused);
     $('#mobile-pause').textContent=paused?'▶ Play story':'Ⅱ Pause story';$('#mobile-pause').setAttribute('aria-label',paused?'Play story':'Pause story');$('#mobile-pause').setAttribute('aria-pressed',String(!paused));$('#mobile-pause').disabled=!ready;
     $('#pause').textContent=paused?'▶ Play':'Ⅱ Pause';$('#pause').setAttribute('aria-label',paused?'Play story':'Pause story');$('#pause').setAttribute('aria-pressed',String(!paused));
-    $('#run-status').textContent=paused?'Story and scene paused':'Story and scene playing';
     $('#camera-controls').hidden=!paused&&!exploring;
+    $('#start-story').disabled=stage===STORY_SCENES.length-1;$('#start-story-manual').disabled=stage===STORY_SCENES.length-1;
     $('#playback-status').textContent=exploring?(paused?'Manual view · paused':'Manual view · playing'):story.complete?'End of story':paused?(reducedMotion.matches?'Paused · reduced motion':'Paused · explore at your pace'):'Autoplay · pause anytime';
   }
   function applySceneCamera(){
@@ -97,7 +97,6 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     $('#canonical-reading').textContent=canonical?.status==='resolved'?`${Math.round(canonical.valueKm/1.609344).toLocaleString('en-US')} mi`:'Unresolved';
     $('#canonical-source').textContent=canonical?.status==='resolved'?`Provider ${canonical.sourceId}`:'No usable reading from the chosen source';
     $('#mode-description').textContent=mode==='then'?'These controls choose one vehicle’s odometer source and exclude readings without deleting history.':'Review the flagged readings, then choose the source.';
-    $('#integrity-count').textContent=scenario?`${scenario.readings.length} readings kept`:'Raw records kept';
     if(panel&&scenario)panel.update({mode,compact:true,showVehicleSelector:true,selectedVehicleId,readings:scenario.readings,policies:scenario.policies,exclusions:scenario.exclusions,decisions:evaluation.decisions,serviceHistory:scenario.serviceFacts||[],review:review?.vehicleId===selectedVehicleId?review:null,configurationVersion:scenario.configVersion,authorityStatus:canonical?.status||'unresolved',canonical,vehicles:scenario.vehicles,notifications,asOf:scenario.asOf,reviewing,assumptions:scenario.fixture?.assumptions||[]});
     if(scene&&sim){const current=sim.getState();scene.update(snapshot(current.timeSeconds,current.paused));}
   }
@@ -105,7 +104,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     const next=sampleStory(timeSeconds),changed=next.index!==stage,completionChanged=next.complete!==story.complete;story=next;stage=next.index;intro=stage===0;
     if(changed){mode=stage===7?'today':'then';render();applySceneCamera();}
     if(completionChanged)renderPlayback();if(story.complete&&!paused&&!exploring)setPaused(true);
-    renderPresentation();scene?.update(snapshot(timeSeconds,sim?.getState().paused??paused));updateMetrics(performance.now());
+    renderPresentation();scene?.update(snapshot(timeSeconds,sim?.getState().paused??paused));
   }
   function focusStoryText(){sidebarTransition.afterCommit(()=>{const title=[1,6,7].includes(stage)?$(`[data-story-sidebar="${story.id}"] h2`):intro?$('#intro-panel h1'):$('#chapter-title');title?.setAttribute('tabindex','-1');title?.focus?.({preventScroll:true});});}
 
@@ -120,9 +119,9 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   function selectEntity(id){setPaused(true);if(['oict','centerpoint','depot'].includes(id)){focusFacility(id);return;}selectVehicle(id);}
   function selectVehicle(id){if(!['TRK-104','TRK-208'].includes(id))return;selectedVehicleId=id;scene?.setFocus(id);render();}
   function openDialog(id){
-    setPaused(true);if(activeDialog)closeDialog(false);dialogReturnFocus=doc.activeElement;activeDialog=$(id);activeDialog.hidden=false;$('.workspace').dataset.dialogOpen='true';$('#about-toggle').setAttribute('aria-expanded',String(id==='#about-panel'));activeDialog.querySelector('button')?.focus();
+    setPaused(true);if(activeDialog)closeDialog(false);dialogReturnFocus=doc.activeElement;activeDialog=$(id);activeDialog.hidden=false;$('.workspace').dataset.dialogOpen='true';activeDialog.querySelector('button')?.focus();
   }
-  function closeDialog(restore=true){if(!activeDialog)return;activeDialog.hidden=true;activeDialog=null;$('.workspace').dataset.dialogOpen='false';$('#about-toggle').setAttribute('aria-expanded','false');if(restore&&dialogReturnFocus?.isConnected)dialogReturnFocus.focus({preventScroll:true});dialogReturnFocus=null;}
+  function closeDialog(restore=true){if(!activeDialog)return;activeDialog.hidden=true;activeDialog=null;$('.workspace').dataset.dialogOpen='false';if(restore&&dialogReturnFocus?.isConnected)dialogReturnFocus.focus({preventScroll:true});dialogReturnFocus=null;}
   async function handleAction(action){
     if(disposed||!ready)return;
     try{
@@ -146,7 +145,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     }catch(error){reviewing=false;feedback(`${error.code||'Unable to apply change'}: ${error.message}`);render();}
   }
   function bind(){
-    $('#source-dialog').hidden=true;$('#about-panel').hidden=true;$('.workspace').dataset.dialogOpen='false';
+    $('#source-dialog').hidden=true;$('.workspace').dataset.dialogOpen='false';
     // One mobile control stays reachable until the full playback control is on screen.
     if(typeof IntersectionObserver==='function'){
       const observer=new IntersectionObserver(entries=>{if(disposed)return;const entry=entries.find(item=>item.target===$('#pause'));if(entry)$('.workspace').dataset.playbackVisible=String(entry.isIntersecting&&entry.intersectionRatio>=.5);},{threshold:[0,.5,1]});
@@ -154,14 +153,13 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     }
     $('#scene-steps').innerHTML=STORY_SCENES.map(item=>`<button type="button" data-scene-index="${item.index}" aria-label="Scene ${item.index+1}: ${item.label}" title="${item.label}">${String(item.index+1).padStart(2,'0')}</button>`).join('');
     $('#story-progress').max=String(STORY_DURATION);
-    on($('#start-story'),'click',()=>{setChapter(1);setPaused(false);});on($('#start-story-manual'),'click',()=>setChapter(1));on($('#previous-chapter'),'click',()=>setChapter(stage-1));on($('#next-chapter'),'click',()=>setChapter(stage+1));
+    on($('#start-story'),'click',()=>{if(stage>=STORY_SCENES.length-1)return;setChapter(stage+1);setPaused(false);});on($('#start-story-manual'),'click',()=>{if(stage<STORY_SCENES.length-1)setChapter(stage+1);});on($('#previous-chapter'),'click',()=>setChapter(stage-1));on($('#next-chapter'),'click',()=>setChapter(stage+1));
     $$('[data-scene-index]').forEach(button=>on(button,'click',()=>setChapter(Number(button.dataset.sceneIndex))));
     on($('#story-progress'),'input',event=>{exploring=false;setPaused(true);sim?.seek(Number(event.target.value));render();applySceneCamera();});
     on($('#mobile-pause'),'click',togglePlayback);on($('#pause'),'click',togglePlayback);
     on($('#open-source-controls'),'click',()=>{mode='then';openDialog('#source-dialog');render();});
     on($('#run-story-review'),'click',()=>{mode='today';openDialog('#source-dialog');render();void handleAction({type:'review-imports'});});
     on($('#source-close'),'click',()=>closeDialog());
-    on($('#about-toggle'),'click',()=>activeDialog===$('#about-panel')?closeDialog():openDialog('#about-panel'));on($('#about-close'),'click',()=>closeDialog());
     $$('[data-view]').forEach(button=>on(button,'click',()=>{enterManualView();view=button.dataset.view;$$('[data-view]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));scene?.setView(view);}));
     $$('[data-focus]').forEach(button=>on(button,'click',()=>focusFacility(button.dataset.focus)));
     on($('#overview'),'click',()=>focusFacility(null));
@@ -180,7 +178,6 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     on(reducedMotion,'change',event=>{if(event.matches){setPaused(true);sidebarTransition.finish();}});
     on(doc,'visibilitychange',()=>{if(doc.hidden){visibilityPauseState=sim?.getState().paused??true;setPaused(true);}else if(visibilityPauseState!==null){setPaused(visibilityPauseState);visibilityPauseState=null;}});
   }
-  function updateMetrics(time){if(time-lastMetricUpdate<2000)return;lastMetricUpdate=time;const metrics=scene?.getMetrics?.();if(!metrics)return;const fps=metrics.fps??metrics.averageFps??metrics.fpsAverage;$('#performance').textContent=Number.isFinite(fps)?`${Math.round(fps)} RAF/s · p95 ${Math.round(metrics.p95Ms||0)} ms · GPU target unverified`:(metrics.renderer||metrics.mode||'Browser scene')+' · hardware performance unverified';}
   async function main(){
     bind();render();
     try{domain=await import('../domain/readings/index.js');if(disposed)return;scenario=domain.createScenario({authorityApplied:false});evaluate();}

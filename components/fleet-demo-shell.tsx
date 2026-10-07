@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react"
 import PortfolioShell from "./portfolio-shell"
-import AnimatedLink from "./animated-link"
 import portfolio from "./portfolio-home.module.css"
 import styles from "./fleet-demo-shell.module.css"
 
@@ -56,6 +55,7 @@ const projectFields = [
 
 function FleetSidebar() {
   return <>
+    <div id="sidebar-story-body" className={styles.sidebarStoryBody}>
     <div id="intro-panel" className={styles.introPanel}>
       <p className={portfolio.eyebrow}>Fleet integrations · A case study</p>
       <h1 className={portfolio.name}>The Same Truck.<br />The Same Service.<br />Again.</h1>
@@ -67,8 +67,7 @@ function FleetSidebar() {
       </section>
       <div className={`${portfolio.bio} ${styles.introCta}`}>
         <p>Why were the same trucks getting serviced more than once in a week?</p>
-        <button id="start-story" className={portfolio.cta} type="button">Next Slide: Auto</button>
-        <button id="start-story-manual" className={portfolio.control} type="button">Next Slide: Manual</button>
+
       </div>
     </div>
     <div id="story-content" className={styles.storyContent} hidden>
@@ -115,6 +114,11 @@ function FleetSidebar() {
         <button id="open-source-controls" className={portfolio.control} type="button" hidden>Try the source controls ↗</button>
         <button id="run-story-review" className={portfolio.control} type="button" hidden>Run an example review ↗</button>
       </div>
+    </div>
+    </div>
+    <div id="story-advance-controls" className={styles.advanceControls}>
+        <button id="start-story" className={portfolio.cta} type="button">Next Slide: Auto</button>
+        <button id="start-story-manual" className={portfolio.control} type="button">Next Slide: Manual</button>
     </div>
   </>
 }
@@ -188,6 +192,11 @@ export default function FleetDemoShell() {
             </div>
           </div>
           <div className={`story-dock ${styles.storyDock}`} aria-label="Story playback and vehicle context">
+            <div className={`impact-strip ${styles.impactStrip}`}>
+              <div><span className={portfolio.eyebrow}>Following one truck</span><strong id="selected-asset">TRK-104</strong><small id="asset-role"></small></div>
+              <div><span className={portfolio.eyebrow}>Service visits</span><strong id="service-visits">—</strong><small id="service-summary"></small></div>
+              <div><span className={portfolio.eyebrow}>Repeat service cost</span><strong id="maintenance-cost">—</strong><small id="maintenance-cost-note">Labor, parts and downtime</small></div>
+            </div>
             <div className={styles.timelineHeader}><span id="story-position" className={portfolio.eyebrow}>01 / 09 · The question</span><span id="playback-status">Preparing story</span></div>
             <div id="scene-steps" className={styles.sceneSteps} aria-label="Choose a scene" />
             <label className={styles.srOnly} htmlFor="story-progress">Scrub through the story</label>
@@ -196,14 +205,9 @@ export default function FleetDemoShell() {
               <button id="previous-chapter" className={portfolio.control} type="button" aria-label="Previous scene" aria-keyshortcuts="ArrowLeft">← Back</button>
               <button id="pause" className={portfolio.cta} type="button" aria-label="Play story" aria-keyshortcuts="Space">▶ Play</button>
               <button id="next-chapter" className={portfolio.control} type="button" aria-label="Next scene" aria-keyshortcuts="ArrowRight">Next →</button>
-              <button id="about-toggle" className={portfolio.control} type="button" aria-label="About this demo" aria-expanded="false">Details</button>
             </div>
             <div id="camera-controls" hidden className={styles.worldToolbar} role="group" aria-label="Camera controls"><button className={portfolio.control} data-view="2d" type="button" aria-pressed="false">2D</button><button className={portfolio.control} data-view="3d" type="button" aria-pressed="false">3D</button><button className={portfolio.control} data-view="iso" type="button" aria-pressed="true">ISO</button><button id="overview" type="button" className={portfolio.control}>Overview</button><button id="follow" type="button" className={portfolio.control} aria-pressed="true">Follow truck</button><button className={portfolio.control} data-focus="depot" type="button">Workshop</button><button className={portfolio.control} data-focus="oict" type="button">OICT</button><button className={portfolio.control} data-focus="centerpoint" type="button">Factory</button></div>
-            <div className={`impact-strip ${styles.impactStrip}`}>
-              <div><span className={portfolio.eyebrow}>Following one truck</span><strong id="selected-asset">TRK-104</strong><small id="asset-role"></small></div>
-              <div><span className={portfolio.eyebrow}>Service visits</span><strong id="service-visits">—</strong><small id="service-summary"></small></div>
-              <div><span className={portfolio.eyebrow}>Repeat service cost</span><strong id="maintenance-cost">—</strong><small id="maintenance-cost-note">Labor, parts and downtime</small></div>
-            </div>
+
           </div>
           <div id="source-dialog" className={styles.sourceDialog} role="dialog" aria-modal="true" aria-labelledby="source-dialog-title" hidden>
             <button id="source-close" className={`${portfolio.control} ${styles.close}`} type="button" aria-label="Close source controls">×</button>
@@ -213,15 +217,7 @@ export default function FleetDemoShell() {
             <div id="source-inspector"><div id="provenance" /><div id="app-feedback" className={styles.feedback} role="status" aria-live="polite" /></div>
             <p id="mode-description" className={styles.modeDescription} />
           </div>
-          <div id="about-panel" className={styles.aboutPanel} role="dialog" aria-modal="true" aria-labelledby="about-heading" hidden>
-            <button id="about-close" className={`${portfolio.control} ${styles.close}`} type="button" aria-label="Close demo details">×</button>
-            <h2 id="about-heading">About this story</h2>
-            <p>This case study follows the provider-overlap incident. The source controls use sample records so you can try the workflow.</p>
-            <p id="cargo-capability-note">Follow the trucks, incoming kits and assembly work in the scene.</p>
 
-            <details><summary>Data and performance</summary><p>The animated readings, visits and $350 service price are examples. No live telemetry is connected. The exact maintenance-trigger rule is unknown.</p><p id="integrity-count" /><p>Original readings and service history are preserved. Settings are versioned and recalculated results are derived views.</p><p><span id="run-status">Scene paused</span> · One 20 Hz simulation clock with interpolated rendering.</p><p id="performance">Performance measurement pending</p><p>Browser frame cadence is not a physical-GPU benchmark.</p></details>
-            <p><a href="/fleet-demo/reno.html">Original Reno console ↗</a></p><AnimatedLink href="/projects/fleet-fuel-integration">Read the original case study ↗</AnimatedLink>
-          </div>
         </section>
       </div>
       <noscript><p>JavaScript is needed to run this interactive story. <a href="/projects/fleet-fuel-integration">Read the original case study.</a></p></noscript>

@@ -128,9 +128,9 @@ try{
  await setPaused(true);const paused=(await state()).simulation.timeSeconds;await page.waitForTimeout(200);assert.equal((await state()).simulation.timeSeconds,paused);
  evidence.checks.push('camera modes/follow/pause controls operate without data mutation');
  await chooseTruck('TRK-208');assert.equal((await state()).selectedVehicleId,'TRK-208');
- await page.locator('#about-toggle').click();assert.equal(await page.locator('#about-panel').isVisible(),true);await page.keyboard.press('Escape');assert.equal(await page.locator('#about-panel').isVisible(),false);
+ await openSource();await page.keyboard.press('Escape');assert.equal(await page.locator('#source-dialog').isVisible(),false);
  await navigateStory(page,0);await reloadStory(page);const reset=await state();assert.equal(reset.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').status,'unresolved');assert.equal(reset.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);assert.equal(reset.follow,true);assert.equal(reset.selectedVehicleId,'TRK-104');assert.equal(reset.simulation.paused,true);
- evidence.checks.push('selection, about dismissal and browser reload restore expected state');
+ evidence.checks.push('selection, source-dialog dismissal and browser reload restore expected state');
  await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:30000});await setPaused(false);phase='steady-1080p';evidence.interactionMetrics=await page.evaluate(()=>window.__fleetDemo.getMetrics());
  await page.setViewportSize({width:1920,height:1080});
  await page.waitForTimeout(1000);
@@ -189,15 +189,15 @@ assert.equal(await page.evaluate(()=>document.querySelector('#start-story-manual
    else if(evidence.contextCycles.length===2){await page.locator('#follow').click();await setPaused(false);await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.camera.follow&&m.camera.focus===window.__fleetDemo.getState().selectedVehicleId&&m.viewState.zoom>17&&!m.cameraMoving;});}
 
  }
- phase='legacy-reno';await page.locator('#about-toggle').click();await page.getByRole('link',{name:'Original Reno console ↗'}).click();await page.waitForLoadState('domcontentloaded');await page.getByRole('button',{name:'Live',exact:true}).click();
+ phase='legacy-reno';const legacyUrl=new URL('reno.html',url.endsWith('/')?url:url+'/').href;await page.goto(legacyUrl,{waitUntil:'domcontentloaded'});await page.getByRole('button',{name:'Live',exact:true}).click();
  for(const mode of ['2D','3D','Isometric'])await page.getByRole('button',{name:mode,exact:true}).click();
  await page.getByRole('button',{name:'Follow vehicle',exact:true}).click();assert.equal(await page.getByRole('button',{name:'Following',exact:true}).isVisible(),true);await page.getByRole('button',{name:'Following',exact:true}).click();
  evidence.checks.push('original Reno Live, 2D, 3D, Isometric and follow controls remain usable');
- await page.goBack({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo?.getMetrics?.());phase='back-navigation';await page.keyboard.press('Escape');assert.equal(await page.locator('#about-panel').isVisible(),false);await setPaused(false);const backTime=(await state()).simulation.timeSeconds;await page.waitForTimeout(150);assert.ok((await state()).simulation.timeSeconds>backTime);await openReview();assert.equal((await state()).mode,'today');
+ await page.goBack({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo?.getMetrics?.());phase='back-navigation';await page.keyboard.press('Escape');assert.equal(await page.locator('#source-dialog').isVisible(),false);await setPaused(false);const backTime=(await state()).simulation.timeSeconds;await page.waitForTimeout(150);assert.ok((await state()).simulation.timeSeconds>backTime);await openReview();assert.equal((await state()).mode,'today');
  evidence.checks.push('Back navigation restores an operating scene and controls');
  phase='reduced-motion';await page.emulateMedia({reducedMotion:'reduce'});await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo?.getState?.());assert.equal((await state()).simulation.paused,true);await navigateStory(page,0);assert.equal((await state()).simulation.paused,true);
  evidence.checks.push('reduced-motion preference pauses the opening and manual story navigation');
- evidence.checks.push('original Reno console remains reachable');
+ evidence.checks.push('original Reno console remains available at its own route');
  // The preserved legacy console may log unrelated external-map warnings; new page exceptions are captured above.
  evidence.unexpectedGraphicsWarnings=evidence.console.filter(m=>m.phase!=='legacy-reno'&&/INVALID_OPERATION|INVALID_VALUE|buffer overflow|element array buffer/i.test(m.text));
  assert.deepEqual(evidence.errors,[]);assert.deepEqual(evidence.unexpectedGraphicsWarnings,[],'New-demo graphics warnings need investigation');

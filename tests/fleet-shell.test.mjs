@@ -25,7 +25,7 @@ test('annotated content is in the sidebar and only requested map overlays remain
 test('persistent bottom controls include pause, navigation, scrubbing and cost context',()=>{
  assert.equal((shell.match(/story-dock/g)||[]).length,1);
  const dock=shell.slice(shell.indexOf('className={`story-dock'),shell.indexOf('id="source-dialog"'));
- for(const id of ['story-position','playback-status','scene-steps','story-progress','previous-chapter','pause','next-chapter','about-toggle','selected-asset','asset-role','service-visits','service-summary','maintenance-cost','maintenance-cost-note']){assert.ok(dock.includes(`id="${id}"`),id);assert.equal((shell.match(new RegExp(`id="${id}"`,'g'))||[]).length,1);}
+ for(const id of ['story-position','playback-status','scene-steps','story-progress','previous-chapter','pause','next-chapter','selected-asset','asset-role','service-visits','service-summary','maintenance-cost','maintenance-cost-note']){assert.ok(dock.includes(`id="${id}"`),id);assert.equal((shell.match(new RegExp(`id="${id}"`,'g'))||[]).length,1);}
  assert.match(shell,/htmlFor="story-progress"/);assert.match(shell,/aria-keyshortcuts="ArrowLeft"/);assert.match(shell,/aria-keyshortcuts="ArrowRight"/);assert.match(shell,/aria-keyshortcuts="Space"/);
  assert.match(css,/\.impactStrip[^}]*grid-template-columns: repeat\(3,minmax\(0,1fr\)\)/);
 });
@@ -70,11 +70,18 @@ test('story camera sets follow before the atomic focus/view so orientation canno
 test('intro offers explicit Auto and Manual choices without Explore or Replay buttons',()=>{
  assert.match(shell,/id="start-story" className=\{portfolio.cta\} type="button">Next Slide: Auto/);assert.match(shell,/id="start-story-manual" className=\{portfolio.control\} type="button">Next Slide: Manual/);
  assert.doesNotMatch(shell,/id="(?:explore-scene|reset|story-replay)"|Explore scene|Replay/);assert.ok(app.includes("$('#next-chapter').disabled=stage===8"));
- assert.ok(app.includes("on($('#start-story'),'click',()=>{setChapter(1);setPaused(false);})"));assert.ok(app.includes("on($('#start-story-manual'),'click',()=>setChapter(1))"));
+ assert.ok(app.includes("on($('#start-story'),'click',()=>{if(stage>=STORY_SCENES.length-1)return;setChapter(stage+1);setPaused(false);})"));assert.ok(app.includes("on($('#start-story-manual'),'click',()=>{if(stage<STORY_SCENES.length-1)setChapter(stage+1);})"));
 });
 
 test('receipt uses aligned paper service lines without fabricated shop, tax or payment facts',()=>{
  const receipt=shell.slice(shell.indexOf('data-story-overlay="cost"'),shell.indexOf('data-story-overlay="learning"'));
  assert.match(receipt,/Service receipt/);assert.equal((receipt.match(/Oil change/g)||[]).length,2);assert.match(receipt,/\$350\.00/);assert.doesNotMatch(receipt,/address|invoice number|tax|payment|card ending/i);
  assert.match(css,/\.receipt \{[^}]*background: var\(--page\)/);assert.match(css,/\.receipt \{[^}]*font-family: ui-monospace/);assert.match(css,/border-top: 1px dashed/);
+});
+
+
+test('persistent left mode controls are outside the fading content and fleet facts precede timeline',()=>{
+ const body=shell.slice(shell.indexOf('id="sidebar-story-body"'),shell.indexOf('id="story-advance-controls"'));assert.doesNotMatch(body,/id="start-story"|id="start-story-manual"/);
+ assert.ok(app.includes("element:$('#sidebar-story-body')"));assert.match(css,/\.sidebarStoryBody \{[^}]*overflow-y: auto/);
+ assert.ok(shell.indexOf('className={`impact-strip')<shell.indexOf('id="story-position"'));assert.doesNotMatch(shell,/id="about-toggle"|id="about-panel"|id="about-close"/);
 });

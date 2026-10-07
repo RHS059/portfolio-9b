@@ -11,7 +11,7 @@ const url=process.env.FLEET_BROWSER_URL;
 const require=process.env.PLAYWRIGHT_PACKAGE?createRequire(join(resolve(process.env.PLAYWRIGHT_PACKAGE),'package.json')):createRequire(import.meta.url);
 const state=page=>page.evaluate(()=>window.__fleetDemo.getState());
 const textSettled=page=>page.waitForFunction(()=>{const t=window.__fleetDemo.getState().textTransition;return !t||t.phase==='idle';});
-const closeDialogs=async page=>{for(const [dialog,close]of [['#source-dialog','#source-close'],['#about-panel','#about-close']])if(await page.locator(dialog).isVisible())await page.locator(close).click();};
+const closeDialogs=async page=>{for(const [dialog,close]of [['#source-dialog','#source-close']])if(await page.locator(dialog).isVisible())await page.locator(close).click();};
 const freshFixture=async page=>{await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo);await textSettled(page);};
 const canonical=(s,id='TRK-104')=>s.evaluation.vehicles.find(v=>v.vehicleId===id);
 const goToStage=async(page,target)=>{await closeDialogs(page);await page.locator(`[data-scene-index="${target}"]`).click();await textSettled(page);};
@@ -57,7 +57,7 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
     await run('initial fixture makes missing authority visible while TRK-208 remains A',async()=>{
       assert.equal(canonical(initial).reason,'missing-authority');assert.equal(canonical(initial,'TRK-208').sourceId,'A');
       assert.equal(canonical(initial,'TRK-208').status,'resolved');
-      await page.locator('#about-toggle').click();try{assert.match(await page.locator('#about-panel').innerText(),/source controls use sample records/i);}finally{await page.locator('#about-close').click();}assert.equal(initial.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);
+      assert.equal(initial.intro,true);assert.equal(await page.locator('#story-content').isVisible(),false);
       assert.equal(await page.locator('#project-info').isVisible(),true);
     });
     await run('opening project details transition to source inspector',async()=>{
@@ -119,10 +119,10 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
       await page.waitForTimeout(200);const next=await state(page);assert.equal(next.simulation.timeSeconds,prior.simulation.timeSeconds);unchanged(next,prior);
       await page.locator('#pause').click();assert.equal((await state(page)).simulation.paused,false);
     });
-    await run('about panel closes with Escape and remains closed',async()=>{
-      await page.locator('#about-toggle').click();assert.equal(await page.locator('#about-panel').isVisible(),true);
-      await page.keyboard.press('Escape');assert.equal(await page.locator('#about-panel').isVisible(),false);
-      assert.equal(await page.locator('#about-toggle').getAttribute('aria-expanded'),'false');
+    await run('source dialog closes with Escape and preserves its chosen settings',async()=>{
+      await openInspector(page);const prior=await state(page);assert.equal(await page.locator('#source-dialog').isVisible(),true);
+      await page.keyboard.press('Escape');assert.equal(await page.locator('#source-dialog').isVisible(),false);
+      assert.deepEqual((await state(page)).scenario,prior.scenario);
     });
     await run('returning to the opening preserves chosen source settings and history',async()=>{
       const prior=await state(page);await goToStage(page,0);const next=await state(page);
@@ -131,15 +131,6 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
     await run('reload honestly restores this in-memory fixture',async()=>{
       await openInspector(page);await authority(page,'B').click();await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo);
       assert.deepEqual((await state(page)).scenario,initial.scenario);
-    });
-    await run('data limitations remain available in collapsed demo details',async()=>{
-      await goToStage(page,2);
-      await page.locator('#about-toggle').click();
-      try{
-        await page.locator('#about-panel details > summary').click();
-        const details=await page.locator('#about-panel').innerText();
-        assert.match(details,/no live telemetry/i);assert.match(details,/readings, visits and \$350 service price are examples/i);assert.match(details,/exact maintenance-trigger rule is unknown/i);
-      }finally{await page.locator('#about-close').click();}
     });
     await run('narrow viewport retains essential authority controls',async()=>{
       await page.setViewportSize({width:390,height:844});await authority(page,'B').click();assert.equal(canonical(await state(page)).status,'resolved');
