@@ -1,0 +1,72 @@
+Native acceptance and frame-summary checks
+Command: REQUIRE_MAPPED_PORT=1 FLEET_THREE_MODULE=<pinned Three r128 module> node --test tests/acceptance/*.test.mjs tests/performance/*.test.mjs
+Runtime: v24.19.0
+Date: 2026-10-07 UTC
+These native checks do not certify browser pixels or GPU performance.
+
+✔ independent geometry checker catches an edge crossing a concave water notch (2.253126ms)
+✔ lane checker catches crossing, contained and separated lane segments (0.390859ms)
+✔ boundary checker handles closed rings and outside corners (0.339933ms)
+✔ segment distance handles degenerate, collinear and proper crossing cases (0.21865ms)
+✔ required mapped-port test prerequisites are available (1.20061ms)
+✔ mapped port uses the complete supplied polygon and lanes in unshifted local meters (140.366816ms)
+✔ every representative row and crane base clears concave boundary edges and all lane corridors (284.627219ms)
+✔ quay basis follows mapped quay and crane bases stay landward with seaward boom direction (111.663435ms)
+✔ actual instanced container footprints fit independently checked row envelopes (196.057437ms)
+✔ port LOD selects one bounded representation and does not mutate mapped input (106.699914ms)
+✔ mapped port has no opaque ground pad or invented low-level water-covering surface (101.549081ms)
+✔ facility adapter forwards mapped geography exactly once and keeps depot/factory local (123.054323ms)
+✔ missing geography stays explicitly unavailable rather than inventing a symbolic terminal (0.29907ms)
+▶ UI presentation boundary (not browser/layout verification)
+  ✔ source values and distinct observation/import timestamps remain readable (21.337749ms)
+  ✔ raw strings are escaped rather than inserted as executable markup (1.315102ms)
+  ✔ current recorded review is honestly labeled and advisory (1.423216ms)
+  ✔ version review findings and notifications are withheld (1.830059ms)
+  ✔ cutoff review findings and notifications are withheld (0.932946ms)
+  ✔ vehicle review findings and notifications are withheld (1.129633ms)
+  ✔ live-mode review findings and notifications are withheld (0.939306ms)
+  ✔ Then mode does not surface Today findings (2.119435ms)
+✔ UI presentation boundary (not browser/layout verification) (36.515339ms)
+▶ Facility presentation follows declared shop status, never inferred maintenance
+  ✔ source conflict, odometer, and animation time cannot create a shop visit (1.300309ms)
+  ✔ explicit service status drives bounded, deduplicated illustrative occupancy (0.32538ms)
+  ✔ resolving authority does not erase a separately declared in-bay visit (0.11915ms)
+✔ Facility presentation follows declared shop status, never inferred maintenance (2.866681ms)
+✔ frozen scenario contract identifies migrated TRK-104/B and independent TRK-208/A (15.277426ms)
+✔ explicit B authority beats the later imported frozen A reading (1.594323ms)
+✔ raw records, units, timestamps and service facts survive replay/configuration unchanged (3.405893ms)
+✔ vehicle+field exclusion on A leaves TRK-208/A and other fields independent (3.020622ms)
+✔ vehicle-only exclusion covers its fields but not another vehicle (0.41103ms)
+✔ explicit integration-wide exclusion has a visibly broader result (1.225767ms)
+✔ individual-reading exclusion is pinned to raw identity and cannot silently resurrect an older row (0.895099ms)
+✔ conflicting row-exclusion scope is rejected rather than silently normalized (0.471711ms)
+✔ stale selected A source remains unresolved despite fresh B input (0.805074ms)
+✔ missing selected source remains unresolved with no latest/max fallback (0.638362ms)
+✔ missing vehicle authority is distinct from missing readings (0.578752ms)
+✔ configuration commands version-check, append once, and reject changed duplicate commands (0.391901ms)
+✔ configuration effective date and exclusive end boundary are honored by replay (1.954325ms)
+✔ duplicate imports retain original receipt and do not duplicate service history (0.400935ms)
+✔ conflicting duplicate import fails atomically without overwriting raw evidence (0.334464ms)
+✔ replay is deterministic across input order and repeated runs (1.547493ms)
+✔ replay respects import cutoff while preserving not-yet-imported evidence (0.561527ms)
+✔ equal-time conflicting selected-source rows remain unresolved (0.701127ms)
+✔ invalid selected-source raw input remains evidence and does not fall back (0.838644ms)
+✔ default Today review is labeled simulated/no model call and cannot mutate policy/history (11.283066ms)
+✔ recorded review is bound to exact original input and honestly distinct from live review (5.395647ms)
+✔ recorded review rejects changed configuration rather than restamping old findings (4.162394ms)
+✔ recorded review rejects changed raw input rather than restamping old findings (2.283361ms)
+✔ recorded review rejects changed replay cutoff rather than restamping old findings (3.585244ms)
+✔ review response cannot smuggle executable commands or unknown evidence (1.712861ms)
+✔ application review adapter emits only an in-app advisory for the selected vehicle (1.203524ms)
+✔ frame summary uses measured elapsed time and preserves long pauses (1.361037ms)
+✔ no samples produces no invented FPS (0.202285ms)
+✔ invalid/non-increasing intervals are not counted as frames (0.272581ms)
+✔ real measurement requires named environment and source revision (0.678633ms)
+ℹ tests 56
+ℹ suites 0
+ℹ pass 56
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1252.450229

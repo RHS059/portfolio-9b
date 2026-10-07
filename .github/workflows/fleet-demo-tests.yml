@@ -1,0 +1,123 @@
+name: Fleet demo invariants
+on:
+  push:
+    branches: [main]
+    paths: ['public/fleet-demo/**', 'app/fleet-demo/**', 'scripts/fleet-browser-smoke.mjs', 'scripts/fleet-portfolio-shell-smoke.mjs', 'components/fleet-demo-shell*', 'components/portfolio-shell.tsx', 'components/portfolio-home.module.css', 'tests/fleet-shell.test.mjs', '.github/workflows/fleet-demo-tests.yml']
+  pull_request:
+    paths: ['public/fleet-demo/**', 'app/fleet-demo/**', 'scripts/fleet-browser-smoke.mjs', 'scripts/fleet-portfolio-shell-smoke.mjs', 'components/fleet-demo-shell*', 'components/portfolio-shell.tsx', 'components/portfolio-home.module.css', 'tests/fleet-shell.test.mjs', '.github/workflows/fleet-demo-tests.yml']
+concurrency:
+  group: fleet-demo-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Fetch pinned geometry test module
+        run: |
+          curl -fsSL https://unpkg.com/three@0.128.0/build/three.module.js -o "$RUNNER_TEMP/fleet-three-r128.mjs"
+          echo "af527c374b56b8688737a42d7fcea7cb8aaeb57a4e3c6da98b4dffd55bcc3514  $RUNNER_TEMP/fleet-three-r128.mjs" | sha256sum -c -
+      - name: Complete native suite with actual Three r128 geometry
+        working-directory: public/fleet-demo
+        env:
+          REQUIRE_MAPPED_PORT: '1'
+          FLEET_THREE_MODULE: ${{ runner.temp }}/fleet-three-r128.mjs
+        run: node --test
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install isolated browser test tooling
+        id: browser-tooling
+        run: |
+          npm install --prefix "$RUNNER_TEMP/fleet-browser" --no-save --ignore-scripts playwright@1.62.0
+          "$RUNNER_TEMP/fleet-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Exercise Fleet demo in Chromium
+        env:
+          PLAYWRIGHT_PACKAGE: ${{ runner.temp }}/fleet-browser
+          REQUIRE_FACILITIES: '1'
+          REQUIRE_MAPPED_PORT: '1'
+        run: node scripts/fleet-browser-smoke.mjs
+      - name: Independent browser acceptance
+        if: ${{ !cancelled() && steps.browser-tooling.outcome == 'success' }}
+        env:
+          PLAYWRIGHT_PACKAGE: ${{ runner.temp }}/fleet-browser
+          FLEET_BROWSER_URL: http://127.0.0.1:8024/
+          FLEET_SOURCE_REVISION: ${{ github.sha }}
+          FLEET_TEST_ENV: GitHub Actions ubuntu-latest Chromium
+          FLEET_EVIDENCE_DIR: fleet-browser-evidence/independent
+        run: |
+          python3 -m http.server 8024 --directory public/fleet-demo &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          for i in {1..40}; do curl -fsS "$FLEET_BROWSER_URL" >/dev/null && break; sleep 0.1; done
+          node --test public/fleet-demo/tests/browser/fleet-workflow.test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fleet-browser-evidence
+          path: fleet-browser-evidence/
+          retention-days: 7
+
+  native-portfolio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - name: Install locked portfolio dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Native shell source contracts
+        run: node --test tests/fleet-shell.test.mjs
+      - name: Build actual portfolio routes
+        run: pnpm build
+      - name: Check portfolio TypeScript
+        id: typecheck
+        continue-on-error: true
+        run: |
+          mkdir -p fleet-browser-evidence/native-shell
+          set -o pipefail
+          pnpm exec tsc --noEmit 2>&1 | tee fleet-browser-evidence/native-shell/typecheck.txt
+      - name: Install isolated browser tooling
+        run: |
+          npm install --prefix "$RUNNER_TEMP/fleet-browser" --no-save --ignore-scripts playwright@1.62.0
+          "$RUNNER_TEMP/fleet-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Compare native Fleet UI with the homepage and verify route lifecycle
+        env:
+          PLAYWRIGHT_PACKAGE: ${{ runner.temp }}/fleet-browser
+          FLEET_PORTFOLIO_URL: http://127.0.0.1:3000
+        run: |
+          pnpm start > "$RUNNER_TEMP/fleet-portfolio-server.log" 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"; cp "$RUNNER_TEMP/fleet-portfolio-server.log" fleet-browser-evidence/native-shell/server.log' EXIT
+          for i in {1..60}; do curl -fsS "$FLEET_PORTFOLIO_URL/fleet-demo" >/dev/null && break; sleep 1; done
+          set +e
+          node scripts/fleet-portfolio-shell-smoke.mjs
+          FLEET_SHELL_EXIT=$?
+          FLEET_DEMO_URL="$FLEET_PORTFOLIO_URL/fleet-demo" FLEET_SMOKE_EVIDENCE_DIR=fleet-browser-evidence/native-shell/strict REQUIRE_FACILITIES=1 REQUIRE_MAPPED_PORT=1 node scripts/fleet-browser-smoke.mjs
+          FLEET_FLOW_EXIT=$?
+          test "$FLEET_SHELL_EXIT" -eq 0 && test "$FLEET_FLOW_EXIT" -eq 0
+      - name: Preserve TypeScript failure status
+        if: ${{ !cancelled() && steps.typecheck.outcome == 'failure' }}
+        run: exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fleet-native-shell-evidence
+          path: fleet-browser-evidence/native-shell/
+          retention-days: 7

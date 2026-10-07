@@ -3,6 +3,7 @@ import ProjectHero from "../../../components/project-hero"
 import ProjectSection from "../../../components/project-section"
 
 const sections = [
+  { id: "interactive-demo", title: "Interactive Demo" },
   { id: "impact", title: "Impact" },
   { id: "overview", title: "Overview" },
   { id: "the-problem-surface-level", title: "The Problem (surface level)" },
@@ -257,6 +258,18 @@ export default function FleetFuelIntegrationProject() {
     <ProjectLayout sections={sections}>
       <div className="space-y-8 md:space-y-10">
         <ProjectHero {...projectData} />
+
+        <section id="interactive-demo" className="rounded-xl border border-[#9b95b2]/30 bg-[#9b95b2]/10 p-6 md:p-8" aria-labelledby="fleet-demo-title">
+          <p className="mb-2 text-xs font-medium uppercase tracking-widest text-[#685c84]">Then / Today · Interactive exploration</p>
+          <h2 id="fleet-demo-title" className="mb-3 text-2xl font-semibold text-[#181425]">Why the same trucks kept coming back to the shop</h2>
+          <p className="mb-5 max-w-3xl text-base leading-relaxed text-[#181425]">
+            Shop technicians noticed the same trucks returning for oil changes and tire rotations within one week. Follow the readings from both providers, then choose which one supplies the truck’s odometer. Compare the controls I added in 2021–22 with a proposed agent review today.
+          </p>
+          <a href="/fleet-demo" className="inline-flex items-center gap-3 rounded-md bg-[#181425] px-5 py-3 text-sm font-medium text-white hover:bg-[#685c84] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#685c84]">
+            Open the working demo <span aria-hidden="true">↗</span>
+          </a>
+          <p className="mt-4 text-xs leading-relaxed text-[#685c84]">The scene and records are illustrative. Today’s review is a labeled simulation; source changes require your choice.</p>
+        </section>
 
         {sectionContent.map((section) => (
           <ProjectSection key={section.id} id={section.id} title={section.title} content={section.content} />
