@@ -1,6 +1,9 @@
 import {buildConfigurationCommand} from './commands.js';
 import {forwardSceneLabelWheel} from './wheel-navigation.js';
 import {createSimulation} from '../core/simulation.js';
+import {sampleCargoProcess,CARGO_PRESENTATION_OFFSET_SECONDS} from '../core/cargo-process.js';
+import {sampleOrdinaryTraffic} from '../render/map/cargo-routes.js';
+const sampleProcess=(timeSeconds,paused)=>sampleCargoProcess(timeSeconds,{paused,presentationOffsetSeconds:CARGO_PRESENTATION_OFFSET_SECONDS,outgoingEnabled:false});
 import {reviewFixture} from './review-adapter.js';
 import {createProvenancePanel as createFallbackPanel} from './fallback-provenance.js';
 
@@ -40,19 +43,16 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   const feedback = text => { $('#app-feedback').textContent=text; };
 
   function snapshot(timeSeconds=0,paused=false){
-    const travel=(rate,offset)=>{const distance=timeSeconds*rate+offset;return {progress:distance%1,travelCycle:Math.floor(distance)};};
+    const cargoProcess=sampleProcess(timeSeconds,paused);
     const resolved=evaluation?.vehicles.find(v=>v.vehicleId==='TRK-104')?.status==='resolved';
-    const roadTravel=slot=>travel(.006,.59+slot/12);
-    const shop=stage<=2 || (stage>=3 && !resolved);
     // Illustrative repeated visit loop only; it never schedules or modifies service facts.
     const servicePhase=((timeSeconds+13)%32)/32;
     const servicePose=servicePhase<.4?{routeId:'factory-to-depot',progress:servicePhase/.4,status:'en-route-to-service'}:servicePhase<.65?{routeId:'depot-bay',progress:0,status:'workshop'}:{routeId:'depot-to-factory',progress:(servicePhase-.65)/.35,status:'returning'};
-    return {timeSeconds,paused,selectedId:selectedVehicleId,stage,issueActive:stage>0&&!resolved,authorityResolved:!!resolved,
+    return {timeSeconds,paused,cargoProcess,factoryAssembly:cargoProcess.factoryAssembly,selectedId:selectedVehicleId,stage,issueActive:stage>0&&!resolved,authorityResolved:!!resolved,
       vehicles:[
-        {id:'TRK-104',...(shop?(stage===0?{routeId:'depot-bay',progress:0,status:'workshop'}:servicePose):{...roadTravel(11),routeId:'delivery',status:'moving'})},
-        {id:'TRK-208',...roadTravel(0),routeId:'delivery',status:'moving'},
-        {id:'VAN-311',model:'van',inspectable:false,...roadTravel(10),routeId:'delivery',status:'moving'},
-        ...Array.from({length:9},(_,i)=>({id:`TRAFFIC-${String(i+1).padStart(3,'0')}`,inspectable:false,...roadTravel(i+1),routeId:'delivery',status:'moving'}))
+        ...cargoProcess.trucks,...cargoProcess.outboundVehicles,
+        {id:'TRK-104',...(resolved?{routeId:'depot-bay',progress:0,status:'ready for work'}:stage===0?{routeId:'depot-bay',progress:0,status:'workshop'}:servicePose)},
+        {id:'TRK-208',model:'truck',...sampleOrdinaryTraffic(timeSeconds,0,{presentationOffsetSeconds:CARGO_PRESENTATION_OFFSET_SECONDS})}
       ],facilities:[{id:'oict',label:'OICT container terminal'},{id:'centerpoint',label:'Drone factory'},{id:'depot',label:'Fleet workshop'}]};
   }
   function evaluate(){evaluation=domain.replayReadings(scenario,{asOf:scenario.asOf});}
@@ -167,7 +167,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
       else{dispose();}
     });
     on(window,'pageshow',event=>{if(event.persisted&&suspendedPauseState!==null){sim?.setPaused(suspendedPauseState);suspendedPauseState=null;scene?.resize();render();}});
-    debugAPI={getState:()=>({intro,mode,stage,selectedVehicleId,view,follow,scenario,evaluation,review,simulation:sim.getState()}),getMetrics:()=>scene?.getMetrics?.(),projectScenePoint:position=>scene?.projectPoint?.(position)??null,getSceneSnapshot:()=>{const current=sim.getState();return freezeScene(snapshot(current.timeSeconds,current.paused));},seekScene:timeSeconds=>{if(disposed)return;sim.seek(timeSeconds);render();},version:'fleet-demo/v1'};window.__fleetDemo=debugAPI;
+    debugAPI={getState:()=>({intro,mode,stage,selectedVehicleId,view,follow,scenario,evaluation,review,simulation:sim.getState(),cargoProcess:sampleProcess(sim.getState().timeSeconds,sim.getState().paused)}),getMetrics:()=>scene?.getMetrics?.(),projectScenePoint:position=>scene?.projectPoint?.(position)??null,getSceneSnapshot:()=>{const current=sim.getState();return freezeScene(snapshot(current.timeSeconds,current.paused));},seekScene:timeSeconds=>{if(disposed)return;sim.seek(timeSeconds);render();},version:'fleet-demo/v1'};window.__fleetDemo=debugAPI;
   }
   const controller={ready:main().catch(error=>{dispose();throw error;}),dispose};
   mountedControllers.set(root,controller);

@@ -42,17 +42,18 @@ test('same-root remount replaces the old controller and final disposal releases 
  first.dispose();assert.ok(window.__fleetDemo,'Disposing an old controller cannot remove the new controller');second.dispose();assert.equal(window.__fleetDemo,undefined);assert.equal(host.frames.size,0);assert.equal(start.listeners.get('click').size,0);
 });
 
-test('moving intro traffic keeps distinct route slots through the old collision time and route wraps',async t=>{
+test('inbound preview shares one clock, preserves the story trucks and holds completed output',async t=>{
  const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();host.flush();
- const truth=JSON.stringify(window.__fleetDemo.getState().scenario);
- for(const seconds of [0,8.75,133,166.6666667,1000,86400]){
-  window.__fleetDemo.seekScene(seconds);
-  const vehicles=window.__fleetDemo.getSceneSnapshot().vehicles.filter(v=>v.routeId==='delivery');
-  const selected=vehicles.find(v=>v.id==='TRK-208');assert.ok(Math.abs(selected.progress-(seconds*.006+.59)%1)<1e-9);
-  for(let i=0;i<vehicles.length;i++)for(let j=i+1;j<vehicles.length;j++){
-   const gap=Math.abs(vehicles[i].progress-vehicles[j].progress),circular=Math.min(gap,1-gap);
-   assert.ok(circular>=1/12-1e-9,`${vehicles[i].id}/${vehicles[j].id} share a route slot at ${seconds}s`);
-  }
+ const api=window.__fleetDemo,truth=JSON.stringify(api.getState().scenario),first=api.getSceneSnapshot();
+ assert.equal(first.cargoProcess.outgoingEnabled,false);assert.equal(first.cargoProcess.capabilities.onePassHold,true);
+ assert.deepEqual(first.vehicles.map(v=>v.id).sort(),['CARGO-401','CARGO-402','CARGO-403','CARGO-404','TRK-104','TRK-208']);
+ const opening=first.vehicles.find(v=>v.id==='TRK-208');assert.equal(opening.status,'moving');assert.equal(opening.routeId,'delivery');
+ for(const seconds of [0,8.75,127.999,128,256,512,86400]){
+  api.seekScene(seconds);const snapshot=api.getSceneSnapshot();assert.equal(snapshot.timeSeconds,seconds);assert.equal(snapshot.cargoProcess.timeSeconds,seconds);
+  const ordinary=snapshot.vehicles.filter(v=>v.routeId==='delivery');assert.equal(ordinary.length,1);assert.equal(ordinary[0].id,'TRK-208');
+  assert.ok(Number.isFinite(ordinary[0].progress)&&ordinary[0].progress>=0&&ordinary[0].progress<=1);
+  if(seconds>=512){assert.equal(snapshot.cargoProcess.outboundVehicles.length,0);assert.ok(snapshot.cargoProcess.products.every(p=>p.held&&p.owner.kind==='workcell'));assert.ok(snapshot.cargoProcess.cargo.every(c=>c.batch===1));}
  }
- assert.equal(JSON.stringify(window.__fleetDemo.getState().scenario),truth);controller.dispose();
+ api.seekScene(128);const next=api.getSceneSnapshot().vehicles.find(v=>v.id==='TRK-208');assert.ok(Math.abs(next.progress-opening.progress)<1e-10);assert.equal(next.travelCycle,opening.travelCycle+1);
+ assert.equal(JSON.stringify(api.getState().scenario),truth);controller.dispose();
 });

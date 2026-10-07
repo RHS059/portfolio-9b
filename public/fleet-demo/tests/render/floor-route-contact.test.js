@@ -1,0 +1,20 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+let T;try{T=await import(process.env.FLEET_THREE_MODULE||'three')}catch(e){if(process.env.FLEET_THREE_MODULE)throw e;}
+import{createFactory}from'../../src/render/facilities/factory/index.js';
+import{resolveCargoFrame}from'../../src/render/core/cargo-frame.js';
+import{sampleCargoProcess}from'../../src/core/cargo-process.js';
+import{SITES}from'../../src/render/map/world.js';
+import{createCargoRenderer}from'../../src/render/core/cargo-renderer.js';
+test('AMR occupied solids avoid actual factory machinery and storage throughout complete incoming/outgoing routes',{skip:!T},()=>{
+const f=SITES.find(s=>s.id==='centerpoint'),factory=createFactory({THREE:T});factory.userData.setDetailLevel('detail');factory.userData.update({cargoProcess:sampleCargoProcess(0)});factory.updateMatrixWorld(true);
+const scene=new T.Scene(),facilities=new T.Group();facilities.add(factory);scene.add(facilities);const runtime=createCargoRenderer({THREE:T,scene,facilities}),storage=scene.getObjectByName('storage-roller-stations'),solids=new T.Group();solids.add(factory,storage);solids.updateMatrixWorld(true);
+const triangles=[],grid=new Map(),point=new T.Vector3(),key=(x,y)=>`${x}/${y}`,size=4;
+const visible=o=>!o||o.visible&&visible(o.parent);
+solids.traverse(o=>{if(!o.isMesh||o.isInstancedMesh||!visible(o))return;const g=o.geometry,p=g.getAttribute('position'),idx=g.index;for(let i=0;i<(idx?.count??p.count);i+=3){const v=[0,1,2].map(j=>new T.Vector3().fromBufferAttribute(p,idx?idx.getX(i+j):i+j).applyMatrix4(o.matrixWorld)),box=new T.Box3().setFromPoints(v);if(box.max.z<=.251||box.min.z>=1.5)continue;const item={v,box,name:o.name},id=triangles.push(item)-1;for(let x=Math.floor(box.min.x/size);x<=Math.floor(box.max.x/size);x++)for(let y=Math.floor(box.min.y/size);y<=Math.floor(box.max.y/size);y++){const k=key(x,y);if(!grid.has(k))grid.set(k,[]);grid.get(k).push(id);}}});
+// These are actual occupied AMR solids, not the loose full model envelope.
+const bodies=[{id:'lower-chassis-inscribed',box:new T.Box3(new T.Vector3(-.23,-.34,.125),new T.Vector3(.23,.34,.345))},...[-.23,.23].flatMap(x=>[-.28,.28].map(y=>({id:'lift-column',box:new T.Box3(new T.Vector3(x-.0275,y-.0275,.365),new T.Vector3(x+.0275,y+.0275,.835))}))),...[-.39,.39].map(x=>({id:'roller-side-rail',box:new T.Box3(new T.Vector3(x-.035,-.6,.82),new T.Vector3(x+.035,.6,.96))}))];
+for(const body of bodies){body.box.min.addScalar(.005);body.box.max.addScalar(-.005);}
+const tri=new T.Triangle(),inverse=new T.Matrix4(),mat=new T.Matrix4(),quat=new T.Quaternion(),zAxis=new T.Vector3(0,0,1),scale=new T.Vector3(1,1,1),records=new Map();let samples=0,checks=0;
+for(let step=0;step<=2400;step++){const t=step/10,frame=resolveCargoFrame(sampleCargoProcess(t));for(const actor of frame.actors.filter(a=>a.kind==='amr')){samples++;const pos=new T.Vector3(actor.position[0]-f.x,actor.position[1]-f.y,actor.position[2]);mat.compose(pos,quat.setFromAxisAngle(zAxis,-actor.heading),scale);inverse.copy(mat).invert();const ids=new Set();for(let x=Math.floor((pos.x-.9)/size);x<=Math.floor((pos.x+.9)/size);x++)for(let y=Math.floor((pos.y-.9)/size);y<=Math.floor((pos.y+.9)/size);y++)for(const id of grid.get(key(x,y))||[])ids.add(id);let found=null;for(const id of ids){const item=triangles[id];if(item.box.max.x<pos.x-.9||item.box.min.x>pos.x+.9||item.box.max.y<pos.y-.9||item.box.min.y>pos.y+.9)continue;tri.a.copy(item.v[0]).applyMatrix4(inverse);tri.b.copy(item.v[1]).applyMatrix4(inverse);tri.c.copy(item.v[2]).applyMatrix4(inverse);for(const body of bodies){checks++;if(body.box.intersectsTriangle(tri)){found={obstacle:item.name,body:body.id,obstacleTriangle:item.v.map(p=>p.toArray())};break;}}if(found)break;}if(found){const k=`${actor.id}/${actor.stage}/${found.obstacle}/${found.body}`;if(!records.has(k))records.set(k,{actor:actor.id,stage:actor.stage,...found,firstTime:t,lastTime:t,count:0,firstPosition:pos.toArray()});const record=records.get(k);record.lastTime=t;record.count++;}}}
+assert.equal(records.size,0,JSON.stringify([...records.values()]));runtime.dispose();factory.userData.dispose();
+});

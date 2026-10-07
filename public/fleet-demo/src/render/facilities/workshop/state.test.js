@@ -9,7 +9,7 @@ test('empty snapshots have no implied workshop occupants', () => {
     assert.match(state.label, /Fictional.*reconstruction/);
   }
 });
-test('only explicit in-bay statuses indicate occupancy', () => {
+test('only an explicit bay route or in-bay status indicates occupancy', () => {
   for (const status of ['workshop', 'in-service', 'maintenance', 'in-bay', 'WORKSHOP']) {
     assert.equal(workshopPresentation({ vehicles: [{ id: 'TRK-104', status }] }).occupied, 1);
   }
@@ -39,3 +39,5 @@ test('repeated updates and replay reset do not accumulate visits', () => {
 test('invalid vehicle records are harmless', () => {
   assert.equal(workshopPresentation({vehicles:[null,{}, {id:4,status:'workshop'}, {id:'',status:'moving'}]}).occupied,0);
 });
+
+test('a ready tractor still physically occupies its assigned bay without implying another service',()=>{const snapshot=Object.freeze({vehicles:Object.freeze([Object.freeze({id:'TRK-104',routeId:'depot-bay',status:'ready for work'})])});assert.deepEqual(workshopPresentation(snapshot).occupants,['TRK-104']);assert.equal(snapshot.vehicles[0].status,'ready for work');});

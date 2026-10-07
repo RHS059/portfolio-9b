@@ -171,6 +171,7 @@ export default function FleetDemoShell() {
             <h2>About this demo</h2>
             <p>The incident is real. Vehicle IDs, readings, dates and shop visits in this synthetic demo are examples, not live telemetry. The Oakland map provides geographic context; the workshop, factory activity and routes are illustrative.</p>
             <p>The exact maintenance-trigger rule is unknown. The animation shows the reported repeat visits without claiming to reproduce that rule.</p>
+            <p id="cargo-capability-note">This preview runs four incoming kits through assembly and keeps the finished drones at their workcells. Outgoing delivery is still being built. Reset starts the run again.</p>
             <p>Provider A and Provider B are anonymous. Networkfleet / Verizon, Samsara and Wright Express / WEX are examples from the integration ecosystem, not identified as either provider in this incident.</p>
             <details><summary>Data and performance</summary><p id="integrity-count" /><p>Original readings and service history are preserved. Settings are versioned and recalculated results are derived views.</p><p><span id="run-status">Scene running</span> · 20 Hz simulation with interpolated rendering.</p><p id="performance">Performance measurement pending</p><p>Browser frame cadence is not a physical-GPU benchmark.</p></details>
             <p><a href="/fleet-demo/reno.html">Original Reno console ↗</a></p>

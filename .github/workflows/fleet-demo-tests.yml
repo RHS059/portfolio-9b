@@ -26,6 +26,7 @@ jobs:
         working-directory: public/fleet-demo
         env:
           REQUIRE_MAPPED_PORT: '1'
+          REQUIRE_CARGO_FLOW: '1'
           FLEET_THREE_MODULE: ${{ runner.temp }}/fleet-three-r128.mjs
         run: node --test
   browser:
@@ -46,6 +47,7 @@ jobs:
           PLAYWRIGHT_PACKAGE: ${{ runner.temp }}/fleet-browser
           REQUIRE_FACILITIES: '1'
           REQUIRE_MAPPED_PORT: '1'
+          REQUIRE_CARGO_FLOW: '1'
         run: node scripts/fleet-browser-smoke.mjs
       - name: Independent browser acceptance
         if: ${{ !cancelled() && steps.browser-tooling.outcome == 'success' }}
@@ -109,7 +111,7 @@ jobs:
           set +e
           node scripts/fleet-portfolio-shell-smoke.mjs
           FLEET_SHELL_EXIT=$?
-          FLEET_DEMO_URL="$FLEET_PORTFOLIO_URL/fleet-demo" FLEET_SMOKE_EVIDENCE_DIR=fleet-browser-evidence/native-shell/strict REQUIRE_FACILITIES=1 REQUIRE_MAPPED_PORT=1 node scripts/fleet-browser-smoke.mjs
+          FLEET_DEMO_URL="$FLEET_PORTFOLIO_URL/fleet-demo" FLEET_SMOKE_EVIDENCE_DIR=fleet-browser-evidence/native-shell/strict REQUIRE_FACILITIES=1 REQUIRE_MAPPED_PORT=1 REQUIRE_CARGO_FLOW=1 node scripts/fleet-browser-smoke.mjs
           FLEET_FLOW_EXIT=$?
           test "$FLEET_SHELL_EXIT" -eq 0 && test "$FLEET_FLOW_EXIT" -eq 0
       - name: Preserve TypeScript failure status

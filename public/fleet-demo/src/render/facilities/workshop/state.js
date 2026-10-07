@@ -3,7 +3,7 @@ const IN_BAY = /^(workshop|in-service|maintenance|in-bay)$/i;
 export function workshopPresentation(snapshot = {}) {
   const unique = new Map();
   for (const vehicle of Array.isArray(snapshot?.vehicles) ? snapshot.vehicles : []) {
-    if (typeof vehicle?.id === 'string' && IN_BAY.test(vehicle.status || '')) unique.set(vehicle.id, vehicle.id);
+    if (typeof vehicle?.id === 'string' && (vehicle.routeId==='depot-bay'||IN_BAY.test(vehicle.status || ''))) unique.set(vehicle.id, vehicle.id);
   }
   const occupants = [...unique.keys()].sort();
   return Object.freeze({

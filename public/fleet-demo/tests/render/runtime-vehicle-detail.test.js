@@ -1,3 +1,4 @@
+import{roadTruckPosition}from'../../src/render/map/cargo-layout.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createVehicleDetailPool,selectDetailedVehicles} from '../../src/render/core/vehicle-detail.js';
@@ -18,7 +19,7 @@ test('detail pool reuses three models through reordering, culling and many entit
 });
 test('absolute wheel travel repeats on pause and resets with snapshots independently of LOD',()=>{
  const old=normalizeSnapshot({timeSeconds:1,vehicles:[{id:'a',routeId:'delivery',progress:.1}]}),current=normalizeSnapshot({timeSeconds:2,vehicles:[{id:'a',routeId:'delivery',progress:.2}]});
- const middle=interpolateSnapshots(old,current,.5)[0];assert.ok(Math.abs(middle.presentationDistanceMeters-routeDistance('delivery',.15))<1e-8);
+ const middle=interpolateSnapshots(old,current,.5)[0];assert.ok(Math.abs(middle.presentationDistanceMeters-roadTruckPosition({routeId:'delivery',progress:.15}).presentationDistanceMeters)<1e-8);
  const pause=normalizeSnapshot({...current,paused:true});assert.deepEqual(interpolateSnapshots(old,pause,0),interpolateSnapshots(old,pause,1));const reset=normalizeSnapshot({timeSeconds:0,vehicles:[{id:'a',routeId:'delivery',progress:0}]});assert.equal(interpolateSnapshots(current,reset,0)[0].presentationDistanceMeters,0);assert.equal(routeDistance('depot-bay',1),0);
  const f=fixture(),v={...vehicle('a'),presentationDistanceMeters:20};f.pool.update([v],options);f.pool.update([v],options);f.pool.update([v],{...options,zoom:12});f.pool.update([{...v,presentationDistanceMeters:0}],options);assert.deepEqual(f.instances[0].distances,[10,10,0]);f.pool.dispose();
 });

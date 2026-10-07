@@ -29,14 +29,14 @@ export function createFactory({ THREE }) {
   overviewBuilder.box(8.4,3.3,.12,42,26,.915,'paper');b.rectangle(42,26,20,14,0.44);b.text('QA',42,15,0.04,.7);
   for(const x of[50,62])overviewBuilder.box(3.2,3.525,.12,x,-14.5625,.915,'face');
   b.text('DISPATCH',53,-25,0.04,.45);for(const x of [-34,25])b.line([[x,-25,0.04],[x,35,0.04]]);
-  for(const x of[-56,-40])b.box(8,2.6,.25,x,-46.3,-.125,'ground');
+  for(const x of[-65.3,-49.3,18.7,46.7])b.box(8,10.9,.25,x,-49.45,-.125,'ground');
   const group=new THREE.Group();group.name='centerpoint';const structure=b.finish('factory-structure'),overview=overviewBuilder.finish('factory-overview'),detail=createFactoryWorkcells({THREE});for(const child of[structure,overview,detail])child.position.z=FACTORY_FLOOR_Z;detail.visible=false;group.add(structure,overview,detail);
   const mounts=new Map();for(const cell of detail.userData.mounts)for(const [kind,key] of[['input','input'],['output','output'],['carrier-output','carrier'],['dispatch-pickup','pickup']]){const mount=new THREE.Group();mount.name='cell:'+cell.id+':'+kind;mount.position.fromArray(cell[key]);mount.userData={anchorId:mount.name,coordinateSpace:'site-root',supportOrigin:'bottom-center'};group.add(mount);mounts.set(mount.name,mount);}
   for(const entry of transferMountEntries()){const mount=new THREE.Group();mount.name=entry.id;mount.position.fromArray(entry.position);mount.userData={anchorId:entry.id,coordinateSpace:'site-root',supportOrigin:'carrier-bottom'};group.add(mount);mounts.set(entry.id,mount);}
   const a=createSorter({THREE,name:'factory-sorter-01'}),c=createSorter({THREE,name:'factory-sorter-02'}),sorting=new THREE.Group();sorting.position.z=FACTORY_FLOOR_Z;sorting.add(a,c);group.add(sorting);
   bindIllustrativeMotion(sorting,[{object:a,points:[[-34,-20],[-34,36],[25,36],[25,-20],[-34,-20]],period:58,offset:0},{object:c,points:[[25,-20],[45,-20],[45,6],[25,6],[25,-20]],period:37,offset:.35}]);
   let disposed=false,lastSnapshot={};
-  group.userData={siteId:'centerpoint',kind:'factory',fictional:true,label:'Fictional drone assembly / sorting / dispatch',dimensions:FACTORY_DIMENSIONS,bounds:{min:[-75,-47.6,-.25],max:[75,45,12]},floorZ:FACTORY_FLOOR_Z,detailLevel:'overview',workcells:detail.userData.workcells,
+  group.userData={siteId:'centerpoint',kind:'factory',fictional:true,label:'Fictional drone assembly / sorting / dispatch',dimensions:FACTORY_DIMENSIONS,bounds:{min:[-75,-54.9,-.25],max:[75,45,12]},floorZ:FACTORY_FLOOR_Z,detailLevel:'overview',workcells:detail.userData.workcells,
     setDetailLevel(level){if(disposed||!['overview','detail'].includes(level))return;overview.visible=level==='overview';detail.visible=level==='detail';group.userData.detailLevel=level;if(detail.visible)detail.userData.update(lastSnapshot);},
     update(snapshot){if(disposed||snapshot===lastSnapshot)return;lastSnapshot=snapshot||{};sorting.visible=!factoryProcess(lastSnapshot);if(sorting.visible)sorting.userData.update(lastSnapshot);if(detail.visible)detail.userData.update(lastSnapshot);},
     getAssemblyState(){return detail.userData.assemblyState;},

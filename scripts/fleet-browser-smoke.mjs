@@ -4,6 +4,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import {routeDistance,toLocal} from '../public/fleet-demo/src/render/map/world.js';
+import {ordinaryRoadRouteInfo} from '../public/fleet-demo/src/render/map/cargo-layout.js';
+import {exerciseCargoFlow} from './fleet-cargo-browser-checks.mjs';
 import {createRequire} from 'node:module';
 const require=createRequire(path.join(process.env.PLAYWRIGHT_PACKAGE || '/tmp/fleet-browser','package.json'));
 const {chromium}=require('playwright');
@@ -46,10 +48,14 @@ try{
      await page.screenshot({path:path.join(out,'vehicle-detail-workshop.png'),fullPage:true});evidence.checks.push('Selected workshop tractor has no trailer in the bounded detailed model pool');
    }
    if(id==='centerpoint'){
-     await page.waitForFunction(()=>window.__fleetDemo.getMetrics().factoryDetailLevel==='detail');evidence.factoryDetail=await page.evaluate(()=>window.__fleetDemo.getMetrics());assert.ok(evidence.factoryDetail.factoryAssemblyState.length>0);assert.ok(evidence.factoryDetail.factoryAssemblyState.every(cell=>cell.progress===0),'Assembly stays idle without an explicit process snapshot');
-     await page.screenshot({path:path.join(out,'factory-detail.png'),fullPage:true});evidence.checks.push('Factory detail is visible and assembly stays idle without process input');
-     const wasPaused=(await state()).simulation.paused;if(!wasPaused)await page.locator('#pause').click();
-     const approachProgress=routeDistance('port-to-factory',1)/routeDistance('delivery',1)-.000001,approachTime=((approachProgress-.59+1)%1)/.006;
+     await page.waitForFunction(()=>window.__fleetDemo.getMetrics().factoryDetailLevel==='detail');
+     const connected=!!(await state()).cargoProcess,wasPaused=(await state()).simulation.paused;if(connected&&!wasPaused)await page.locator('#pause').click();if(connected)await page.evaluate(()=>window.__fleetDemo.seekScene(0));
+     if(connected)await page.waitForFunction(()=>window.__fleetDemo.getMetrics().factoryAssemblyState.some(cell=>cell.active&&cell.armAction==='assemble-drone'));
+     evidence.factoryDetail=await page.evaluate(()=>window.__fleetDemo.getMetrics());assert.ok(evidence.factoryDetail.factoryAssemblyState.length>0);
+     if(!connected)assert.ok(evidence.factoryDetail.factoryAssemblyState.every(cell=>cell.progress===0),'Assembly stays idle without an explicit process snapshot');
+     await page.screenshot({path:path.join(out,'factory-detail.png'),fullPage:true});evidence.checks.push(connected?'Factory assembly follows the explicit inbound process snapshot':'Factory detail is visible and assembly stays idle without process input');
+     if(!connected&&!wasPaused)await page.locator('#pause').click();
+     const approachProgress=routeDistance('port-to-factory',1)/routeDistance('delivery',1)-.000001,approachTime=connected?ordinaryRoadRouteInfo().approachTimeSeconds:((approachProgress-.59+1)%1)/.006;
      await page.evaluate(time=>window.__fleetDemo.seekScene(time),approachTime);await page.waitForTimeout(120);await page.screenshot({path:path.join(out,'factory-approach-close.png'),fullPage:true});
      const factoryBox=await page.locator('.maplibregl-canvas').boundingBox();await page.mouse.move(factoryBox.x+factoryBox.width*.5,factoryBox.y+factoryBox.height*.5);
      for(let step=0;step<12;step++){if(await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState.zoom<=15.3))break;await page.mouse.wheel(0,550);await page.waitForTimeout(750);}
@@ -65,6 +71,7 @@ try{
      evidence.portDetail=await page.evaluate(()=>window.__fleetDemo.getMetrics());await page.screenshot({path:path.join(out,'facility-oict-detail.png'),fullPage:true});evidence.checks.push('Mapped terminal footprint loads and switches to individual containers at inspection scale');
    }
  }
+ if(process.env.REQUIRE_CARGO_FLOW==='1'){assert.ok((await state()).cargoProcess,'Connected process must be enabled');await exerciseCargoFlow({page,evidence,out,setPhase:value=>{phase=value;}});}
  await page.locator('[data-focus="depot"]').click();
  phase='manual-camera';
  const sceneBox=await page.locator('.maplibregl-canvas').boundingBox();
@@ -97,6 +104,7 @@ try{
  await page.screenshot({path:path.join(out,'02-today-review.png'),fullPage:true});
  await page.locator('[data-action="set-authority"][data-source="B"]').click();
  const fixed=await state();assert.equal(fixed.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').sourceId,'B');assert.equal(fixed.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').status,'resolved');assert.equal(fixed.evaluation.vehicles.find(v=>v.vehicleId==='TRK-208').sourceId,'A');assert.equal(JSON.stringify(fixed.scenario.readings),raw);assert.equal(JSON.stringify(fixed.scenario.serviceFacts),services);
+ if(fixed.cargoProcess?.capabilities?.outgoing===false){const truck=await page.evaluate(()=>window.__fleetDemo.getSceneSnapshot().vehicles.find(v=>v.id==='TRK-104'));assert.equal(truck.routeId,'depot-bay');assert.equal(truck.status,'ready for work');}
  evidence.checks.push('explicit B repair resolves only migrated vehicle and preserves immutable records');
  await page.getByText('More source controls',{exact:true}).click();
  await page.locator('[data-action="replay"]').click();
@@ -159,6 +167,7 @@ assert.equal(await page.evaluate(()=>document.querySelector('#start-story').getB
    const recovered=await state();
    assert.equal(JSON.stringify(recovered.scenario),JSON.stringify(beforeLoss.scenario),'Recovery preserves readings, services and configuration');
    assert.equal(recovered.intro,beforeLoss.intro);assert.equal(recovered.selectedVehicleId,beforeLoss.selectedVehicleId);assert.equal(recovered.mode,beforeLoss.mode);assert.equal(recovered.view,beforeLoss.view);assert.equal(recovered.follow,beforeLoss.follow);assert.equal(recovered.simulation.paused,beforeLoss.simulation.paused);
+   if(beforeLoss.cargoProcess){await page.waitForFunction(()=>window.__fleetDemo.getMetrics().cargoProcessRender?.active,undefined,{timeout:15000});assert.equal(recovered.cargoProcess.outgoingEnabled,beforeLoss.cargoProcess.outgoingEnabled);if(beforeLoss.simulation.paused)assert.deepEqual(recovered.cargoProcess,beforeLoss.cargoProcess);assert.deepEqual((await page.evaluate(()=>window.__fleetDemo.getMetrics().cargoProcessRender)).errors,[]);}
    if(beforeLoss.simulation.paused)assert.equal(recovered.simulation.timeSeconds,beforeLoss.simulation.timeSeconds);
    else assert.ok(recovered.simulation.timeSeconds>beforeLoss.simulation.timeSeconds,'Live simulation continues through recovery');
    evidence.checks.push(`${selector} actual context loss and recovery preserve records, source policy, selection and pause state`);

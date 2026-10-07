@@ -17,7 +17,7 @@ check('all four cell mounts and floor supports stay in the declared site-root sp
   f.position.set(251,-187,3);f.rotation.z=.37;f.updateWorldMatrix(true,true);
   for(const m of mounts){assert.equal(m.input[2],1.225);assert.equal(m.output[2],1.7);for(const kind of['input','output'])near(f.userData.getMount(`cell:${m.id}:${kind}`).getWorldPosition(new T.Vector3()).toArray(),world(f,m[kind]));}
   const scene=new T.Group();scene.add(f);f.position.set(0,0,0);f.rotation.z=0;scene.updateMatrixWorld(true);
-  for(const[x,y]of[[0,-40],[-56,-46.3],[-40,-46.3]]){const ray=new T.Raycaster(new T.Vector3(x,y,.75),new T.Vector3(0,0,-1));const hit=ray.intersectObjects(f.children,true).find(h=>h.object.isMesh);assert.ok(hit);near(hit.point.toArray(),[x,y,.25]);}
+  for(const[x,y]of[[0,-40],[-65.3,-49.45],[-49.3,-49.45]]){const ray=new T.Raycaster(new T.Vector3(x,y,.75),new T.Vector3(0,0,-1));const hit=ray.intersectObjects(f.children,true).find(h=>h.object.isMesh);assert.ok(hit);near(hit.point.toArray(),[x,y,.25]);}
 }));
 
 check('gripper world contact meets actual animated flap edges across every cell and flap',()=>withFactory(f=>{
