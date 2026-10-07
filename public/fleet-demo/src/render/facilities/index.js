@@ -6,11 +6,11 @@ export { createWorkshop, WORKSHOP_DIMENSIONS, WORKSHOP_BAYS } from './workshop/i
 export { createPort, PORT_DIMENSIONS } from './port/index.js';
 export { createFactory, FACTORY_DIMENSIONS } from './factory/index.js';
 
-/** Frozen v1 H2 adapter. Local meters: X east, Y north, Z up. */
-export function createFacilities({ THREE }) {
+/** Read-only facility adapter. Local meters: X east, Y north, Z up. */
+export function createFacilities({ THREE, geography = {} }) {
   if (!THREE?.Group) throw new TypeError('createFacilities requires a THREE namespace');
   const group = new THREE.Group(); group.name = 'fleet-facilities';
-  const sites = [createDepot({ THREE }), createPort({ THREE }), createFactory({ THREE })];
+  const sites = [createDepot({ THREE }), createPort({ THREE, geography: geography.oict }), createFactory({ THREE })];
   group.add(...sites);
   let disposed = false;
   group.userData = {

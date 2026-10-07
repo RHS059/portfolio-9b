@@ -1,38 +1,68 @@
-import { createDiagramBuilder } from '../depot/geometry.js';
-import { addContainer, createSorter } from '../illustration/models.js';
-import { bindIllustrativeMotion } from '../illustration/motion.js';
+import { createDiagramBuilder, FACILITY_THEME } from '../depot/geometry.js';
+import { createPortLayout } from './layout.js';
 
-export const PORT_DIMENSIONS = Object.freeze({ width: 220, depth: 120, height: 24 });
+export const PORT_DIMENSIONS = Object.freeze({ width:1902.772, depth:1296.4, height:50 });
+const identityBounds=()=>({min:[0,0,0],max:[0,0,0]});
 
-/** Symbolic terminal layout, not the surveyed OICT footprint or live port activity. */
-export function createPort({ THREE }) {
-  const b = createDiagramBuilder(THREE);
-  b.box(220,120,0.25,0,0,-0.125,'ground');b.rectangle(0,0,218,118,0.03);
-  // Incoming / outgoing sorting rows with intact access aisles.
-  for (const x of [-84,-65,-46,34,53,72,91]) for (const y of [9,23,37]) {
-    addContainer(b,x,y,0.05,13,5.5);
-    if (y===37) addContainer(b,x,y,3.05,13,5.5);
+function instanceBoxes(T,boxes,name) {
+  const geometry=new T.BoxGeometry(1,1,1),material=new T.MeshLambertMaterial({color:0xffffff});
+  const mesh=new T.InstancedMesh(geometry,material,Math.max(1,boxes.length));mesh.name=name;mesh.count=boxes.length;mesh.frustumCulled=false;
+  const matrix=new T.Matrix4(),position=new T.Vector3(),scale=new T.Vector3(),quaternion=new T.Quaternion(),axis=new T.Vector3(0,0,1);
+  const edges=new T.EdgesGeometry(geometry),unit=edges.getAttribute('position').array,lines=[];
+  for(let i=0;i<boxes.length;i++){
+    const b=boxes[i];position.set(b.x,b.y,b.z);scale.set(b.w,b.d,b.h);quaternion.setFromAxisAngle(axis,b.angle);
+    matrix.compose(position,quaternion,scale);mesh.setMatrixAt(i,matrix);mesh.setColorAt(i,new T.Color(i%3?FACILITY_THEME.face:FACILITY_THEME.paper));
+    for(let j=0;j<unit.length;j+=3){const p=new T.Vector3(unit[j],unit[j+1],unit[j+2]).applyMatrix4(matrix);lines.push(p.x,p.y,p.z);}
   }
-  b.text('INCOMING',-65,47,0.04,0.75);b.text('OUTGOING',63,47,0.04,0.75);
-  b.rectangle(-12,18,18,42,0.04);b.text('SORT',-12,10,0.04,0.7);
-  // Schematic quay edge and a single container carrier, entirely within local bounds.
-  b.box(216,1.4,0.8,0,-33,0.15,'face');
-  b.box(102,17,3,14,-46,1.5,'face');
-  b.box(14,14,6,-25,-46,5.7,'paper');
-  for(const x of [1,18,35,52])addContainer(b,x,-46,2.8,13,5.5);
-  // Two outline gantries, simple structural symbols without operational mechanics.
-  for(const x of [-63,45]){
-    for(const dx of [-10,10])for(const y of [-27,-3])b.box(0.9,0.9,22,x+dx,y,11,'muted');
-    b.box(24,1.2,1.2,x,-27,22.6,'paper');
-    b.box(24,1.2,1.2,x,-3,22.6,'paper');
-    b.box(1.2,44,1.2,x,-24,22.6,'paper');
-    b.line([[x,-41,22],[x,-41,8]]);b.box(9,3,0.4,x,-41,7.8,'muted');
+  edges.dispose();mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+  const edgeGeometry=new T.BufferGeometry();edgeGeometry.setAttribute('position',new T.Float32BufferAttribute(lines,3));edgeGeometry.computeBoundingSphere();
+  const outline=new T.LineSegments(edgeGeometry,new T.LineBasicMaterial({color:FACILITY_THEME.ink}));outline.name=name+'-outlines';
+  const group=new T.Group();group.name=name+'-level';group.add(mesh,outline);return group;
+}
+
+/** Geography is injected; the renderer alone applies the reference-point translation. */
+export function createPort({ THREE, geography }) {
+  const T=THREE,group=new T.Group();group.name='oict';
+  group.userData={siteId:'oict',kind:'port',fictional:true,label:'OICT mapped extent · illustrative equipment',dimensions:PORT_DIMENSIONS,bounds:identityBounds(),status:'geography-unavailable'};
+  let disposed=false;
+  group.userData.update=()=>{};
+  group.userData.dispose=()=>{disposed=true;};
+  if(!geography)return group;
+  const layout=createPortLayout(geography),b=createDiagramBuilder(T);
+  b.line([...layout.footprint,layout.footprint[0]].map(([x,y])=>[x,y,.12]));
+  b.line(layout.quay.map(([x,y])=>[x,y,.18]));
+  // No solid pad, fake yard roads, fence rectangle or vessel covers map lanes/water.
+  group.add(b.finish('mapped-terminal-outline'));
+  const overview=[],detail=[];
+  for(const row of layout.rows){
+    overview.push({x:row.center[0],y:row.center[1],z:row.layers*2.9/2,w:row.width,d:row.depth,h:row.layers*2.9,angle:layout.rotationZ});
+    for(let col=0;col<4;col++)for(let side=0;side<2;side++)for(let layer=0;layer<row.layers;layer++){
+      const u=(col-1.5)*13.7,v=(side-.5)*4.2;
+      detail.push({x:row.center[0]+layout.along[0]*u+layout.landward[0]*v,y:row.center[1]+layout.along[1]*u+layout.landward[1]*v,z:layer*2.9+1.45,w:12.2,d:2.44,h:2.9,angle:layout.rotationZ});
+    }
   }
-  b.text('PORT / SORTING',0,-24,0.04,0.65);
-  b.text('ILLUSTRATIVE OPERATIONS',0,-57,0.04,0.35);
-  const group=b.finish('oict');
-  group.userData={siteId:'oict',kind:'port',fictional:true,label:'Symbolic port sorting · illustrative operations',dimensions:PORT_DIMENSIONS,bounds:{min:[-110,-60,-0.25],max:[110,60,24]}};
-  const sorter=createSorter({THREE,name:'port-sorter'});group.add(sorter);
-  bindIllustrativeMotion(group,[{object:sorter,points:[[-28,-2],[-28,28],[-12,28],[-12,-2],[-28,-2]],period:48,offset:0}]);
+  const far=instanceBoxes(T,overview,'representative-container-rows'),near=instanceBoxes(T,detail,'representative-containers');near.visible=false;group.add(far,near);
+  const craneTemplate=createDiagramBuilder(T);
+  for(const x of [-10,10])for(const y of [-13,13])craneTemplate.box(1.2,1.2,36,x,y,18,'muted');
+  for(const y of [-13,13])craneTemplate.box(24,1.5,1.5,0,y,36.75,'paper');
+  craneTemplate.box(1.8,79,1.5,0,-24.5,40,'paper');
+  craneTemplate.line([[0,-64,39.25],[0,-64,17]]);
+  const template=craneTemplate.finish('gantry-template');
+  // Batch the small crane set by material, keeping transparent surfaces out.
+  for(const child of template.children){
+    const p=child.geometry.getAttribute('position'),positions=[],normals=[],normal=child.geometry.getAttribute('normal');
+    for(const crane of layout.cranes)for(let i=0;i<p.count;i++){
+      const x=p.getX(i),y=p.getY(i);positions.push(crane.center[0]+layout.along[0]*x+layout.landward[0]*y,crane.center[1]+layout.along[1]*x+layout.landward[1]*y,p.getZ(i));
+      if(normal){const nx=normal.getX(i),ny=normal.getY(i);normals.push(layout.along[0]*nx+layout.landward[0]*ny,layout.along[1]*nx+layout.landward[1]*ny,normal.getZ(i));}
+    }
+    const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));if(normal)geometry.setAttribute('normal',new T.Float32BufferAttribute(normals,3));geometry.computeBoundingSphere();
+    const object=child.isLineSegments?new T.LineSegments(geometry,child.material):new T.Mesh(geometry,child.material);object.name='quay-'+child.name;group.add(object);child.geometry.dispose();
+  }
+  const reach=layout.cranes.flatMap(c=>[-1,1].map(x=>[c.center[0]+layout.along[0]*x*.9-layout.landward[0]*64,c.center[1]+layout.along[1]*x*.9-layout.landward[1]*64]));
+  const bounds={min:[Math.min(layout.bounds.min[0],...reach.map(p=>p[0])),Math.min(layout.bounds.min[1],...reach.map(p=>p[1])),0],max:[layout.bounds.max[0],layout.bounds.max[1],50]};
+  group.userData={...group.userData,status:'mapped',layout,bounds,mappedBounds:layout.bounds,detailLevel:'overview',representativeRowCount:layout.rows.length,representativeContainerCount:detail.length,schematicCraneCount:layout.cranes.length,
+    approximation:layout.approximation,
+    setDetailLevel(level){if(disposed)return;if(level!=='overview'&&level!=='detail')return;far.visible=level==='overview';near.visible=level==='detail';group.userData.detailLevel=level;},
+  };
   return group;
 }
