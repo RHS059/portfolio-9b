@@ -91,8 +91,8 @@ test('Material Symbols are self-hosted official assets with license and provenan
  const manifest=JSON.parse(await read('public/fleet-demo/assets/material-symbols.source.json'));
  const sprite=await read('public/fleet-demo/assets/material-symbols.svg');
  assert.equal(manifest.source,'https://github.com/google/material-design-icons');assert.equal(manifest.set,'Material Symbols Outlined');assert.match(manifest.commit,/^[a-f0-9]{40}$/);assert.equal(manifest.license,'Apache-2.0');assert.match(await read('public/fleet-demo/assets/material-symbols-LICENSE.txt'),/Apache License/);
- for(const icon of ['skip_previous','play_arrow','pause','skip_next','map','view_in_ar','deployed_code']){assert.ok(sprite.includes(`id="${icon}"`));assert.ok(shell.includes(`material-symbols.svg#${icon}`));assert.ok(standalone.includes(`./assets/material-symbols.svg#${icon}`));assert.ok(manifest.icons.some(item=>item.name===icon&&item.url.includes(manifest.commit)));}
- assert.doesNotMatch(sprite,/<script|<foreignObject|onload=|href=/i);assert.doesNotMatch(shell,/▶|Ⅱ|← Back|Next →/);
+ for(const icon of ['skip_previous','play_arrow','pause','skip_next','map','view_in_ar','deployed_code']){assert.ok(sprite.includes(`id="${icon}"`));assert.ok(shell.includes(`data-material-symbol="${icon}"`));assert.ok(standalone.includes(`data-material-symbol="${icon}"`));const geometry=sprite.match(new RegExp(`<symbol id="${icon}"[^>]*><path d="([^"]+)"`))[1];assert.ok(shell.includes(`<path d="${geometry}"`));assert.ok(standalone.includes(`<path d="${geometry}"`));assert.ok(manifest.icons.some(item=>item.name===icon&&item.url.includes(manifest.commit)));}
+ assert.doesNotMatch(shell,/<use href=/);assert.doesNotMatch(standalone,/<use href=/);assert.doesNotMatch(sprite,/<script|<foreignObject|onload=|href=/i);assert.doesNotMatch(shell,/▶|Ⅱ|← Back|Next →/);
 });
 test('playback is icon-only and the only camera buttons live in the lower-right stage',()=>{
  const dock=shell.slice(shell.indexOf('className={`story-dock'),shell.indexOf('id="source-dialog"'));
