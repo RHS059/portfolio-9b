@@ -32,7 +32,7 @@ try{
  if(process.env.REQUIRE_MAPPED_PORT==='1')await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.portStatus==='mapped'&&m.portRowCount>0&&m.portContainerCount>0&&m.portCraneCount>0;},undefined,{timeout:15000});
  await page.waitForTimeout(800);
  await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:30000});
- await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.vehicleDetailState==='ready'&&m.vehicleDetail.models.some(v=>v.id==='TRK-104');},undefined,{timeout:15000});
+ await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.vehicleDetailState==='ready'&&m.vehicleDetail.models.some(v=>v.id==='TRK-208');},undefined,{timeout:15000});
  phase='initial-scene';await page.screenshot({path:path.join(out,'01-desktop-initial.png'),fullPage:true});
  const state=()=>page.evaluate(()=>window.__fleetDemo.getState());
  const advanceToStage=async target=>{if((await state()).intro)await page.locator('#start-story').click();while((await state()).stage<target)await page.locator('#next-chapter').click();while((await state()).stage>target)await page.locator('#previous-chapter').click();};
@@ -97,6 +97,7 @@ try{
  await page.locator('[data-action="set-authority"][data-source="B"]').click();
  const fixed=await state();assert.equal(fixed.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').sourceId,'B');assert.equal(fixed.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').status,'resolved');assert.equal(fixed.evaluation.vehicles.find(v=>v.vehicleId==='TRK-208').sourceId,'A');assert.equal(JSON.stringify(fixed.scenario.readings),raw);assert.equal(JSON.stringify(fixed.scenario.serviceFacts),services);
  evidence.checks.push('explicit B repair resolves only migrated vehicle and preserves immutable records');
+ await page.getByText('More source controls',{exact:true}).click();
  await page.locator('[data-action="replay"]').click();
  await page.locator('[data-action="replay"]').click();
  await page.locator('[data-action="reimport"]').click();
