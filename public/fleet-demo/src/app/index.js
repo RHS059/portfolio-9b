@@ -44,7 +44,8 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     $('#mobile-pause').textContent=paused?'▶ Play story':'Ⅱ Pause story';$('#mobile-pause').setAttribute('aria-label',paused?'Play story':'Pause story');$('#mobile-pause').setAttribute('aria-pressed',String(!paused));$('#mobile-pause').disabled=!ready;
     $('#pause').textContent=paused?'▶ Play':'Ⅱ Pause';$('#pause').setAttribute('aria-label',paused?'Play story':'Pause story');$('#pause').setAttribute('aria-pressed',String(!paused));
     $('#camera-controls').hidden=!paused&&!exploring;
-    $('#start-story').disabled=stage===STORY_SCENES.length-1;$('#start-story-manual').disabled=stage===STORY_SCENES.length-1;
+    $('#start-story').disabled=!ready||stage===STORY_SCENES.length-1;$('#start-story-manual').disabled=!ready||stage===STORY_SCENES.length-1;$('#pause').disabled=!ready;$('#story-progress').disabled=!ready;
+    $$('[data-scene-index], [data-view], [data-focus], #overview, #follow').forEach(button=>{button.disabled=!ready;});
     $('#playback-status').textContent=exploring?(paused?'Manual view · paused':'Manual view · playing'):story.complete?'End of story':paused?(reducedMotion.matches?'Paused · reduced motion':'Paused · explore at your pace'):'Autoplay · pause anytime';
   }
   function applySceneCamera(){
@@ -69,10 +70,11 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     $('#open-source-controls').hidden=beatIndex!==6;$('#run-story-review').hidden=beatIndex!==7;
     const takeaways={6:'<strong>90% faster</strong><p>Data issue resolution went from weeks to hours.</p>'};
     $('#chapter-takeaway').innerHTML=takeaways[beatIndex]||'';
+    const body=$('#sidebar-story-body');if(body.dataset.scene!==beat.id){body.scrollTop=0;body.dataset.scene=beat.id;}
     });
     $('#story-position').textContent=`${String(stage+1).padStart(2,'0')} / 09 · ${story.label}`;
-    $('#previous-chapter').disabled=stage===0;
-    $('#next-chapter').textContent='Next →';$('#next-chapter').disabled=stage===8;$('#next-chapter').setAttribute('aria-label','Next scene');
+    $('#previous-chapter').disabled=!ready||stage===0;
+    $('#next-chapter').textContent='Next →';$('#next-chapter').disabled=!ready||stage===8;$('#next-chapter').setAttribute('aria-label','Next scene');
     $$('[data-story-overlay]').forEach(element=>{element.hidden=exploring||element.dataset.storyOverlay!==story.id;});
     $$('[data-scene-index]').forEach(button=>{const index=Number(button.dataset.sceneIndex);button.setAttribute('aria-current',index===stage?'step':'false');button.dataset.complete=String(index<stage);});
     renderPlayback();
@@ -109,6 +111,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   function focusStoryText(){sidebarTransition.afterCommit(()=>{const title=[1,6,7].includes(stage)?$(`[data-story-sidebar="${story.id}"] h2`):intro?$('#intro-panel h1'):$('#chapter-title');title?.setAttribute('tabindex','-1');title?.focus?.({preventScroll:true});});}
 
   function setChapter(index){
+    if(!ready)return;
     closeDialog(false);exploring=false;setPaused(true);const target=Math.min(STORY_SCENES.length-1,Math.max(0,index));
     if(sim)sim.seek(sceneTime(target));else{story=sampleStory(sceneTime(target));stage=story.index;intro=stage===0;render();}
     render();applySceneCamera();focusStoryText();
@@ -153,9 +156,9 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     }
     $('#scene-steps').innerHTML=STORY_SCENES.map(item=>`<button type="button" data-scene-index="${item.index}" aria-label="Scene ${item.index+1}: ${item.label}" title="${item.label}">${String(item.index+1).padStart(2,'0')}</button>`).join('');
     $('#story-progress').max=String(STORY_DURATION);
-    on($('#start-story'),'click',()=>{if(stage>=STORY_SCENES.length-1)return;setChapter(stage+1);setPaused(false);});on($('#start-story-manual'),'click',()=>{if(stage<STORY_SCENES.length-1)setChapter(stage+1);});on($('#previous-chapter'),'click',()=>setChapter(stage-1));on($('#next-chapter'),'click',()=>setChapter(stage+1));
+    on($('#start-story'),'click',()=>{if(!ready||stage>=STORY_SCENES.length-1)return;setChapter(stage+1);setPaused(false);});on($('#start-story-manual'),'click',()=>{if(ready&&stage<STORY_SCENES.length-1)setChapter(stage+1);});on($('#previous-chapter'),'click',()=>setChapter(stage-1));on($('#next-chapter'),'click',()=>setChapter(stage+1));
     $$('[data-scene-index]').forEach(button=>on(button,'click',()=>setChapter(Number(button.dataset.sceneIndex))));
-    on($('#story-progress'),'input',event=>{exploring=false;setPaused(true);sim?.seek(Number(event.target.value));render();applySceneCamera();});
+    on($('#story-progress'),'input',event=>{if(!ready)return;exploring=false;setPaused(true);sim?.seek(Number(event.target.value));render();applySceneCamera();});
     on($('#mobile-pause'),'click',togglePlayback);on($('#pause'),'click',togglePlayback);
     on($('#open-source-controls'),'click',()=>{mode='then';openDialog('#source-dialog');render();});
     on($('#run-story-review'),'click',()=>{mode='today';openDialog('#source-dialog');render();void handleAction({type:'review-imports'});});

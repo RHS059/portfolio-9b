@@ -59,8 +59,8 @@
     </div>
     </div>
     <div id="story-advance-controls" class="advanceControls">
-        <button id="start-story" class="cta" type="button">Next Slide: Auto</button>
-        <button id="start-story-manual" class="control" type="button">Next Slide: Manual</button>
+        <button id="start-story" class="cta" type="button" disabled>Next Slide: Auto</button>
+        <button id="start-story-manual" class="control" type="button" disabled>Next Slide: Manual</button>
     </div></aside></div><main id="work" class="stack route-panel main">
       <button id="mobile-pause" class="cta mobilePlayback" type="button" aria-label="Play story" aria-pressed="false" disabled>▶ Play story</button>
       <div class="workspaceBody">
@@ -109,11 +109,11 @@
             <div class="timelineHeader"><span id="story-position" class="eyebrow">01 / 09 · The question</span><span id="playback-status">Preparing story</span></div>
             <div id="scene-steps" class="sceneSteps" aria-label="Choose a scene"></div>
             <label class="srOnly" for="story-progress">Scrub through the story</label>
-            <input id="story-progress" class="storyProgress" type="range" min="0" max="124" step="0.1" value="0" aria-valuetext="Scene 1 of 9" />
+            <input id="story-progress" disabled class="storyProgress" type="range" min="0" max="124" step="0.1" value="0" aria-valuetext="Scene 1 of 9" />
             <div class="playbackControls">
-              <button id="previous-chapter" class="control" type="button" aria-label="Previous scene" aria-keyshortcuts="ArrowLeft">← Back</button>
-              <button id="pause" class="cta" type="button" aria-label="Play story" aria-keyshortcuts="Space">▶ Play</button>
-              <button id="next-chapter" class="control" type="button" aria-label="Next scene" aria-keyshortcuts="ArrowRight">Next →</button>
+              <button id="previous-chapter" class="control" type="button" aria-label="Previous scene" aria-keyshortcuts="ArrowLeft" disabled>← Back</button>
+              <button id="pause" class="cta" type="button" aria-label="Play story" aria-keyshortcuts="Space" disabled>▶ Play</button>
+              <button id="next-chapter" class="control" type="button" aria-label="Next scene" aria-keyshortcuts="ArrowRight" disabled>Next →</button>
             </div>
             <div id="camera-controls" hidden class="worldToolbar" role="group" aria-label="Camera controls"><button class="control" data-view="2d" type="button" aria-pressed="false">2D</button><button class="control" data-view="3d" type="button" aria-pressed="false">3D</button><button class="control" data-view="iso" type="button" aria-pressed="true">ISO</button><button id="overview" type="button" class="control">Overview</button><button id="follow" type="button" class="control" aria-pressed="true">Follow truck</button><button class="control" data-focus="depot" type="button">Workshop</button><button class="control" data-focus="oict" type="button">OICT</button><button class="control" data-focus="centerpoint" type="button">Factory</button></div>
 

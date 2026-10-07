@@ -68,9 +68,9 @@ test('story camera sets follow before the atomic focus/view so orientation canno
 
 
 test('intro offers explicit Auto and Manual choices without Explore or Replay buttons',()=>{
- assert.match(shell,/id="start-story" className=\{portfolio.cta\} type="button">Next Slide: Auto/);assert.match(shell,/id="start-story-manual" className=\{portfolio.control\} type="button">Next Slide: Manual/);
- assert.doesNotMatch(shell,/id="(?:explore-scene|reset|story-replay)"|Explore scene|Replay/);assert.ok(app.includes("$('#next-chapter').disabled=stage===8"));
- assert.ok(app.includes("on($('#start-story'),'click',()=>{if(stage>=STORY_SCENES.length-1)return;setChapter(stage+1);setPaused(false);})"));assert.ok(app.includes("on($('#start-story-manual'),'click',()=>{if(stage<STORY_SCENES.length-1)setChapter(stage+1);})"));
+ assert.match(shell,/id="start-story" className=\{portfolio.cta\} type="button" disabled>Next Slide: Auto/);assert.match(shell,/id="start-story-manual" className=\{portfolio.control\} type="button" disabled>Next Slide: Manual/);
+ assert.doesNotMatch(shell,/id="(?:explore-scene|reset|story-replay)"|Explore scene|Replay/);assert.ok(app.includes("$('#next-chapter').disabled=!ready||stage===8"));
+ assert.ok(app.includes("on($('#start-story'),'click',()=>{if(!ready||stage>=STORY_SCENES.length-1)return;setChapter(stage+1);setPaused(false);})"));assert.ok(app.includes("on($('#start-story-manual'),'click',()=>{if(ready&&stage<STORY_SCENES.length-1)setChapter(stage+1);})"));
 });
 
 test('receipt uses aligned paper service lines without fabricated shop, tax or payment facts',()=>{

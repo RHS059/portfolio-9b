@@ -117,8 +117,8 @@ function FleetSidebar() {
     </div>
     </div>
     <div id="story-advance-controls" className={styles.advanceControls}>
-        <button id="start-story" className={portfolio.cta} type="button">Next Slide: Auto</button>
-        <button id="start-story-manual" className={portfolio.control} type="button">Next Slide: Manual</button>
+        <button id="start-story" className={portfolio.cta} type="button" disabled>Next Slide: Auto</button>
+        <button id="start-story-manual" className={portfolio.control} type="button" disabled>Next Slide: Manual</button>
     </div>
   </>
 }
@@ -200,11 +200,11 @@ export default function FleetDemoShell() {
             <div className={styles.timelineHeader}><span id="story-position" className={portfolio.eyebrow}>01 / 09 · The question</span><span id="playback-status">Preparing story</span></div>
             <div id="scene-steps" className={styles.sceneSteps} aria-label="Choose a scene" />
             <label className={styles.srOnly} htmlFor="story-progress">Scrub through the story</label>
-            <input id="story-progress" className={styles.storyProgress} type="range" min="0" max="124" step="0.1" defaultValue="0" aria-valuetext="Scene 1 of 9" />
+            <input id="story-progress" disabled className={styles.storyProgress} type="range" min="0" max="124" step="0.1" defaultValue="0" aria-valuetext="Scene 1 of 9" />
             <div className={styles.playbackControls}>
-              <button id="previous-chapter" className={portfolio.control} type="button" aria-label="Previous scene" aria-keyshortcuts="ArrowLeft">← Back</button>
-              <button id="pause" className={portfolio.cta} type="button" aria-label="Play story" aria-keyshortcuts="Space">▶ Play</button>
-              <button id="next-chapter" className={portfolio.control} type="button" aria-label="Next scene" aria-keyshortcuts="ArrowRight">Next →</button>
+              <button id="previous-chapter" className={portfolio.control} type="button" aria-label="Previous scene" aria-keyshortcuts="ArrowLeft" disabled>← Back</button>
+              <button id="pause" className={portfolio.cta} type="button" aria-label="Play story" aria-keyshortcuts="Space" disabled>▶ Play</button>
+              <button id="next-chapter" className={portfolio.control} type="button" aria-label="Next scene" aria-keyshortcuts="ArrowRight" disabled>Next →</button>
             </div>
             <div id="camera-controls" hidden className={styles.worldToolbar} role="group" aria-label="Camera controls"><button className={portfolio.control} data-view="2d" type="button" aria-pressed="false">2D</button><button className={portfolio.control} data-view="3d" type="button" aria-pressed="false">3D</button><button className={portfolio.control} data-view="iso" type="button" aria-pressed="true">ISO</button><button id="overview" type="button" className={portfolio.control}>Overview</button><button id="follow" type="button" className={portfolio.control} aria-pressed="true">Follow truck</button><button className={portfolio.control} data-focus="depot" type="button">Workshop</button><button className={portfolio.control} data-focus="oict" type="button">OICT</button><button className={portfolio.control} data-focus="centerpoint" type="button">Factory</button></div>
 

@@ -129,3 +129,15 @@ test('left Auto and Manual remain available after timeline interaction and advan
  for(const stage of [0,2,4,6]){api.seekStory(stage,.3);assert.equal(auto.hidden,false);assert.equal(manual.hidden,false);assert.equal(auto.disabled,false);auto.dispatchEvent(new Event('click'));assert.equal(api.getState().stage,stage+1);assert.equal(api.getState().simulation.paused,false);api.seekStory(stage,.3);manual.dispatchEvent(new Event('click'));assert.equal(api.getState().stage,stage+1);assert.equal(api.getState().simulation.paused,true);}
  api.seekStory(8);assert.equal(auto.disabled,true);assert.equal(manual.disabled,true);assert.equal(auto.hidden,false);assert.equal(manual.hidden,false);assert.equal(host.root.querySelector('#about-panel'),null);assert.equal(host.root.querySelector('#about-toggle'),null);controller.dispose();
 });
+
+
+test('advance choices are disabled until ready and cannot lose an early click',async t=>{
+ const host=setup(t),controller=mountFleetDemo({root:host.root}),auto=host.root.querySelector('#start-story'),manual=host.root.querySelector('#start-story-manual');
+ assert.equal(auto.disabled,true);assert.equal(manual.disabled,true);auto.dispatchEvent(new Event('click'));manual.dispatchEvent(new Event('click'));assert.equal(host.root.dataset.intro,'true');
+ await controller.ready;await host.settle();assert.equal(auto.disabled,false);assert.equal(manual.disabled,false);assert.equal(window.__fleetDemo.getState().stage,0);assert.equal(window.__fleetDemo.getState().simulation.paused,true);auto.dispatchEvent(new Event('click'));assert.equal(window.__fleetDemo.getState().stage,1);assert.equal(window.__fleetDemo.getState().simulation.paused,false);controller.dispose();
+});
+
+test('new sidebar scenes start at the top but same-scene updates keep reading position',async t=>{
+ const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();const api=window.__fleetDemo,body=host.root.querySelector('#sidebar-story-body');
+ api.seekStory(6,.2);body.scrollTop=220;api.seekStory(6,.3);assert.equal(body.scrollTop,220);host.root.querySelector('#start-story-manual').dispatchEvent(new Event('click'));assert.equal(api.getState().stage,7);assert.equal(body.scrollTop,0);controller.dispose();
+});

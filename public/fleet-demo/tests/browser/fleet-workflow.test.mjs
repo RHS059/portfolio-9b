@@ -129,7 +129,7 @@ test('Fleet browser acceptance: interactive workflow and honest review boundary'
       assert.deepEqual(next.scenario,prior.scenario);assert.equal(next.mode,'then');assert.equal(next.stage,0);assert.equal(next.selectedVehicleId,initial.selectedVehicleId);assert.equal(next.intro,true);assert.equal(next.simulation.paused,true);assert.equal(await page.locator('#story-content').isVisible(),false);
     });
     await run('reload honestly restores this in-memory fixture',async()=>{
-      await openInspector(page);await authority(page,'B').click();await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo);
+      await freshFixture(page);await openInspector(page);await authority(page,'B').click();await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo);
       assert.deepEqual((await state(page)).scenario,initial.scenario);
     });
     await run('narrow viewport retains essential authority controls',async()=>{
