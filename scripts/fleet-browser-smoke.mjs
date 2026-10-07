@@ -46,7 +46,7 @@ try{
  const setPaused=async value=>{if((await state()).simulation.paused!==value)await page.locator('#pause').click();};
  const exploreScene=async()=>{if(!(await state()).exploring)await enterCameraView(page);};
  const closeSource=async()=>{if(await page.locator('#source-dialog').isVisible())await page.locator('#source-close').click();};
- const advanceToStage=async target=>{await closeSource();await page.locator(`[data-scene-index="${target}"]`).click();assert.equal((await state()).stage,target);await page.waitForFunction(()=>{const t=window.__fleetDemo.getState().textTransition;return !t||t.phase==='idle';});};
+ const advanceToStage=async target=>{await navigateStory(page,target);assert.equal((await state()).stage,target);await page.waitForFunction(()=>{const t=window.__fleetDemo.getState().textTransition;return !t||t.phase==='idle';});};
  const openSource=async()=>{if(!await page.locator('#source-dialog').isVisible()){await advanceToStage(6);await page.locator('#open-source-controls').click();}};
  const openReview=async()=>{await advanceToStage(7);await page.locator('#run-story-review').click();};
  const chooseTruck=async id=>{await openSource();const picker=page.locator('[data-vehicle-select]');if(!await picker.isVisible())await page.getByText('Check another truck',{exact:true}).click();await picker.selectOption(id);await closeSource();};

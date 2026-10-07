@@ -1,3 +1,4 @@
+import {navigateStory} from '../../../../scripts/fleet-browser-controls.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
@@ -14,7 +15,7 @@ const textSettled=page=>page.waitForFunction(()=>{const t=window.__fleetDemo.get
 const closeDialogs=async page=>{for(const [dialog,close]of [['#source-dialog','#source-close']])if(await page.locator(dialog).isVisible())await page.locator(close).click();};
 const freshFixture=async page=>{await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>window.__fleetDemo);await textSettled(page);};
 const canonical=(s,id='TRK-104')=>s.evaluation.vehicles.find(v=>v.vehicleId===id);
-const goToStage=async(page,target)=>{await closeDialogs(page);await page.locator(`[data-scene-index="${target}"]`).click();await textSettled(page);};
+const goToStage=async(page,target)=>{await navigateStory(page,target);await textSettled(page);};
 const openInspector=async page=>{if(!await page.locator('#source-inspector').isVisible()){await goToStage(page,6);await page.locator('#open-source-controls').click();}};
 const revealControl=async(page,selector)=>{
   await openInspector(page);const target=page.locator(`#provenance ${selector}`);

@@ -113,8 +113,8 @@ test('sidebar relocation keeps animated content unique and receipt totals unchan
  const host=setup(t),controller=mountFleetDemo({root:host.root});await controller.ready;await host.settle();const api=window.__fleetDemo;
  const sideScenes={1:'integration',4:'mileage-loop',6:'solution',7:'agents'};
  for(const [index,id] of Object.entries(sideScenes)){api.seekStory(Number(index),.5);assert.equal(host.root.querySelector('#sidebar-scenes').hidden,false);assert.equal(host.root.querySelector(`[data-story-sidebar="${id}"]`).hidden,false);assert.equal(host.root.querySelector(`[data-story-overlay="${id}"]`),null);assert.equal(host.root.querySelector('#chapter-number').hidden,Number(index)===6);}
- api.seekStory(4,2/18);assert.equal(host.root.querySelector('#mileage-value').textContent,'50,000');api.seekStory(5,.75);assert.equal(host.root.querySelector('#cost-total').textContent,'$700.00');assert.equal(host.root.querySelector('#cost-duplicate').textContent,'$350.00');assert.equal(host.root.querySelector('#maintenance-cost').textContent,'$350');
- for(const id of ['reset','explore-scene','story-replay'])assert.equal(host.root.querySelector('#'+id),null);controller.dispose();
+ api.seekStory(4,2/18);assert.equal(host.root.querySelector('#mileage-value').textContent,'50,000');api.seekStory(5,.75);assert.equal(host.root.querySelector('#cost-total').textContent,'$700.00');assert.equal(host.root.querySelector('#cost-duplicate').textContent,'$350.00');
+ for(const id of ['reset','explore-scene','story-replay','scene-steps','story-position','playback-status','selected-asset','asset-role','service-visits','service-summary','maintenance-cost','maintenance-cost-note'])assert.equal(host.root.querySelector('#'+id),null);controller.dispose();
 });
 
 

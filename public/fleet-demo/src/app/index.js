@@ -11,7 +11,6 @@ const sampleProcess=(timeSeconds,paused)=>sampleCargoProcess(timeSeconds,{paused
 const mountedControllers=new WeakMap();
 const freezeScene=value=>{if(value&&typeof value==='object'&&!Object.isFrozen(value)){Object.values(value).forEach(freezeScene);Object.freeze(value);}return value;};
 const receiptMoney=value=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(value);
-const money=value=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(value);
 /** One clock controls the story and renderer. Editorial overlays never mutate domain records. */
 export function mountFleetDemo({root=document,theme={}}={}) {
   if(!root?.querySelector)throw new TypeError('Fleet demo requires a DOM root');
@@ -44,8 +43,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     $$('#pause').forEach(button=>{const label=paused?'Play story':'Pause story';button.setAttribute('aria-label',label);button.setAttribute('title',label);button.setAttribute('aria-pressed',String(!paused));button.disabled=!ready;});
     $$('[data-playback-icon]').forEach(icon=>{icon.hidden=(icon.dataset.playbackIcon==='play')!==paused;});
     $('#pause').disabled=!ready;$('#story-progress').disabled=!ready;
-    $$('[data-scene-index], [data-view]').forEach(button=>{button.disabled=!ready;});
-    $('#playback-status').textContent=exploring?(paused?'Manual view · paused':'Manual view · playing'):story.complete?'End of story':paused?(reducedMotion.matches?'Paused · reduced motion':'Paused · explore at your pace'):'Autoplay · pause anytime';
+    $$('[data-view]').forEach(button=>{button.disabled=!ready;});
   }
   function applySceneCamera(){
     if(exploring)return;
@@ -70,11 +68,9 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     $('#chapter-takeaway').innerHTML=takeaways[beatIndex]||'';
     const body=$('#sidebar-story-body');if(body.dataset.scene!==beat.id){body.scrollTop=0;body.dataset.scene=beat.id;}
     });
-    $('#story-position').textContent=`${String(stage+1).padStart(2,'0')} / 09 · ${story.label}`;
     $('#previous-chapter').disabled=!ready||stage===0;$('#previous-chapter').hidden=stage===0;
     $('#next-chapter').disabled=!ready||stage===8;$('#next-chapter').hidden=stage===8;$('#next-chapter').setAttribute('aria-label','Next scene');
     $$('[data-story-overlay]').forEach(element=>{element.hidden=exploring||element.dataset.storyOverlay!==story.id;});
-    $$('[data-scene-index]').forEach(button=>{const index=Number(button.dataset.sceneIndex);button.setAttribute('aria-current',index===stage?'step':'false');button.dataset.complete=String(index<stage);});
     renderPlayback();
   }
   function renderPresentation(){
@@ -82,14 +78,8 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     $('#story-elapsed').textContent=clockTime(story.timeSeconds);$('#story-duration').textContent=clockTime(STORY_DURATION);
     $('#story-progress').style.backgroundImage=`linear-gradient(to right,#fff ${story.timeSeconds/STORY_DURATION*100}%,#ffffff40 ${story.timeSeconds/STORY_DURATION*100}%)`;
     $('#story-progress').value=String(story.timeSeconds);$('#story-progress').setAttribute('aria-valuetext',`Scene ${stage+1} of 9: ${story.label}, ${Math.round(story.progress*100)} percent`);
-    $('#selected-asset').textContent=selectedVehicleId;$('#asset-role').textContent=stage<2?'On the road':stage<6?'Back in the workshop':'Odometer source';
     if(stage===4){const mileage=sampleMileage(story.elapsedSeconds);$('#mileage-day').textContent=String(mileage.day);$('#mileage-current').textContent=mileage.current.toLocaleString('en-US');$('#mileage-value').textContent=mileage.display.toLocaleString('en-US');$('#mileage-alert').textContent=mileage.maintenanceDue?'Preventive maintenance appears due. Again.':mileage.atCurrent?'Current reading imported':'Stale reading imported again';$('#mileage-alert').dataset.due=String(mileage.maintenanceDue);}
     const cost=sampleCost(stage===5?story.progress:stage>5?1:0);
-    const visits=stage<2?0:stage<5?2:cost.visits,repeatVisits=stage<2?0:stage<5?1:cost.repeatVisits;
-    $('#service-visits').textContent=stage<2?'—':String(visits);
-    $('#service-summary').textContent=stage<2?'Following the same truck':stage<5?'Two visits in one week':`${visits} ${visits===1?'visit':'visits'} this week`;
-    $('#maintenance-cost').textContent=stage<5?'—':money(cost.repeatCost);
-    $('#maintenance-cost-note').textContent=stage<5?'Labor, parts and downtime':'Example cost';
     if(stage===5){$('#cost-caption').textContent=cost.visits===1?'1 service':'2 services in one week';$('#cost-total').textContent=receiptMoney(cost.totalCost);$('#cost-duplicate').textContent=receiptMoney(cost.repeatCost);$$('[data-cost-visit]').forEach(item=>item.dataset.active=String(Number(item.dataset.costVisit)<=cost.visits));}
 
     if(stage===7){const active=Math.min(2,Math.floor((story.elapsedSeconds%9)/3));$$('[data-agent-step]').forEach(row=>row.dataset.active=String(Number(row.dataset.agentStep)<=active));}
@@ -150,10 +140,8 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   }
   function bind(){
     $('#source-dialog').hidden=true;$('.workspace').dataset.dialogOpen='false';
-    $('#scene-steps').innerHTML=STORY_SCENES.map(item=>`<button type="button" data-scene-index="${item.index}" aria-label="Scene ${item.index+1}: ${item.label}" title="${item.label}">${String(item.index+1).padStart(2,'0')}</button>`).join('');
     $('#story-progress').max=String(STORY_DURATION);
     on($('#previous-chapter'),'click',()=>setChapter(stage-1));on($('#next-chapter'),'click',()=>setChapter(stage+1));
-    $$('[data-scene-index]').forEach(button=>on(button,'click',()=>setChapter(Number(button.dataset.sceneIndex))));
     on($('#story-progress'),'input',event=>{if(!ready)return;exploring=false;setPaused(true);sim?.seek(Number(event.target.value));render();applySceneCamera();});
     on($('#pause'),'click',togglePlayback);
     on($('#open-source-controls'),'click',()=>{mode='then';openDialog('#source-dialog');render();});

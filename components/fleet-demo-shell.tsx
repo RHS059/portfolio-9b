@@ -170,7 +170,7 @@ export default function FleetDemoShell() {
               </div>
 
               <article data-story-overlay="cost" className={styles.receipt} hidden aria-label="Service receipt">
-                <header className={styles.receiptHeader}><h2>Service receipt</h2><p>TRK-104</p></header>
+                <header className={styles.receiptHeader}><h2>Service receipt</h2><p>TRK-104 · Example cost</p></header>
                 <div className={styles.receiptColumns}><span>SERVICE</span><span>AMOUNT</span></div>
                 <div className={styles.receiptLines}>
                   <div data-cost-visit="1"><div><strong>Oil change</strong><span>Visit 1</span></div><strong>$350.00</strong></div>
@@ -191,14 +191,7 @@ export default function FleetDemoShell() {
               <button className={portfolio.control} data-view="iso" type="button" aria-label="ISO" title="Isometric 3D" aria-pressed="true" disabled><svg className={styles.materialSymbol} width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="deployed_code"><path d="M440-183v-274L200-596v274l240 139Zm80 0 240-139v-274L520-457v274Zm-40-343 237-137-237-137-237 137 237 137ZM160-252q-19-11-29.5-29T120-321v-318q0-22 10.5-40t29.5-29l280-161q19-11 40-11t40 11l280 161q19 11 29.5 29t10.5 40v318q0 22-10.5 40T800-252L520-91q-19 11-40 11t-40-11L160-252Zm320-228Z" /></svg></button>
             </div>
           </div>
-          <div className={`story-dock ${styles.storyDock}`} aria-label="Story playback and vehicle context">
-            <div className={`impact-strip ${styles.impactStrip}`}>
-              <div><span className={portfolio.eyebrow}>Following one truck</span><strong id="selected-asset">TRK-104</strong><small id="asset-role"></small></div>
-              <div><span className={portfolio.eyebrow}>Service visits</span><strong id="service-visits">—</strong><small id="service-summary"></small></div>
-              <div><span className={portfolio.eyebrow}>Repeat service cost</span><strong id="maintenance-cost">—</strong><small id="maintenance-cost-note">Labor, parts and downtime</small></div>
-            </div>
-            <div className={styles.timelineHeader}><span id="story-position" className={portfolio.eyebrow}>01 / 09 · The question</span><span id="playback-status">Preparing story</span></div>
-            <div id="scene-steps" className={styles.sceneSteps} aria-label="Choose a scene" />
+          <div className={`story-dock ${styles.storyDock}`} aria-label="Story playback">
             <div id="story-transport" className={styles.storyTransport} role="group" aria-label="Story playback">
               <label className={styles.srOnly} htmlFor="story-progress">Scrub through the story</label>
               <input id="story-progress" disabled className={styles.storyProgress} type="range" min="0" max="124" step="0.1" defaultValue="0" aria-valuetext="Scene 1 of 9" />

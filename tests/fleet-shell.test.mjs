@@ -22,12 +22,12 @@ test('annotated content is in the sidebar and only requested map overlays remain
  assert.ok(shell.indexOf('data-provider="verizon"')<shell.indexOf('data-provider="samsara"'));assert.match(css,/\[data-scene="provider-switch"\] \.world \{ filter: blur\(7px\) brightness/);
  assert.ok(app.includes("$('#chapter-number').hidden=beatIndex===6"));
 });
-test('persistent bottom controls include pause, navigation, scrubbing and cost context',()=>{
+test('the bottom dock contains only the single transport',()=>{
  assert.equal((shell.match(/story-dock/g)||[]).length,1);
  const dock=shell.slice(shell.indexOf('className={`story-dock'),shell.indexOf('id="source-dialog"'));
- for(const id of ['story-position','playback-status','scene-steps','story-progress','previous-chapter','pause','next-chapter','selected-asset','asset-role','service-visits','service-summary','maintenance-cost','maintenance-cost-note']){assert.ok(dock.includes(`id="${id}"`),id);assert.equal((shell.match(new RegExp(`id="${id}"`,'g'))||[]).length,1);}
+ for(const id of ['story-transport','story-progress','story-elapsed','story-duration','previous-chapter','pause','next-chapter']){assert.ok(dock.includes(`id="${id}"`),id);assert.equal((shell.match(new RegExp(`id="${id}"`,'g'))||[]).length,1);}
  assert.match(shell,/htmlFor="story-progress"/);assert.match(shell,/aria-keyshortcuts="ArrowLeft"/);assert.match(shell,/aria-keyshortcuts="ArrowRight"/);assert.match(shell,/aria-keyshortcuts="Space"/);
- assert.match(css,/\.impactStrip[^}]*grid-template-columns: repeat\(3,minmax\(0,1fr\)\)/);
+ assert.doesNotMatch(dock,/impact-strip|story-position|playback-status|scene-steps|selected-asset|service-visits|maintenance-cost/);
 });
 test('source controls are an optional modal, with human approval and preserved history',()=>{
  assert.match(shell,/id="source-dialog"[^>]*role="dialog"[^>]*aria-modal="true"[^>]*hidden/);
@@ -39,7 +39,7 @@ test('source controls are an optional modal, with human approval and preserved h
 });
 test('story copy removes redundant captions and uses one compact fixed-cost label',()=>{
  assert.doesNotMatch(shell,/illustrative|reported provider overlap|Try a service cost|Oil change #2|service-unit-cost|cost-days/i);
- assert.equal((app.match(/'Example cost'/g)||[]).length,1);assert.match(shell,/id="cost-total">\$350/);assert.match(shell,/id="cost-duplicate">\$0/);
+ assert.equal((shell.match(/Example cost/g)||[]).length,1);assert.match(shell,/id="cost-total">\$350/);assert.match(shell,/id="cost-duplicate">\$0/);
  const solution=shell.slice(shell.indexOf('data-story-sidebar="solution"'),shell.indexOf('data-story-sidebar="agents"'));
  const agents=shell.slice(shell.indexOf('data-story-sidebar="agents"'),shell.indexOf('id="chapter-takeaway"'));
  assert.match(solution,/<h2[^>]*>The change I designed<\/h2>/);assert.match(agents,/<h2[^>]*>How I’d approach it today<\/h2>/);
@@ -80,9 +80,9 @@ test('receipt uses aligned paper service lines without fabricated shop, tax or p
 });
 
 
-test('fleet facts precede timeline and the left story keeps its scrolling fade container',()=>{
+test('removed fact and chapter strips leave the continuous scrubber and readable left story',()=>{
  assert.ok(app.includes("element:$('#sidebar-story-body')"));assert.match(css,/\.sidebarStoryBody \{[^}]*overflow-y: auto/);
- assert.ok(shell.indexOf('className={`impact-strip')<shell.indexOf('id="story-position"'));assert.ok(shell.indexOf('id="story-position"')<shell.indexOf('id="story-transport"'));assert.doesNotMatch(shell,/id="about-toggle"|id="about-panel"|id="about-close"/);
+ assert.doesNotMatch(shell,/id="(?:selected-asset|asset-role|service-visits|service-summary|maintenance-cost|maintenance-cost-note|scene-steps|story-position|playback-status)"/);assert.doesNotMatch(app,/data-scene-index|#selected-asset|#service-visits|#maintenance-cost|#scene-steps|#story-position|#playback-status/);assert.doesNotMatch(shell,/id="about-toggle"|id="about-panel"|id="about-close"/);
 });
 
 test('Material Symbols are self-hosted official assets with license and provenance',async()=>{

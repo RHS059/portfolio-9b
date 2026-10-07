@@ -22,9 +22,9 @@ test('opening preserves project name, unchanged project information and question
  assert.doesNotMatch(intro,/Project details|COLLECTIVE DATA|data-mode=|story-steps/);
  assert.match(html,/<div id="story-content"[^>]*hidden>/);assert.match(html,/class="workspace root" data-intro="true"/);
 });
-test('one standard transport follows fleet facts without duplicate left controls',()=>{
+test('one standard transport remains without fact or chapter strips',()=>{
  const region=html.slice(html.indexOf('id="story-transport"'));
  for(const id of ['story-progress','story-elapsed','story-duration','previous-chapter','pause','next-chapter'])assert.ok(region.includes(`id="${id}"`));
- assert.ok(html.indexOf('class="impact-strip')<html.indexOf('id="story-transport"'));
+ assert.doesNotMatch(html,/impact-strip|id="scene-steps"|id="story-position"|id="playback-status"|id="selected-asset"|id="service-visits"|id="maintenance-cost"/);
  assert.doesNotMatch(html,/id="start-story"|id="start-story-manual"|id="story-advance-controls"|id="mobile-pause"|id="about-panel"|id="about-toggle"|id="reset"|id="explore-scene"/);
 });
