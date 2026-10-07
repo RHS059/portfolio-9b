@@ -1,4 +1,5 @@
 import {buildConfigurationCommand} from './commands.js';
+import {forwardSceneLabelWheel} from './wheel-navigation.js';
 import {createSimulation} from '../core/simulation.js';
 import {reviewFixture} from './review-adapter.js';
 import {createProvenancePanel as createFallbackPanel} from './fallback-provenance.js';
@@ -109,7 +110,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     $$('[data-vehicle]').forEach(b=>on(b,'click',()=>selectVehicle(b.dataset.vehicle)));
     on($('#overview'),'click',()=>focusFacility(null));
     on($('#world'),'pointerdown',()=>{manualCameraUsed=true;});
-    on($('#world'),'wheel',()=>{manualCameraUsed=true;},{passive:true});
+    on($('#world'),'wheel',event=>{manualCameraUsed=true;forwardSceneLabelWheel(event,$('#world .maplibregl-canvas-container'));},{passive:false});
     on($('#follow'),'click',()=>{manualCameraUsed=true;follow=!follow;$('#follow').setAttribute('aria-pressed',String(follow));scene?.setFollow(follow);if(follow)scene?.setFocus(selectedVehicleId);});
     on($('#pause'),'click',()=>{if(!sim)return;const paused=!sim.getState().paused;sim.setPaused(paused);$('#pause').textContent=paused?'▶ Play':'Ⅱ Pause';$('#run-status').textContent=paused?'Scene paused':'Scene running';render();});
     on($('#reset'),'click',()=>{
