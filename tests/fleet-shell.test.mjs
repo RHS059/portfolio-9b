@@ -50,3 +50,12 @@ test('native and standalone markup expose the same controller hooks',()=>{
  for(const id of ids)assert.ok(standalone.includes(`id="${id}"`),id);
  assert.doesNotMatch(standalone,/className=|<PortfolioShell|\$\{styles/);
 });
+
+
+test('story camera sets follow before the atomic focus/view so orientation cannot be cleared afterward',()=>{
+ const body=app.slice(app.indexOf('function applySceneCamera()'),app.indexOf('function renderStory()'));
+ assert.equal((body.match(/scene\?\.setFollow/g)||[]).length,1);
+ assert.ok(body.indexOf('scene?.setFollow(follow)')<body.indexOf('scene?.setView'));
+ assert.match(body,/setView\(view,\{focusId:stage<=1\?'TRK-104':'depot'\}\)/);
+ assert.match(body,/if\(stage===8\)\{scene\?\.setView\(view,\{animate:false\}\);scene\?\.setFocus\(null\);\}/);
+});

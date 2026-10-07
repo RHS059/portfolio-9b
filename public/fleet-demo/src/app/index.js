@@ -44,10 +44,11 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   }
   function applySceneCamera(){
     if(exploring)return;
-    selectedVehicleId='TRK-104';follow=stage<=1;scene?.setFollow(false);
+    selectedVehicleId='TRK-104';follow=stage<=1;
+    // The scene wrapper’s setFollow also sets focus. Do it before the atomic view command.
+    scene?.setFollow(follow);
     if(stage===8){scene?.setView(view,{animate:false});scene?.setFocus(null);}
     else scene?.setView(view,{focusId:stage<=1?'TRK-104':'depot'});
-    scene?.setFollow(follow);
     $('#follow').setAttribute('aria-pressed',String(follow));
   }
   function renderStory(){
