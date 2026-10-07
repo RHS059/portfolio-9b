@@ -2,9 +2,9 @@ name: Fleet demo invariants
 on:
   push:
     branches: [main]
-    paths: ['public/fleet-demo/**', 'app/fleet-demo/**', 'scripts/fleet-browser-smoke.mjs', 'scripts/fleet-portfolio-shell-smoke.mjs', 'components/fleet-demo-shell*', 'components/portfolio-shell.tsx', 'components/portfolio-home.module.css', 'tests/fleet-shell.test.mjs', '.github/workflows/fleet-demo-tests.yml']
+    paths: ['public/fleet-demo/**', 'app/fleet-demo/**', 'scripts/fleet-browser-smoke.mjs', 'scripts/fleet-cargo-browser-checks.mjs', 'scripts/fleet-portfolio-shell-smoke.mjs', 'components/fleet-demo-shell*', 'components/portfolio-shell.tsx', 'components/portfolio-home.module.css', 'tests/fleet-shell.test.mjs', '.github/workflows/fleet-demo-tests.yml']
   pull_request:
-    paths: ['public/fleet-demo/**', 'app/fleet-demo/**', 'scripts/fleet-browser-smoke.mjs', 'scripts/fleet-portfolio-shell-smoke.mjs', 'components/fleet-demo-shell*', 'components/portfolio-shell.tsx', 'components/portfolio-home.module.css', 'tests/fleet-shell.test.mjs', '.github/workflows/fleet-demo-tests.yml']
+    paths: ['public/fleet-demo/**', 'app/fleet-demo/**', 'scripts/fleet-browser-smoke.mjs', 'scripts/fleet-cargo-browser-checks.mjs', 'scripts/fleet-portfolio-shell-smoke.mjs', 'components/fleet-demo-shell*', 'components/portfolio-shell.tsx', 'components/portfolio-home.module.css', 'tests/fleet-shell.test.mjs', '.github/workflows/fleet-demo-tests.yml']
 concurrency:
   group: fleet-demo-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: false
