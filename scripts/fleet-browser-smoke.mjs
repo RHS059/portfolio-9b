@@ -96,7 +96,7 @@ try{
  await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;});
 
  phase='source-workflow';await setPaused(true);const initial=await state();
- const initialView=await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState);assert.ok(initialView.zoom>17,'Opening must actually frame the moving truck');assert.ok(Math.abs(initialView.pitch-52)<.01,'Reset restores ISO pitch');assert.ok(Math.abs(initialView.bearing+28)<.01,'Reset restores ISO bearing');
+ const initialView=await page.evaluate(()=>window.__fleetDemo.getMetrics().viewState);evidence.initialResetView=initialView;assert.ok(initialView.zoom>17,'Opening must actually frame the moving truck');assert.ok(Math.abs(initialView.pitch-52)<.01,'Reset restores ISO pitch');assert.ok(Math.abs(initialView.bearing+28)<.01,'Reset restores ISO bearing');
  assert.equal(initial.evaluation.vehicles.find(v=>v.vehicleId==='TRK-104').status,'unresolved');
  assert.equal(initial.evaluation.vehicles.find(v=>v.vehicleId==='TRK-208').sourceId,'A');
  const raw=JSON.stringify(initial.scenario.readings),services=JSON.stringify(initial.scenario.serviceFacts);

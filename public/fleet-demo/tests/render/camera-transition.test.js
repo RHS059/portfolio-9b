@@ -106,3 +106,26 @@ test('all orbit and pan steps survive a native movestart callback',()=>{
  map.view.center.forEach((value,i)=>close(value,start[i]+delta[i]));
  assert.equal(camera.get().manual,true);assert.equal(camera.get().transitioning,false);
 });
+
+test('reset is unsettled from its queued focus through the final exact ISO view',()=>{
+ const {map,camera}=fixture({zoom:18.8,pitch:65,bearing:108});
+ camera.markManual();
+ // Repeated intro reset can leave the text transition idle in this same task.
+ camera.setFocus('TRK-104');camera.setFollow(true);camera.setView('iso',{focusId:'TRK-104'});
+ assert.equal(camera.get().transitioning,true,'Settled-view waits must not pass before the first RAF');
+ assert.equal(map.view.pitch,65,'The queued request has not changed the map yet');
+ camera.update([pose()],100);assert.equal(camera.get().transitioning,true);
+ camera.update([pose()],450);assert.equal(camera.get().transitioning,true);assert.ok(map.view.pitch>52&&map.view.pitch<65);
+ camera.update([pose()],800);assert.equal(camera.get().transitioning,false);assert.equal(map.view.pitch,52);assert.equal(map.view.bearing,-28);assert.equal(map.view.zoom,18.3);
+});
+
+test('nonanimated focus is pending only until applied, and cancellation clears readiness',()=>{
+ const {camera}=fixture();camera.setView('iso',{focusId:'TRK-104',animate:false});assert.equal(camera.get().transitioning,true);camera.update([pose()],100);assert.equal(camera.get().transitioning,false);
+ camera.setFocus('TRK-104');assert.equal(camera.get().transitioning,true);camera.markManual();assert.equal(camera.get().transitioning,false);
+ camera.setFocus('TRK-104');camera.setFollow(false);assert.equal(camera.get().transitioning,false);
+});
+
+test('queued focus does not block fallback readiness while its map is unavailable',()=>{
+ let map=null;const camera=createCameraController(()=>map);camera.setFollow(true);camera.setView('iso',{focusId:'TRK-104'});assert.equal(camera.get().transitioning,false);
+ map=fakeMap();assert.equal(camera.get().transitioning,true);camera.update([pose()],100);camera.update([pose()],800);assert.equal(camera.get().transitioning,false);
+});

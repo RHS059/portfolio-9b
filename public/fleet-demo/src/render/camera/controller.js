@@ -76,6 +76,8 @@ export function createCameraController(getMap){
       followCenter=discontinuity||reducedMotion?.matches?position:smoothFollow(followCenter,lastPosition,position,elapsed);
       lastPosition=position;lastPose={...v};if(!drawTransition(map,now))map.jumpTo({center:toLngLat(followCenter)});
     },
-    get(){return {mode,focus,follow,manual,transitioning:!!transition};}
+    // Vehicle focus is applied on the next RAF. It is already unsettled before
+    // that frame; an unavailable map leaves fallback readiness independent.
+    get(){return {mode,focus,follow,manual,transitioning:!!transition||(pendingFocus&&!!getMap())};}
   };
 }
