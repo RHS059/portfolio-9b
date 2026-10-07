@@ -8,6 +8,7 @@ export async function exerciseCargoFlow({page,evidence,out,setPhase=()=>{}}){
   const state=()=>page.evaluate(()=>window.__fleetDemo.getState());
   const metrics=()=>page.evaluate(()=>window.__fleetDemo.getMetrics().cargoProcessRender);
   const facts=s=>({readings:s.scenario.readings,services:s.scenario.serviceFacts,policies:s.scenario.policies,exclusions:s.scenario.exclusions});
+  if(!(await state()).exploring&&await page.locator('#explore-scene').count())await page.locator('#explore-scene').click();
   const initial=await state(),preserved=facts(initial),outgoingEnabled=initial.cargoProcess.outgoingEnabled!==false;
   evidence.cargoCapabilities=initial.cargoProcess.capabilities;
   if(!initial.simulation.paused)await page.locator('#pause').click();
@@ -133,6 +134,7 @@ export async function exerciseCargoFlow({page,evidence,out,setPhase=()=>{}}){
   await page.screenshot({path:path.join(out,'cargo-ship-unloading.png'),fullPage:true});
   await page.locator('#reset').click();
   if(!(await state()).simulation.paused)await page.locator('#pause').click();
+  if(await page.locator('#explore-scene').count()&&!(await state()).exploring)await page.locator('#explore-scene').click();
   const reset=await seek(0);
   assert.deepEqual(materialState(reset),materialState(warm),'Reset reproduces the populated startup, identities and poses');
   evidence.checks.push('Connected cargo has one visible owner through enabled crane, trailer, forklift and workcell transfers; pause/reset preserve poses and service facts');

@@ -1,109 +1,52 @@
-import test from 'node:test'
-import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
-const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8')
-const [page, shell, css, shared, frame] = await Promise.all([
-  read('app/fleet-demo/page.tsx'), read('components/fleet-demo-shell.tsx'),
-  read('components/fleet-demo-shell.module.css'), read('components/portfolio-home.module.css'),
-  read('components/portfolio-shell.tsx'),
-])
-
-test('Fleet route uses the actual portfolio shell and a single scene card', () => {
-  assert.match(page, /return <FleetDemoShell \/>/)
-  assert.doesNotMatch(page, /iframe|index\.html/)
-  assert.match(shell, /import PortfolioShell from "\.\/portfolio-shell"/)
-  assert.match(shell, /import portfolio from "\.\/portfolio-home\.module\.css"/)
-  assert.equal((shell.match(/portfolio\.card/g) || []).length, 1)
-  assert.doesNotMatch(shell, /src\/app\/style\.css|DM Sans|IBM Plex|className="topbar"/)
-})
-
-test('The route removes Work/About/Writing navigation and the evidence sidebar', () => {
-  assert.doesNotMatch(shell, /PortfolioLinks|Portfolio navigation|siteNavigation|Inspect the evidence|<aside/)
-  assert.doesNotMatch(css, /siteNavigation|inspectorPanel|\[data-intro="false"\].*grid-template-columns/)
-  const story = shell.slice(shell.indexOf('id="story-content"'), shell.indexOf('export default'))
-  assert.match(story, /<section className=\{`inspector-panel/)
-  assert.match(story, /id="story-evidence"/)
-  assert.match(story, /id="source-inspector" hidden/)
-  assert.doesNotMatch(story, /id="story-steps"|data-stage=/)
-})
-
-test('The opening retains all six exact fields before the teaser and Next', () => {
-  for (const text of [
-    'UX Designer',
-    'User research, systems design, workflow architecture, integration logic, prototyping, and cross-functional collaboration',
-    'Figma-style wireframing, whiteboarding, API and integration workflows',
-    'UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager',
-    '2019 – 2022',
-    'Data issue resolution improved by 90%, from weeks to hours',
-  ]) assert.ok(shell.includes(text), text)
-  const intro = shell.slice(shell.indexOf('id="intro-panel"'), shell.indexOf('id="story-content"'))
-  assert.ok(intro.indexOf('Fleet Management') < intro.indexOf('id="project-info"'))
-  assert.ok(intro.indexOf('</dl>') < intro.indexOf('Why were the same trucks'))
-  assert.ok(intro.indexOf('Why were the same trucks') < intro.indexOf('id="start-story"'))
-  assert.match(intro, /className=\{portfolio\.name\}/)
-  assert.match(intro, /className=\{portfolio\.cta\}/)
-  assert.match(shell, /id="story-content"[^>]* hidden/)
-  assert.match(shell, /data-intro="true"/)
-})
-
-test('One bottom dock holds the same controls and vehicle context through every beat', () => {
-  assert.equal((shell.match(/story-dock/g) || []).length, 1)
-  const dock = shell.slice(shell.indexOf('className={`story-dock'), shell.indexOf('id="about-panel"'))
-  for (const id of ['overview', 'follow', 'pause', 'reset', 'about-toggle', 'selected-asset', 'asset-role', 'service-visits', 'service-summary', 'maintenance-cost', 'maintenance-cost-note']) {
-    assert.ok(dock.includes(`id="${id}"`), `${id} stays in the bottom dock`)
-    assert.equal((shell.match(new RegExp(`id="${id}"`, 'g')) || []).length, 1)
-  }
-  for (const view of ['2d', '3d', 'iso']) assert.ok(dock.includes(`data-view="${view}"`))
-  for (const place of ['oict', 'centerpoint', 'depot']) assert.ok(dock.includes(`data-focus="${place}"`))
-  assert.doesNotMatch(dock, / hidden|data-stage|data-intro/)
-  assert.doesNotMatch(css, /\[data-intro=/)
-  assert.match(css, /\.impactStrip[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/)
-  assert.match(css, /\.impactStrip > div[^}]*grid-template-rows:/)
-})
-
-test('The story has accessible Next/Back controls and a final-beat comparison slot', () => {
-  for (const id of ['chapter-number', 'chapter-title', 'chapter-copy', 'previous-chapter', 'next-chapter', 'review-controls', 'mode-description', 'reading-context', 'canonical-reading', 'canonical-source', 'provenance', 'app-feedback']) assert.ok(shell.includes(`id="${id}"`), id)
-  assert.match(shell, /aria-live="polite" aria-atomic="true"/)
-  assert.match(shell, /id="chapter-title"[^>]*tabIndex=\{-1\}/)
-  assert.match(shell, /id="review-controls"[^>]* hidden/)
-  assert.match(css, /\.chapterNavigation \{ margin-top: auto/)
-  assert.match(css, /@media \(max-width: 900px\)/)
-  assert.match(css, /@media \(max-width: 480px\)/)
-})
-
-test('Truck counts and unknown costs are honest about the illustration', () => {
-  assert.match(shell, /Vehicle IDs and the two-visit example are illustrative/)
-  assert.match(shell, /id="maintenance-cost">Amount not provided/)
-  assert.doesNotMatch(shell, /\$\d|90%.*maintenance|maintenance.*90%|Not recorded/)
-})
-
-test('Shared outline controls reuse the original portfolio declarations', () => {
-  assert.match(shared, /\.page \.links a:not\(\.cta\), \.page \.control \{/)
-  assert.match(shell, /theme: \{ controlClassName: portfolio\.control, eyebrowClassName: portfolio\.eyebrow \}/)
-  assert.doesNotMatch(css, /#[0-9a-fA-F]{3,8}\b|oklch\(|rgb\(|DM Sans|IBM Plex/)
-})
-
-test('PortfolioShell keeps its default sidebar and shared page chrome for other routes', () => {
-  assert.match(frame, /sidebar \?\? <>/)
-  assert.match(frame, /Reid Slaughter/)
-  assert.match(frame, /\{sidebarContent\}/)
-  assert.match(frame, /className=\{styles\.grid\}/)
-  assert.match(frame, /<footer className=\{styles\.foot\}>/)
-  assert.match(frame, /<PortfolioLinks workHref=/)
-})
-
-test('Native runtime waits for the bridge and cleans up every mounted instance', () => {
-  assert.match(shell, /loadScript\("\/fleet-demo\/src\/app\/bridge\.js", "module"\)/)
-  assert.match(shell, /window\.FleetDemoModule\.mountFleetDemo/)
-  assert.match(shell, /await instance\.ready/)
-  assert.match(shell, /return \(\) => \{ disposed = true; instance\?\.dispose\(\) \}/)
-  assert.equal((shell.match(/if \(disposed\) return/g) || []).length, 3)
-})
-
-test('Details retain factual limits and use native-safe destinations', () => {
-  const details = shell.slice(shell.indexOf('id="about-panel"'))
-  for (const text of ['synthetic demo', 'exact maintenance-trigger rule is unknown', 'id="performance"', 'id="run-status"']) assert.ok(details.includes(text))
-  assert.match(details, /href="\/fleet-demo\/reno\.html"/)
-  assert.match(details, /<AnimatedLink href="\/projects\/fleet-fuel-integration"/)
-  assert.doesNotMatch(shell, /world-heading|world-subtitle|Operations lab|Fictional drone assembly/)
-})
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
+const [page,shell,css]=await Promise.all([read('app/fleet-demo/page.tsx'),read('components/fleet-demo-shell.tsx'),read('components/fleet-demo-shell.module.css')]);
+const app=await read('public/fleet-demo/src/app/index.js'),standalone=await read('public/fleet-demo/index.html');
+test('Fleet stays native in the actual shared PortfolioShell with one scene card',()=>{
+ assert.match(page,/return <FleetDemoShell \/>/);assert.doesNotMatch(page,/iframe|index\.html/);
+ assert.match(shell,/import PortfolioShell from "\.\/portfolio-shell"/);assert.match(shell,/import portfolio from "\.\/portfolio-home\.module\.css"/);
+ assert.equal((shell.match(/portfolio\.card/g)||[]).length,1);assert.doesNotMatch(shell,/PortfolioLinks|Portfolio navigation|Inspect the evidence|<aside|className="topbar"|DM Sans|IBM Plex/);
+});
+test('the opening preserves the project fields and question with an editable working title',()=>{
+ for(const text of ['The Same Truck.','The Same Service.','Again.','UX Designer','User research, systems design, workflow architecture, integration logic, prototyping, and cross-functional collaboration','Figma-style wireframing, whiteboarding, API and integration workflows','UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager','2019 – 2022','Data issue resolution improved by 90%, from weeks to hours','Why were the same trucks getting serviced more than once in a week?'])assert.ok(shell.includes(text),text);
+ assert.match(shell,/id="story-content"[^>]* hidden/);assert.match(shell,/data-intro="true"/);
+});
+test('exactly nine visual scenes retain the requested order and named-provider layout',()=>{
+ const ids=['question','integration','repeat-service','provider-switch','mileage-loop','cost','solution','agents','learning'];
+ assert.deepEqual([...shell.matchAll(/data-story-overlay="([^"]+)"/g)].map(match=>match[1]),ids);
+ assert.ok(shell.indexOf('data-provider="verizon"')<shell.indexOf('data-provider="samsara"'));
+ for(const phrase of ['The customer switched providers','but didn’t inform us, so we were importing from both, daily','FOR MONTHS','30,000','50,000'])assert.ok(shell.includes(phrase));
+ assert.match(css,/\[data-scene="provider-switch"\] \.world \{ filter: blur\(7px\) brightness/);
+});
+test('persistent bottom controls include pause, navigation, scrubbing and cost context',()=>{
+ assert.equal((shell.match(/story-dock/g)||[]).length,1);
+ const dock=shell.slice(shell.indexOf('className={`story-dock'),shell.indexOf('id="source-dialog"'));
+ for(const id of ['story-position','playback-status','scene-steps','story-progress','previous-chapter','pause','next-chapter','reset','about-toggle','selected-asset','asset-role','service-visits','service-summary','maintenance-cost','maintenance-cost-note']){assert.ok(dock.includes(`id="${id}"`),id);assert.equal((shell.match(new RegExp(`id="${id}"`,'g'))||[]).length,1);}
+ assert.match(shell,/htmlFor="story-progress"/);assert.match(shell,/aria-keyshortcuts="ArrowLeft"/);assert.match(shell,/aria-keyshortcuts="ArrowRight"/);assert.match(shell,/aria-keyshortcuts="Space"/);
+ assert.match(css,/\.impactStrip[^}]*grid-template-columns: repeat\(3,minmax\(0,1fr\)\)/);
+});
+test('source controls are an optional modal, with human approval and preserved history',()=>{
+ assert.match(shell,/id="source-dialog"[^>]*role="dialog"[^>]*aria-modal="true"[^>]*hidden/);
+ for(const id of ['open-source-controls','run-story-review','source-close','source-inspector','canonical-reading','canonical-source','provenance','app-feedback'])assert.ok(shell.includes(`id="${id}"`));
+ assert.match(app,/hidden=stage!==6/);assert.match(app,/hidden=stage!==7/);
+ assert.ok(app.includes("action.type==='set-authority'||action.type==='add-exclusion'"));
+ assert.ok(app.includes('Original readings and service records are preserved.'));
+ assert.match(app,/event.key==='Tab'/);assert.match(app,/event.key==='Escape'/);
+});
+test('the UI distinguishes fuel data, telematics, illustrative costs and hypothetical AI',()=>{
+ for(const text of ['Telematics: mileage and vehicle activity.','USD, illustrative','Actual costs weren’t provided.','exact maintenance-trigger rule is unknown','no historical dollar amount or savings is claimed','no live model','not maintenance savings'])assert.ok((shell+app).includes(text),text);
+ assert.doesNotMatch(shell,/\$\d/);assert.match(shell,/id="maintenance-cost">Amount not provided/);
+});
+test('single-clock story has a reduced-motion pause, manual override and route cleanup',()=>{
+ assert.equal((app.match(/createSimulation\(\{/g)||[]).length,1);
+ assert.match(app,/sim\.setPaused\(reducedMotion\.matches\)/);assert.match(app,/on\(\$\('#story-progress'\),'input'/);
+ assert.match(app,/on\(doc,'visibilitychange'/);assert.match(app,/on\(window,'pagehide'/);assert.match(app,/sim\?\.dispose\(\);scene\?\.dispose\(\);panel\?\.dispose\(\)/);
+ assert.match(shell,/await instance\.ready/);assert.match(shell,/instance\?\.dispose\(\)/);assert.match(css,/@media \(prefers-reduced-motion: reduce\)/);
+});
+test('native and standalone markup expose the same controller hooks',()=>{
+ const ids=[...shell.matchAll(/id="([^"]+)"/g)].map(match=>match[1]);
+ for(const id of ids)assert.ok(standalone.includes(`id="${id}"`),id);
+ assert.doesNotMatch(standalone,/className=|<PortfolioShell|\$\{styles/);
+});

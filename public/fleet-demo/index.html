@@ -1,58 +1,144 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#eeede7">
-  <meta name="description" content="Why the same trucks kept returning for maintenance: inspect conflicting odometer readings and choose the source for each vehicle.">
-  <title>Fleet / Odometer sources</title>
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-  <link rel="stylesheet" href="./src/app/style.css">
-  <script defer src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <script defer src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
-</head>
-<body>
-  <div class="app-shell">
-    <header class="topbar">
-      <a href="./" class="wordmark" aria-label="Fleet demo home"><span class="mark" aria-hidden="true">F</span> FLEET</a>
-      <div class="topbar-right"><span class="demo-badge">DEMO</span></div>
-    </header>
-    <main class="workspace" data-intro="true">
-      <aside class="story-panel" aria-label="Fleet case study"><div id="intro-panel" class="intro-panel"><h1>Fleet Management</h1><section id="project-info" class="project-info" aria-label="Project information"><dl><div><dt>Role</dt><dd>UX Designer</dd></div><div><dt>Responsibilities</dt><dd>User research, systems design, workflow architecture, integration logic, prototyping, and cross-functional collaboration</dd></div><div><dt>Tools</dt><dd>Figma-style wireframing, whiteboarding, API and integration workflows</dd></div><div><dt>Team</dt><dd>UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager</dd></div><div><dt>Timeline</dt><dd>2019 – 2022</dd></div><div class="project-outcome"><dt>Outcome</dt><dd>Data issue resolution improved by 90%, from weeks to hours</dd></div></dl></section><div class="intro-cta"><p>Why were the same trucks getting serviced more than once in a week?</p><button id="start-story" class="primary-button" type="button">Next <span aria-hidden="true">↗</span></button></div></div><div id="story-content" hidden>
-        <div class="chapter-intro" aria-live="polite" aria-atomic="true">
-          <p class="eyebrow">Fleet Management</p>
-          <span id="chapter-number" class="eyebrow"></span>
-          <h1 id="chapter-title" tabindex="-1"></h1>
-          <p id="chapter-copy"></p>
-        </div>
-        <section class="inspector-panel chapter-context" aria-label="This truck’s readings" hidden>
-          <div id="story-evidence"></div>
-          <div id="reading-context" class="reading-context"><span class="eyebrow">Odometer used for maintenance</span><strong id="canonical-reading">Unresolved</strong><small id="canonical-source">Choose an odometer source</small></div>
-          <div id="source-inspector" hidden><div id="provenance"></div><div id="app-feedback" role="status" aria-live="polite"></div></div>
-        </section>
-        <div id="review-controls" hidden><div class="mode-switch" aria-label="Approach"><button type="button" data-mode="then" aria-pressed="true">Then <small>2021–22</small></button><button type="button" data-mode="today" aria-pressed="false">Today <small>Agent review</small></button></div><p id="mode-description" class="mode-description"></p></div>
-        <div class="chapter-navigation"><p class="example-note">Vehicle IDs and the two-visit example are illustrative.</p><div class="story-buttons"><button id="previous-chapter" class="secondary-button" type="button">Back</button><button id="next-chapter" class="primary-button" type="button">Next <span aria-hidden="true">↗</span></button></div></div>
-      </div>
-      </aside>
-      <section class="world-panel" aria-label="Oakland operations scene">
-
-        <div id="world" class="world"><div id="scene-loading" class="scene-loading">Preparing operations scene…</div></div>
-        <div id="scene-notice" class="scene-notice" role="status" hidden></div>
-        <div class="story-dock" aria-label="Vehicle context and scene controls">
-        <div class="world-toolbar"><div class="segmented" role="group" aria-label="Camera view"><button data-view="2d" type="button" aria-pressed="false">2D</button><button data-view="3d" type="button" aria-pressed="false">3D</button><button data-view="iso" type="button" aria-pressed="true">ISO</button></div><button id="overview" type="button" class="tool-button">Overview</button><button id="follow" type="button" class="tool-button" aria-pressed="false">◎ Follow vehicle</button><span class="toolbar-spacer"></span><button id="pause" type="button" class="tool-button">Ⅱ Pause</button><button id="reset" type="button" class="tool-button" aria-label="Reset demo">↺ Reset</button><button id="about-toggle" class="tool-button" type="button" aria-label="About this demo" aria-expanded="false">Details</button></div>
-        <div class="place-labels"><button data-focus="oict" type="button"><span class="location-number">01</span><span><strong>OICT</strong></span></button><button data-focus="centerpoint" type="button"><span class="location-number">02</span><span><strong>Drone factory</strong></span></button><button data-focus="depot" type="button"><span class="location-number">03</span><span><strong>Workshop</strong></span></button></div>
-        <div class="impact-strip">
-          <div><span class="eyebrow">Selected truck</span><strong id="selected-asset">TRK-208</strong><small id="asset-role">On delivery</small></div>
-          <div><span class="eyebrow">Visits this week</span><strong id="service-visits">—</strong><small id="service-summary">Illustrative service history</small></div>
-          <div><span class="eyebrow">Maintenance cost</span><strong id="maintenance-cost">Amount not provided</strong><small id="maintenance-cost-note"></small></div>
-        </div>
-        </div>
-        <div id="about-panel" class="about-panel" hidden><button id="about-close" class="icon-button" type="button" aria-label="Close demo details">×</button><h3>About this demo</h3><p>The incident is real. Vehicle IDs, readings, dates and shop visits in this synthetic demo are examples, not live telemetry. The Oakland map provides geographic context; the workshop, factory activity and routes are illustrative.</p><p>The exact maintenance-trigger rule is unknown. The animation shows the reported repeat visits without claiming to reproduce that rule.</p><p id="cargo-capability-note">This preview runs four incoming kits through assembly and keeps the finished drones at their workcells. Outgoing delivery is still being built. Reset starts the run again.</p><p>Provider A and Provider B are anonymous. Networkfleet / Verizon, Samsara and Wright Express / WEX are examples from the integration ecosystem, not identified as either provider in this incident.</p><details><summary>Data and performance</summary><p id="integrity-count"></p><p>Original readings and service history are preserved. Settings are versioned and recalculated results are derived views.</p><p><span id="run-status">Scene running</span> · 20 Hz simulation with interpolated rendering.</p><p id="performance">Performance measurement pending</p><p>Browser frame cadence is not a physical-GPU benchmark.</p></details><p><a href="./reno.html">Original Reno console ↗</a></p><a href="https://www.reidhslaughter.com/projects/fleet-fuel-integration" target="_blank" rel="noreferrer">Read the original case study ↗</a></div>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="A nine-scene interactive story about fleet data, repeat maintenance and source authority."><title>The Same Truck. The Same Service. Again.</title><link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"><link rel="stylesheet" href="./src/app/style.css"><script defer src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script><script defer src="https://unpkg.com/three@0.128.0/build/three.min.js"></script></head><body><div  class="workspace root" data-intro="true" data-scene="question" data-playing="false">
+    <div class="page font-sans"><div class="grid"><div class="side-wrap route-panel"><aside class="side sidebar story-panel" aria-label="Fleet case study">
+    <div id="intro-panel" class="introPanel">
+      <p class="eyebrow">Fleet integrations · A case study</p>
+      <h1 class="name">The Same Truck.<br />The Same Service.<br />Again.</h1>
+      <section id="project-info" class="projectInfo" aria-label="Project information">
+        <dl><div><dt class="eyebrow">Role</dt><dd class="metric">UX Designer</dd></div><div><dt class="eyebrow">Responsibilities</dt><dd class="metric">User research, systems design, workflow architecture, integration logic, prototyping, and cross-functional collaboration</dd></div><div><dt class="eyebrow">Tools</dt><dd class="metric">Figma-style wireframing, whiteboarding, API and integration workflows</dd></div><div><dt class="eyebrow">Team</dt><dd class="metric">UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager</dd></div><div><dt class="eyebrow">Timeline</dt><dd class="metric">2019 – 2022</dd></div><div><dt class="eyebrow">Outcome</dt><dd class="metric">Data issue resolution improved by 90%, from weeks to hours</dd></div></dl>
       </section>
-    </main>
+      <div class="bio introCta">
+        <p>Why were the same trucks getting serviced more than once in a week?</p>
+        <button id="start-story" class="cta" type="button">Follow one truck <span aria-hidden="true">↗</span></button>
+      </div>
+    </div>
+    <div id="story-content" class="storyContent" hidden>
+      <div class="chapterIntro">
+        <p class="eyebrow">Fleet integrations</p>
+        <div aria-live="polite" aria-atomic="true">
+          <span id="chapter-number" class="eyebrow"></span>
+          <h1 id="chapter-title" class="name" tabindex="-1"></h1>
+          <p id="chapter-copy" class="metric chapterCopy"></p>
+        </div>
+      </div>
+      <div id="chapter-takeaway" class="bio chapterTakeaway"></div>
+      <div class="bio chapterNavigation">
+        <p class="exampleNote">A real integration problem, retold with illustrative vehicles, mileage and service visits.</p>
+        <p>Pause, scrub or step through at any time.</p>
+        <button id="open-source-controls" class="control" type="button" hidden>Try the source controls ↗</button>
+        <button id="run-story-review" class="control" type="button" hidden>Run an example review ↗</button>
+        <button id="story-replay" class="cta" type="button" hidden>Replay the story ↺</button>
+      </div>
+    </div></aside></div><main id="work" class="stack route-panel main">
+      <div class="workspaceBody">
+        <section class="world-panel card worldPanel" aria-label="Interactive fleet story">
+          <div class="stageViewport">
+            <div id="world" class="world world"><div id="scene-loading" class="sceneLoading">Preparing operations scene…</div></div>
+            <div id="scene-notice" class="sceneNotice" role="status" hidden></div>
+            <div id="story-overlays" class="storyOverlays">
+              <div data-story-overlay="question" class="openingCaption">
+                <span class="eyebrow">One truck. Two oil changes. One week.</span>
+                <p>Why did it keep<br />coming back?</p>
+              </div>
+              <div data-story-overlay="integration" class="integrationCard" hidden>
+                <span class="eyebrow">What is an integration?</span>
+                <h2>A connection that keeps work moving.</h2>
+                <div class="dataRoute"><span>Fuel &amp; telematics providers</span><b aria-hidden="true">↓</b><span>API · automated data exchange</span><b aria-hidden="true">↓</b><span>Fleet operations software</span></div>
+                <p>Fuel: purchases and consumption.<br />Telematics: mileage and vehicle activity.</p>
+                <small>Teams use this data to budget, schedule service and keep trucks on the road.</small>
+              </div>
+              <div data-story-overlay="repeat-service" class="serviceCard" hidden>
+                <span class="eyebrow">Back in the workshop</span>
+                <strong>Oil change #2</strong><span>Same truck. Same week.</span>
+                <small>The technicians knew something was wrong.</small>
+              </div>
+              <div data-story-overlay="provider-switch" class="providerOverlay" hidden>
+                <div class="devicePair">
+                  <div class="device" data-provider="verizon"><span class="deviceLight"></span><div class="deviceBrand"><strong>Verizon</strong><span>Networkfleet</span></div><small>DAILY IMPORT · ACTIVE</small></div>
+                  <span class="providerPlus" aria-hidden="true">+</span>
+                  <div class="device" data-provider="samsara"><span class="deviceLight"></span><div class="deviceBrand"><strong>Samsara</strong></div><small>DAILY IMPORT · ACTIVE</small></div>
+                </div>
+                <h2>The customer switched providers</h2>
+                <p>but didn’t inform us, so we were importing from both, daily</p>
+                <strong class="months">FOR MONTHS</strong>
+                <small class="providerNote">Illustrative devices · reported provider overlap</small>
+              </div>
+              <div data-story-overlay="mileage-loop" class="mileageOverlay" hidden>
+                <span class="eyebrow">Illustrative reading loop · Day <span id="mileage-day">1</span></span>
+                <div class="mileageValues"><span><small>OLD SOURCE</small>30,000</span><b aria-hidden="true">→</b><span><small>CURRENT SOURCE</small><span id="mileage-current">50,000</span></span></div>
+                <div class="odometer"><span id="mileage-value">30,000</span><small>miles in the system</small></div>
+                <div id="mileage-alert" class="mileageAlert">Stale reading imported again</div>
+                <p>The reading resets. The next jump looks like more driving.</p>
+                <small>This illustrates the consequence, not the original maintenance algorithm.</small>
+              </div>
+              <div data-story-overlay="cost" class="costCard" hidden>
+                <span class="eyebrow">An illustrative two weeks</span>
+                <h2>A repeat visit is a real expense.</h2>
+                <div id="cost-days" class="costDays" aria-label="Four illustrative visits across fourteen days"></div>
+                <p id="cost-caption">Day 1 · The first service</p>
+                <label for="service-unit-cost">Try a service cost <span>(USD, illustrative)</span></label>
+                <input id="service-unit-cost" type="number" inputMode="decimal" min="0" max="100000" step="1" placeholder="Enter an amount" />
+                <small>Actual costs weren’t provided. Your amount changes only this illustration.</small>
+              </div>
+              <div data-story-overlay="solution" class="solutionCard" hidden>
+                <span class="eyebrow">The change I designed</span>
+                <div class="decisionRow"><span>TRK-104</span><strong>Choose its odometer source</strong></div>
+                <div class="decisionRow"><span>OLD READINGS</span><strong>Exclude them from decisions</strong></div>
+                <div class="decisionRow"><span>ORIGINAL HISTORY</span><strong>Keep it intact</strong></div>
+                <p>One vehicle’s migration shouldn’t break the rest of the fleet.</p>
+              </div>
+              <div data-story-overlay="agents" class="agentCard" hidden>
+                <span class="eyebrow">How I’d approach it today · Concept</span>
+                <h2>Catch it before the next shop visit.</h2>
+                <ol class="agentSteps"><li data-agent-step="0"><span>01</span><div><strong>Check incoming data</strong><small>Agent compares sources and reading patterns</small></div></li><li data-agent-step="1"><span>02</span><div><strong>Flag &amp; notify</strong><small>Show the conflict and supporting evidence</small></div></li><li data-agent-step="2"><span>03</span><div><strong>A person decides</strong><small>Approve the source; preserve the history</small></div></li></ol>
+                <small>A proposed workflow. No live AI is making decisions here.</small>
+              </div>
+              <div data-story-overlay="learning" class="learningCard" hidden>
+                <span class="eyebrow">What I learned</span><h2>Good data needs<br />a clear owner.</h2><p>Make the source visible.<br />Make the decision deliberate.<br />Keep the history.</p>
+              </div>
+            </div>
+          </div>
+          <div class="story-dock storyDock" aria-label="Story playback and vehicle context">
+            <div class="timelineHeader"><span id="story-position" class="eyebrow">01 / 09 · The question</span><span id="playback-status">Preparing story</span></div>
+            <div id="scene-steps" class="sceneSteps" aria-label="Choose a scene"></div>
+            <label class="srOnly" for="story-progress">Scrub through the story</label>
+            <input id="story-progress" class="storyProgress" type="range" min="0" max="124" step="0.1" value="0" aria-valuetext="Scene 1 of 9" />
+            <div class="playbackControls">
+              <button id="previous-chapter" class="control" type="button" aria-label="Previous scene" aria-keyshortcuts="ArrowLeft">← Back</button>
+              <button id="pause" class="cta" type="button" aria-label="Play story" aria-keyshortcuts="Space">▶ Play</button>
+              <button id="next-chapter" class="control" type="button" aria-label="Next scene" aria-keyshortcuts="ArrowRight">Next →</button>
+              <button id="reset" class="control" type="button" aria-label="Replay story from the beginning">↺ Replay</button>
+              <button id="explore-scene" class="control" type="button" aria-pressed="false">Explore scene</button>
+              <button id="about-toggle" class="control" type="button" aria-label="About this demo" aria-expanded="false">Details</button>
+            </div>
+            <div id="explore-controls" hidden class="worldToolbar" role="group" aria-label="Explore the scene"><button class="control" data-view="2d" type="button" aria-pressed="false">2D</button><button class="control" data-view="3d" type="button" aria-pressed="false">3D</button><button class="control" data-view="iso" type="button" aria-pressed="true">ISO</button><button id="overview" type="button" class="control">Overview</button><button id="follow" type="button" class="control" aria-pressed="true">Follow truck</button><button class="control" data-focus="depot" type="button">Workshop</button><button class="control" data-focus="oict" type="button">OICT</button><button class="control" data-focus="centerpoint" type="button">Factory</button></div>
+            <div class="impact-strip impactStrip">
+              <div><span class="eyebrow">Following one truck</span><strong id="selected-asset">TRK-104</strong><small id="asset-role">Illustrative vehicle</small></div>
+              <div><span class="eyebrow">Service visits</span><strong id="service-visits">—</strong><small id="service-summary">Illustrative service history</small></div>
+              <div><span class="eyebrow">Repeat service cost</span><strong id="maintenance-cost">Amount not provided</strong><small id="maintenance-cost-note">Labor, parts and downtime</small></div>
+            </div>
+          </div>
+          <div id="source-dialog" class="sourceDialog" role="dialog" aria-modal="true" aria-labelledby="source-dialog-title" hidden>
+            <button id="source-close" class="control close" type="button" aria-label="Close source controls">×</button>
+            <h2 id="source-dialog-title">Choose the source. Keep the history.</h2>
+            <p>Try the controls with synthetic Provider A/B data. These sample values are separate from the story’s mileage animation.</p>
+            <div id="reading-context" class="readingContext"><span class="eyebrow">Odometer used for maintenance</span><strong id="canonical-reading">Unresolved</strong><small id="canonical-source">Choose an odometer source</small></div>
+            <div id="source-inspector"><div id="provenance"></div><div id="app-feedback" class="feedback" role="status" aria-live="polite"></div></div>
+            <p id="mode-description" class="modeDescription"></p>
+          </div>
+          <div id="about-panel" class="aboutPanel" role="dialog" aria-modal="true" aria-labelledby="about-heading" hidden>
+            <button id="about-close" class="control close" type="button" aria-label="Close demo details">×</button>
+            <h2 id="about-heading">About this story</h2>
+            <p>The incident and provider overlap were reported by the designer. Vehicle IDs, readings, dates and shop visits in this synthetic demo are examples, not live telemetry. The Oakland map provides geographic context; the workshop, factory activity and routes are illustrative.</p>
+            <p>The exact maintenance-trigger rule is unknown. The mileage loop explains the reported consequence without reconstructing that rule. The four-visit, two-week cost animation is illustrative; no historical dollar amount or savings is claimed.</p>
+            <p>Fuel integrations provide fuel-related operational data; the odometer conflict concerns telematics data. Named providers illustrate the reported change without assigning a migration direction. The optional source controls use anonymous synthetic Provider A/B records.</p>
+            <p>The 90% improvement, from weeks to hours, refers to data issue resolution. The AI workflow is a proposed approach for today, not part of the original work or a live model.</p>
+            <p id="cargo-capability-note">This preview runs incoming kits through assembly. The activity in the background is an illustration of fleet operations.</p>
 
-  </div>
-  <noscript><p class="noscript">JavaScript is needed to run this interactive demo. The original case study is at reidhslaughter.com/projects/fleet-fuel-integration.</p></noscript>
-  <script type="module" src="./src/app/bootstrap.js"></script>
-</body>
-</html>
+            <details><summary>Data and performance</summary><p id="integrity-count"></p><p>Original readings and service history are preserved. Settings are versioned and recalculated results are derived views.</p><p><span id="run-status">Scene paused</span> · One 20 Hz simulation clock with interpolated rendering.</p><p id="performance">Performance measurement pending</p><p>Browser frame cadence is not a physical-GPU benchmark.</p></details>
+            <p><a href="/fleet-demo/reno.html">Original Reno console ↗</a></p><a href="/projects/fleet-fuel-integration">Read the original case study ↗</a>
+          </div>
+        </section>
+      </div>
+      <noscript><p>JavaScript is needed to run this interactive story. <a href="/projects/fleet-fuel-integration">Read the original case study.</a></p></noscript>
+    </main><footer class="foot"><div>Client work shown remains the property of its owners.</div><div>Copyright © Reid Slaughter</div><div></div></footer></div></div>
+  </div><script type="module" src="./src/app/bootstrap.js"></script></body></html>

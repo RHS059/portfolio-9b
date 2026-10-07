@@ -34,6 +34,7 @@ export async function profileRenderingWindows({page,out}){
       await page.locator('#reset').click();
       await page.locator('#pause').click();
       await page.evaluate(()=>window.__fleetDemo.seekScene(0));
+      if(await page.locator('#explore-scene').count())await page.locator('#explore-scene').click();
       await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.ready&&m.mapTilesLoaded&&!m.cameraMoving;});
       if(!follow)await page.locator('#follow').click();
       await page.waitForTimeout(750);
