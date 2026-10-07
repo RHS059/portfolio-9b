@@ -12,9 +12,9 @@ const mime={'.html':'text/html','.js':'text/javascript','.json':'application/jso
 const server=http.createServer(async(req,res)=>{try{const target=path.resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://local').pathname.replace(/\/$/,'/index.html')));if(!target.startsWith(root+path.sep))throw Error('outside root');const body=await fs.readFile(target);res.writeHead(200,{'content-type':mime[path.extname(target)]||'application/octet-stream'});res.end(body);}catch{res.writeHead(404);res.end('Not found');}});
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const url=`http://127.0.0.1:${server.address().port}/`;
-let browser,page,phase='bootstrap';const evidence={url,startedAt:new Date().toISOString(),checks:[],errors:[],console:[],contextCycles:[],notes:['CI Chromium software rendering is functional evidence, not named-hardware GPU performance.']};
+let browser,page,phase='bootstrap';const evidence={url,browserConfiguration:'Playwright Chromium defaults; detected renderer is recorded separately',startedAt:new Date().toISOString(),checks:[],errors:[],console:[],contextCycles:[],notes:['CI Chromium software rendering is functional evidence, not named-hardware GPU performance.']};
 try{
- browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+ browser=await chromium.launch({headless:true});
  page=await browser.newPage({viewport:{width:1600,height:1000},deviceScaleFactor:1});
  page.on('pageerror',error=>evidence.errors.push(String(error)));
  page.on('console',msg=>{if(['warning','warn','error'].includes(msg.type())||/THREE\.WebGLRenderer: Context (Lost|Restored)\./.test(msg.text()))evidence.console.push({level:msg.type(),text:msg.text(),phase,url:page.url(),location:msg.location(),at:new Date().toISOString()});});
@@ -26,10 +26,7 @@ try{
  });
  await page.goto(url,{waitUntil:'domcontentloaded'});
  if(evidence.errors.length)throw new Error(`Startup page error: ${evidence.errors[0]}`);
- await Promise.race([
-   page.waitForFunction(()=>{const m=window.__fleetDemo?.getMetrics?.();return m?.ready&&!m.initializing&&m.mapTilesLoaded&&m.camera?.focus==='depot'&&!m.cameraMoving;},undefined,{timeout:30000}),
-   page.waitForEvent('pageerror',{timeout:30000}).then(error=>{throw error;})
- ]);
+ await page.waitForFunction(()=>{const m=window.__fleetDemo?.getMetrics?.();return m?.ready&&!m.initializing&&m.mapTilesLoaded&&m.camera?.focus==='depot'&&!m.cameraMoving;},undefined,{timeout:30000});
  if(process.env.REQUIRE_FACILITIES==='1')await page.waitForFunction(()=>window.__fleetDemo.getMetrics().facilitiesLoaded,undefined,{timeout:15000});
  if(process.env.REQUIRE_MAPPED_PORT==='1')await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.portStatus==='mapped'&&m.portRowCount>0&&m.portContainerCount>0&&m.portCraneCount>0;},undefined,{timeout:15000});
  await page.waitForTimeout(800);
