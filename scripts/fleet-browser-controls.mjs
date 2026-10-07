@@ -3,7 +3,7 @@ import {sceneTime} from '../public/fleet-demo/src/app/story-timeline.js';
 export const storyState=page=>page.evaluate(()=>window.__fleetDemo.getState());
 export const waitForStoryText=page=>page.waitForFunction(()=>{const t=window.__fleetDemo?.getState?.().textTransition;return !!t&&t.phase==='idle';});
 export async function pauseScene(page,paused=true){if((await storyState(page)).simulation.paused!==paused)await page.locator('#pause').click();}
-export async function closeStoryDialogs(page){for(const [dialog,close]of [['#source-dialog','#source-close']])if(await page.locator(dialog).isVisible())await page.locator(close).click();}
+export async function closeStoryDialogs(page){for(const [dialog,close]of [['#source-dialog','#source-close'],['[data-original-workflow-dialog]','[data-original-close]']])if(await page.locator(dialog).isVisible())await page.locator(close).click();}
 export async function navigateStory(page,index=0){await closeStoryDialogs(page);await page.locator('#story-progress').evaluate((input,time)=>{input.value=String(time);input.dispatchEvent(new Event('input',{bubbles:true}));},sceneTime(index));await waitForStoryText(page);}
 export async function enterCameraView(page,selector='[data-view="iso"]'){
   await closeStoryDialogs(page);await pauseScene(page);await page.locator(selector).click();

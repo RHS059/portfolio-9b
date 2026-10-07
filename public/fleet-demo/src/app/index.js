@@ -1,3 +1,4 @@
+import {createOriginalWorkflow,createOriginalWorkflowPreview} from '../ui/original-workflow/index.js';
 import {buildConfigurationCommand} from './commands.js';
 import {forwardSceneLabelWheel} from './wheel-navigation.js';
 import {createSimulation} from '../core/simulation.js';
@@ -17,14 +18,14 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   mountedControllers.get(root)?.dispose();
   const doc=root.ownerDocument||document,cleanups=[];
   const $=selector=>root.matches?.(selector)?root:root.querySelector(selector),$$=selector=>[...root.querySelectorAll(selector)];
-  let disposed=false,debugAPI,scenario,evaluation,domain,scene,panel,sim,ready=false;
+  let disposed=false,debugAPI,scenario,evaluation,domain,scene,panel,sim,originalWorkflow,originalPreview,ready=false;
   let story=sampleStory(0),stage=0,intro=true,mode='then',selectedVehicleId='TRK-104',view='iso',follow=true;
   let review=null,notifications=[],commandSequence=0,reviewing=false,reviewSequence=0;
   let exploring=false,activeDialog=null,dialogReturnFocus=null,visibilityPauseState=null;
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   const sidebarTransition=createStoryTextTransition({element:$('#sidebar-story-body'),reducedMotion:()=>reducedMotion.matches});
   function on(target,type,listener,options){if(!target)throw new Error(`Missing Fleet control for ${type}`);target.addEventListener(type,listener,options);cleanups.push(()=>target.removeEventListener(type,listener,options));}
-  function dispose(){if(disposed)return;disposed=true;ready=false;reviewSequence++;for(const remove of cleanups.splice(0))remove();sidebarTransition.dispose();sim?.dispose();scene?.dispose();panel?.dispose();if(window.__fleetDemo===debugAPI)delete window.__fleetDemo;if(mountedControllers.get(root)?.dispose===dispose)mountedControllers.delete(root);}
+  function dispose(){if(disposed)return;disposed=true;ready=false;reviewSequence++;for(const remove of cleanups.splice(0))remove();sidebarTransition.dispose();originalWorkflow?.dispose();originalPreview?.dispose();sim?.dispose();scene?.dispose();panel?.dispose();if(window.__fleetDemo===debugAPI)delete window.__fleetDemo;if(mountedControllers.get(root)?.dispose===dispose)mountedControllers.delete(root);}
   const feedback=text=>{$('#app-feedback').textContent=text;};
   function snapshot(timeSeconds=0,paused=false){
     const beat=sampleStory(timeSeconds),cargoProcess=sampleProcess(timeSeconds,paused);
@@ -82,6 +83,8 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     const cost=sampleCost(stage===5?story.progress:stage>5?1:0);
     if(stage===5){$('#cost-caption').textContent=cost.visits===1?'1 service':'2 services in one week';$('#cost-total').textContent=receiptMoney(cost.totalCost);$('#cost-duplicate').textContent=receiptMoney(cost.repeatCost);$$('[data-cost-visit]').forEach(item=>item.dataset.active=String(Number(item.dataset.costVisit)<=cost.visits));}
 
+    // The miniature shares the story clock; 1.5× completes a repair and reset within this scene.
+    if(stage===6)originalPreview?.render(story.elapsedSeconds*1.5,{paused:sim?.getState().paused??true,reducedMotion:reducedMotion.matches});
     if(stage===7){const active=Math.min(2,Math.floor((story.elapsedSeconds%9)/3));$$('[data-agent-step]').forEach(row=>row.dataset.active=String(Number(row.dataset.agentStep)<=active));}
   }
   function render(){
@@ -115,7 +118,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
   function openDialog(id){
     setPaused(true);if(activeDialog)closeDialog(false);dialogReturnFocus=doc.activeElement;activeDialog=$(id);activeDialog.hidden=false;$('.workspace').dataset.dialogOpen='true';activeDialog.querySelector('button')?.focus();
   }
-  function closeDialog(restore=true){if(!activeDialog)return;activeDialog.hidden=true;activeDialog=null;$('.workspace').dataset.dialogOpen='false';if(restore&&dialogReturnFocus?.isConnected)dialogReturnFocus.focus({preventScroll:true});dialogReturnFocus=null;}
+  function closeDialog(restore=true){if(!activeDialog)return;if(activeDialog===originalWorkflow?.element){originalWorkflow.close({restoreFocus:restore});return;}activeDialog.hidden=true;activeDialog=null;$('.workspace').dataset.dialogOpen='false';if(restore&&dialogReturnFocus?.isConnected)dialogReturnFocus.focus({preventScroll:true});dialogReturnFocus=null;}
   async function handleAction(action){
     if(disposed||!ready)return;
     try{
@@ -144,6 +147,7 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     on($('#previous-chapter'),'click',()=>setChapter(stage-1));on($('#next-chapter'),'click',()=>setChapter(stage+1));
     on($('#story-progress'),'input',event=>{if(!ready)return;exploring=false;setPaused(true);sim?.seek(Number(event.target.value));render();applySceneCamera();});
     on($('#pause'),'click',togglePlayback);
+    on($('#open-original-workflow'),'click',()=>{if(activeDialog)closeDialog(false);originalWorkflow?.open({returnFocus:$('#open-original-workflow')});});
     on($('#open-source-controls'),'click',()=>{mode='then';openDialog('#source-dialog');render();});
     on($('#run-story-review'),'click',()=>{mode='today';openDialog('#source-dialog');render();void handleAction({type:'review-imports'});});
     on($('#source-close'),'click',()=>closeDialog());
@@ -163,6 +167,8 @@ export function mountFleetDemo({root=document,theme={}}={}) {
     on(doc,'visibilitychange',()=>{if(doc.hidden){visibilityPauseState=sim?.getState().paused??true;setPaused(true);}else if(visibilityPauseState!==null){setPaused(visibilityPauseState);visibilityPauseState=null;}});
   }
   async function main(){
+    originalPreview=createOriginalWorkflowPreview({container:$('#original-workflow-preview')});
+    originalWorkflow=createOriginalWorkflow({container:$('.workspace'),reducedMotion,onOpen(){setPaused(true);activeDialog=originalWorkflow.element;dialogReturnFocus=null;$('.workspace').dataset.dialogOpen='true';},onClose(){activeDialog=null;$('.workspace').dataset.dialogOpen='false';if(!disposed)setPaused(true);}});
     bind();render();
     try{domain=await import('../domain/readings/index.js');if(disposed)return;scenario=domain.createScenario({authorityApplied:false});evaluate();}
     catch(error){if(disposed)return;feedback(`The source-policy module could not load: ${error.message}`);throw error;}

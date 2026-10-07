@@ -101,6 +101,9 @@ function FleetSidebar() {
                 <div className={styles.decisionRow}><span>OLD READINGS</span><strong>Exclude them from decisions</strong></div>
                 <div className={styles.decisionRow}><span>ORIGINAL HISTORY</span><strong>Keep it intact</strong></div>
                 <p>Each vehicle keeps its own source.</p>
+                <p>The original import tools still needed a person. Here, a WEX fuel record is linked to the right asset.</p>
+                <div id="original-workflow-preview" aria-label="Original WEX asset-linking workflow" />
+                <button id="open-original-workflow" className={portfolio.control} type="button" aria-haspopup="dialog">Expand the original workflow ↗</button>
               </div>
               <div data-story-sidebar="agents" className={`${styles.agentCard} ${styles.sidebarScene}`} hidden>
                 <h2 className={portfolio.name}>How I’d approach it today</h2>

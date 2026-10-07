@@ -1,3 +1,4 @@
+import {checkOriginalWorkflow} from './fleet-original-workflow-browser-checks.mjs';
 import {navigateStory} from './fleet-browser-controls.mjs';
 import {sceneTime} from '../public/fleet-demo/src/app/story-timeline.js';
 import assert from 'node:assert/strict';
@@ -149,6 +150,7 @@ try{
  await page.keyboard.press('Escape');assert.equal(await page.locator('#source-dialog').isVisible(),false);assert.equal(await page.locator('#open-source-controls').evaluate(element=>element===document.activeElement),true);
  phase='advisory-review';await seek(7,.4);await page.locator('#run-story-review').click();await page.waitForFunction(()=>!!window.__fleetDemo.getState().review);assert.equal((await state()).mode,'today');assert.equal((await state()).simulation.paused,true);await page.keyboard.press('Escape');
  check('Source configuration and advisory review work in optional dialogs, preserve raw/service history and return focus on Escape');
+ phase='original-workflow';await checkOriginalWorkflow(page,{capture});check('Original WEX miniature loops on the story clock; the modal supports local repair, cancellation, focus, reopen/reset, mobile scrolling and reduced motion without changing odometer records');
  phase='text-retargeting';await page.evaluate(()=>{for(const index of [1,3,2,7,4])window.__fleetDemo.seekStory(index,.2);});await settleText();assert.equal(await page.locator('#chapter-title').innerText(),(await state()).story.title);assert.equal((await state()).stage,4);check('Rapid next/back/scrub retargets left text without a stale commit');
  phase='manual-controls';await seek(4,.5);await page.locator('#previous-chapter').click();assert.equal((await state()).stage,3);assert.equal((await state()).simulation.paused,true);await page.locator('#next-chapter').click();assert.equal((await state()).stage,4);assert.equal((await state()).simulation.paused,true);await settleText();
  await page.locator('#chapter-title').focus();await page.keyboard.press('ArrowLeft');assert.equal((await state()).stage,3);await page.keyboard.press('ArrowRight');assert.equal((await state()).stage,4);await settleText();await page.locator('#chapter-title').focus();await page.keyboard.press('Space');assert.equal((await state()).simulation.paused,false);assert.equal((await state()).stage,4);await page.keyboard.press('Space');assert.equal((await state()).simulation.paused,true);
