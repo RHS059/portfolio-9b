@@ -13,3 +13,6 @@ export function vehiclePresentationPose(vehicle,roadScale=1,baySupportElevation=
  const scale=parked||isInsideDepot(vehicle)?1:roadScale;
  return {scale,z:parked?baySupportElevation-modelGroundContact(vehicle.model):.15};
 }
+
+/** Service tractors leave their trailers outside the workshop trip. */
+export function vehicleModelVariant(vehicle){if(vehicle.model==='van')return'van';return vehicle.trailerAttached===false||['depot','depot-bay','factory-to-depot','depot-to-factory'].includes(vehicle.routeId)||/^(workshop|in-service|maintenance|in-bay)$/i.test(vehicle.status||'')?'tractor':'truck';}

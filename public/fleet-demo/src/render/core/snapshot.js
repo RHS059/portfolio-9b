@@ -8,7 +8,7 @@ export function normalizeSnapshot(input = {}) {
   }).map(v=> Object.freeze({
     id:v.id, progress:Math.max(0,Math.min(1,Number.isFinite(v.progress)?v.progress:0)),
     routeId:typeof v.routeId==='string'?v.routeId:'delivery', status:String(v.status||'Available'),
-    model:v.model==='van'?'van':'truck',inspectable:v.inspectable!==false,
+    model:v.model==='van'?'van':'truck',trailerAttached:v.trailerAttached!==false,inspectable:v.inspectable!==false,
     ...(Number.isFinite(v.x)&&Number.isFinite(v.y)?{x:v.x,y:v.y,heading:Number.isFinite(v.heading)?v.heading:0}:{}),
   }));
   const assemblyIds=new Set();const assemblyCells=Array.isArray(input.factoryAssembly?.cells)?input.factoryAssembly.cells.filter(c=>{if(!c||typeof c.id!=='string'||!Number.isFinite(c.progress)||assemblyIds.has(c.id))return false;assemblyIds.add(c.id);return true;}).map(c=>Object.freeze({id:c.id,progress:Math.max(0,Math.min(1,c.progress))})):null;

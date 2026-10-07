@@ -90,12 +90,12 @@ function wheelArch(T, a, x, y, z, width, radius, name) {
   a.add('paper', geometry, name);
 }
 
-function truckBody(T, a) {
+function truckBody(T, a, trailerAttached=true) {
   // Tractor underframe, fifth-wheel silhouette, and short gap in front of the trailer.
   a.box('ink', 1.8, 7.6, .22, 0, 3.05, .84, 'tractor-chassis');
   a.box('metal', 1.55, 1.05, .12, 0, 1.3, 1.04, 'fifth-wheel-coupling');
   a.cylinder('ink', .39, .11, 0, 1.28, 1.14, 'z', 'coupling-disc');
-  for (const y of [5.78, 1.18, -.12, -7.0, -8.3]) a.cylinder('ink', .105, 2.5, 0,y,.55,'x','axle');
+  for (const y of (trailerAttached?[5.78, 1.18, -.12, -7.0, -8.3]:[5.78,1.18,-.12])) a.cylinder('ink', .105, 2.5, 0,y,.55,'x','axle');
   // Recognizable long-nose sleeper cab with a sloping windshield and roof fairing.
   a.prism('paper', 2.28, [[2.25,1.1],[2.25,3.55],[2.58,3.82],[4.15,3.82],[5.15,3.28],[5.42,2.25],[5.27,1.1]], 'sleeper-cab');
   a.prism('paper', 1.94, [[5.22,1.05],[5.22,2.12],[6.84,1.86],[7.2,1.49],[7.2,1.02]], 'tapered-hood');
@@ -136,6 +136,7 @@ function truckBody(T, a) {
   a.box('ink',.48,.025,.16,0,7.443,.82,'front-plate');
   a.bar('panel',[0,5.30,2.122],[0,6.82,1.878],.012,'hood-center-seam');
   for (const x of [-.8,-.4,0,.4,.8]) a.box('metal',.11,.13,.07,x,4.35,3.76,'roof-marker');
+  if(!trailerAttached)return;
   // Simple air/electrical lines indicate the tractor/trailer join without a mechanism model.
   for (const x of [-.25,0,.25]) a.bar('ink',[x,2.22,1.9],[x+.12,1.89,1.4],.025,'trailer-service-line');
   // Box trailer: opaque shell, frame, panel seams, rear doors/hinges and retracted supports.
@@ -214,9 +215,9 @@ function wheelGeometry(T) {
   return a;
 }
 
-export function detailedWheelLayout(kind='truck') {
+export function detailedWheelLayout(kind='truck',trailerAttached=true) {
   if(kind==='van') return [-1.68,1.64].flatMap(y=>[-1,1].map(side=>({x:side*1.045,y,z:.42,radius:.37})));
-  return [5.78,1.18,-.12,-7.0,-8.3].flatMap((y,i)=>[-1,1].flatMap(side=>
+  return (trailerAttached?[5.78,1.18,-.12,-7.0,-8.3]:[5.78,1.18,-.12]).flatMap((y,i)=>[-1,1].flatMap(side=>
     (i===0?[1.2]:[.965,1.275]).map(x=>({x:side*x,y,z:.55,radius:TRUCK_WHEEL_RADIUS}))));
 }
 
@@ -225,8 +226,8 @@ export function detailedWheelLayout(kind='truck') {
  * wheelCenters are axle centers (with radius). groundContacts are the nominal
  * bottom-of-tire support points, NOT axle centers or world-space positions.
  */
-function modelMetadata(kind, min, max) {
-  const wheelCenters = Object.freeze(detailedWheelLayout(kind).map(wheel => Object.freeze(wheel)));
+function modelMetadata(kind, min, max, trailerAttached=true) {
+  const wheelCenters = Object.freeze(detailedWheelLayout(kind,trailerAttached).map(wheel => Object.freeze(wheel)));
   const groundContacts = Object.freeze(wheelCenters.map((wheel, wheelIndex) => Object.freeze({
     wheelIndex, x: wheel.x, y: wheel.y, z: wheel.z - wheel.radius,
   })));
@@ -238,6 +239,7 @@ function modelMetadata(kind, min, max) {
 }
 export const DETAIL_MODEL_METADATA = Object.freeze({
   truck: modelMetadata('truck', [-1.73, -10.389, .05], [1.73, 7.4555, 4.23]),
+  tractor: modelMetadata('truck', [-1.73, -.81, .05], [1.73, 7.4555, 3.82], false),
   van: modelMetadata('van', [-1.475, -2.7, .05], [1.475, 2.69, 2.94]),
 });
 
@@ -247,18 +249,19 @@ export const DETAIL_MODEL_METADATA = Object.freeze({
  * Root vehiclePresentationPose may exaggerate road scale; divide world travel by that
  * same root scale before calling setDistance so tires do not slide against the ground.
  */
-export function createDetailedVehicle({THREE:T,kind='truck'}={}) {
+export function createDetailedVehicle({THREE:T,kind='truck',trailerAttached=true}={}) {
   if(!T?.InstancedMesh) throw new TypeError('Detailed vehicles require Three r128');
   kind=kind==='van'?'van':'truck';
-  const group=new T.Group(); group.name=`detailed-${kind}`;
-  const body=author(T); (kind==='truck'?truckBody:vanBody)(T,body);
+  const modelKey=kind==='truck'&&!trailerAttached?'tractor':kind;
+  const group=new T.Group(); group.name=`detailed-${modelKey}`;
+  const body=author(T); (kind==='truck'?truckBody:vanBody)(T,body,trailerAttached);
   const resources=[];
   for(const [key,parts] of body.buckets) {
     const geometry=mergeParts(T,parts),material=new T.MeshBasicMaterial({color:DETAIL_PALETTE[key],side:T.DoubleSide});
     const mesh=new T.Mesh(geometry,material);mesh.name=`${kind}-body-${key}`;
     group.add(mesh);resources.push(geometry,material);
   }
-  const authoredWheels=wheelGeometry(T),layout=detailedWheelLayout(kind),batches=[];
+  const authoredWheels=wheelGeometry(T),layout=detailedWheelLayout(kind,trailerAttached),batches=[];
   for(const [key,parts] of authoredWheels.buckets) {
     const geometry=mergeParts(T,parts),material=new T.MeshBasicMaterial({color:DETAIL_PALETTE[key],side:T.DoubleSide});
     const mesh=new T.InstancedMesh(geometry,material,layout.length); mesh.name=`${kind}-wheels-${key}`;
@@ -280,8 +283,8 @@ export function createDetailedVehicle({THREE:T,kind='truck'}={}) {
     }
     for(const batch of batches)batch.instanceMatrix.needsUpdate=true;
   }
-  group.userData={kind,detailLevel:'close',wheelCount:layout.length,wheelRadius:layout[0].radius,
-    ...DETAIL_MODEL_METADATA[kind],
+  group.userData={kind,trailerAttached:kind==='truck'&&trailerAttached,detailLevel:'close',wheelCount:layout.length,wheelRadius:layout[0].radius,
+    ...DETAIL_MODEL_METADATA[modelKey],
     features:Object.freeze([...new Set([...body.features,...authoredWheels.features])]),drawCalls:group.children.length};
   setDistance(0);
   return {group,setDistance,wheelBatches:batches,wheelLayout:layout,

@@ -38,8 +38,8 @@ try{
    phase=`facility-${id}`;await page.locator(`[data-focus="${id}"]`).click();await page.waitForTimeout(750);await page.waitForFunction(()=>{const m=window.__fleetDemo.getMetrics();return m.mapTilesLoaded&&!m.cameraMoving;},undefined,{timeout:20000});await page.screenshot({path:path.join(out,`facility-${id}.png`),fullPage:true});
    if(id==='depot'){
      await page.waitForFunction(()=>window.__fleetDemo.getMetrics().vehicleDetail.models.some(v=>v.id==='TRK-104'));
-     evidence.vehicleDetail=await page.evaluate(()=>window.__fleetDemo.getMetrics().vehicleDetail);assert.ok(evidence.vehicleDetail.visible<=3);assert.equal(evidence.vehicleDetail.models.find(v=>v.id==='TRK-104').kind,'truck');
-     await page.screenshot({path:path.join(out,'vehicle-detail-workshop.png'),fullPage:true});evidence.checks.push('Selected workshop truck uses the bounded detailed model pool');
+     evidence.vehicleDetail=await page.evaluate(()=>window.__fleetDemo.getMetrics().vehicleDetail);assert.ok(evidence.vehicleDetail.visible<=3);const bayTractor=evidence.vehicleDetail.models.find(v=>v.id==='TRK-104');assert.equal(bayTractor.kind,'truck');assert.equal(bayTractor.variant,'tractor');assert.equal(bayTractor.wheelCount,10);assert.ok(bayTractor.bounds.min[1]>-1,'Workshop contains the tractor without its road trailer');
+     await page.screenshot({path:path.join(out,'vehicle-detail-workshop.png'),fullPage:true});evidence.checks.push('Selected workshop tractor has no trailer in the bounded detailed model pool');
    }
    if(id==='centerpoint'){
      await page.waitForFunction(()=>window.__fleetDemo.getMetrics().factoryDetailLevel==='detail');evidence.factoryDetail=await page.evaluate(()=>window.__fleetDemo.getMetrics());assert.ok(evidence.factoryDetail.factoryAssemblyState.length>0);assert.ok(evidence.factoryDetail.factoryAssemblyState.every(cell=>cell.progress===0),'Assembly stays idle without an explicit process snapshot');

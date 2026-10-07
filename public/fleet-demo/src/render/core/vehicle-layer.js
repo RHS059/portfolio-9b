@@ -1,6 +1,6 @@
 import {OICT_GEOGRAPHY} from '../map/oict-geography.js';
 import {createVehicleDetailPool} from './vehicle-detail.js';
-import {vehiclePresentationPose} from './presentation-pose.js';
+import {vehiclePresentationPose,vehicleModelVariant} from './presentation-pose.js';
 import {placeFacilityGroups,workshopSupportElevation,WORKSHOP_SURFACES,portDetailLevel,factoryDetailLevel,applyFacilityFacePolicy} from './facilities-adapter.js';
 import {ORIGIN,SITES,toLocal} from '../map/world.js';
 import {createModelGeometry,createModelBuckets,disposeObject,THEME} from './models.js';
@@ -30,7 +30,7 @@ export function createVehicleLayer({THREE:T,maplibregl:M,getVehicles,getSelected
       if(count<=this.capacity)return;this.capacity=Math.max(16,2**Math.ceil(Math.log2(count)));
       for(const obj of this.meshes.values()){for(const mesh of obj.parts){this.scene.remove(mesh);mesh.geometry.dispose();mesh.material.dispose();}this.scene.remove(obj.lines);obj.lines.geometry.dispose();obj.lines.material.dispose();}
       this.meshes.clear();
-      for(const kind of ['truck','van']){
+      for(const kind of ['truck','tractor','van']){
         const parts=createModelBuckets(T,kind).map(({geometry,color})=>{const mesh=new T.InstancedMesh(geometry,new T.MeshBasicMaterial({color,side:T.DoubleSide}),this.capacity);mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.frustumCulled=false;mesh.count=0;this.scene.add(mesh);return mesh;});
         const geometry=createModelGeometry(T,kind),edges=new T.EdgesGeometry(geometry,25),edgePositions=Float32Array.from(edges.getAttribute('position').array);edges.dispose();geometry.dispose();
         const outlines=new T.BufferGeometry();outlines.setAttribute('position',new T.BufferAttribute(new Float32Array(edgePositions.length*this.capacity),3).setUsage(T.DynamicDrawUsage));outlines.setDrawRange(0,0);
@@ -49,7 +49,7 @@ export function createVehicleLayer({THREE:T,maplibregl:M,getVehicles,getSelected
       const detailIds=this.detailPool?.update(vehicles,{zoom:this.map.getZoom(),center:xy,selectedId:getSelected(),roadScale:k,baySupportElevation:this.baySupportElevation})||new Set();
       for(const [kind,group] of this.meshes){
         let count=0;const output=group.lines.geometry.getAttribute('position').array;
-        for(const v of vehicles){if((v.model||'truck')!==kind||detailIds.has(v.id))continue;
+        for(const v of vehicles){if(vehicleModelVariant(v)!==kind||detailIds.has(v.id))continue;
           const pose=vehiclePresentationPose(v,k,this.baySupportElevation),scale=pose.scale;this.position.set(v.x,v.y,pose.z);this.quaternion.setFromAxisAngle(this.axis,-v.heading);this.scale.set(scale,scale,scale);this.matrix.compose(this.position,this.quaternion,this.scale);for(const mesh of group.parts)mesh.setMatrixAt(count,this.matrix);
           const e=group.edgePositions,c=Math.cos(v.heading),s=Math.sin(v.heading),offset=count*e.length;
           for(let i=0;i<e.length;i+=3){output[offset+i]=v.x+(e[i]*c+e[i+1]*s)*scale;output[offset+i+1]=v.y+(-e[i]*s+e[i+1]*c)*scale;output[offset+i+2]=e[i+2]*scale+pose.z+.02;}
