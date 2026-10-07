@@ -19,7 +19,7 @@ Cell IDs are `frame-jig`, `motor-install`, `propeller-install`, and `final-assem
 
 ## Explicit mechanism view
 
-Cells read `active`, `cargoId`, `stage`, `progress`, `boxOpen`, `assemblyProgress`, and `armAction`. Accepted stages are `idle`, `box-opening`, `drone-assembly`, and `complete`; arm actions are `park`, `open-box`, and `assemble-drone`. The supported wrappers are `snapshot.process`, `snapshot.cargoProcess`, or a direct process object containing cargo and factoryAssembly. Older explicit mechanical-preview inputs remain supported without claiming cargo ownership.
+Cells read `active`, `cargoId`, `stage`, `progress`, `boxOpen`, `assemblyProgress`, and `armAction`. Accepted stages are `idle`, `box-opening`, `drone-assembly`, and `complete`; arm actions are `park`, `open-box`, `assemble-drone`, and `handoff-output`. The supported wrappers are `snapshot.process`, `snapshot.cargoProcess`, or a direct process object containing cargo and factoryAssembly. Older explicit mechanical-preview inputs remain supported without claiming cargo ownership.
 
 Inactive cells park. Connected mode disables the earlier independent sorting loop and decorative cargo copies. No local conveyor or assembly timer advances independently of the process snapshot.
 
@@ -37,10 +37,25 @@ The renderer creates and positions its existing pallet/opening-carton object exa
 
 `createForklift` exposes `payloadMount`, named `seatMount`, `setLiftHeight()` and `update({liftHeight,travelMeters})`. Its operator seat is [0,-0.12,1.05] and foot support is Z=0.58 in forklift-local coordinates. Attach `createFactoryWorker()` at that mount and call `update({seated:true})`; the human keeps scale 1 with bent knees, platform-supported feet and hands at the controls. `operatorPresent` remains the process controller's visibility decision.
 
-The roller AMR's support is local Z=0.975. With actor root Z=0.25 its cargo support is Z=1.225. Forklift pickup root Z=0.25 plus lift 1.23 matches the open flatbed support Z=1.48. No terrain height is inferred by these constructors.
+The roller AMR's support is local Z=0.975. With actor root Z=0.25 its cargo support is Z=1.225. The renderer supplies the fork-pocket offset and measured pickup lift for its trailer geometry. No terrain height is inferred by these constructors.
 
 ## Verification
 
 Run `node --test src/render/facilities/factory/*.test.js` from the demo root; supply `FLEET_THREE_MODULE` for actual Three r128 tests. Contact tests verify real transformed floor/pad support, mount coordinates, the external carton's flap/part contacts, product placement, seated operator scale/fit, pause/reset and no asset-owned cargo copies.
 
 The renderer still owns route clearance, cargo/actor positioning, handoff continuity, LOD activation, context recovery and browser performance. A passing mechanism test is not an end-to-end process acceptance.
+## Outgoing carrier transfer
+
+This checkpoint supplies physical supports and a shared trajectory only. Carrier/gripper contact is not accepted: the sampler returns `transferReady: false`, `contactAccepted: false`, and null `gripPoint`, `tool`, and `contact`. The former central vertical grip intersected the drone body and is not enabled. `handoff-output` leaves the arm parked and reports `handoffPending: true`; the renderer must hold the live outgoing transfer until a verified accessible grip and combined carrier/body envelope are integrated. No outgoing contact or end-to-end completion is claimed.
+
+`armAction: 'handoff-output'` consumes `outputTransferProgress` (0..1) and `outputProductId`. No wall clock or kit-cycle duration is inferred. `sampleOutputTransfer(progress)` from `output-handoff.js` provides the agreed carrier trajectory for integration. The sampler returns immutable `carrierPosition`, `gripPoint`, `tool`, `contactEngaged`, `phase`, and `supportOrigin: 'carrier-bottom'`. The sampler explicitly tags `coordinateSpace: 'cell-relative-xy/site-root-z'` and `floorOffsetIncluded: true`: add the cell center to XY only, never add the 0.25 m floor to Z again. `factory.userData.getOutputHandoff(cellId, progress)` converts them to site-root coordinates. `productSupport`/`contact` are equivalent diagnostic aliases.
+
+The existing `cell:<id>:output` remains the drone skid base at Z=1.7. The new `cell:<id>:carrier-output` is the cradle bottom at Z=1.53; `cell:<id>:dispatch-pickup` is cell-relative XY(-3,-4), Z=1.225. The renderer keeps the drone at carrier-local Z=0.17 through assembly and transport. The jig is lowered to meet the cradle without a ready-stage jump. The planned trajectory holds for approach, lifts, clears the jig through XY(-3,-3.5), lowers, and holds for release. Product identity, visibility, custody and return routes stay outside these mechanical assets.
+
+## QA and dispatch supports
+
+QA now has one continuous roller bed through the scanner at Z=1.225. Site-root mounts are `qa:QA-01:input` [37,26,1.225], `qa:QA-01:test` [42,26,1.225], and `qa:QA-01:output` [47,26,1.225]. The slot-qualified form `qa:QA-01:<slot>:input|test|output` resolves to the same physical mount; it does not allocate a new station.
+
+Dispatch mount pairs are `dispatch:DISPATCH-01:input` [50,-12,1.225] / `dispatch:DISPATCH-01:pickup` [50,-16,1.225] and corresponding `DISPATCH-02` mounts at X=62. Both stations have physical rollers and supporting frames. `getTransferMounts()` returns these read-only coordinates. All exported Z values already include the internal floor offset.
+
+The renderer must provide physically clear AMR approaches, carrier transfers and forklift pickup routes around these fixed support beds. Matching a support height alone does not establish actor clearance or end-to-end acceptance.

@@ -1,6 +1,8 @@
 import {createFactoryGeometry,createArticulatedInstances} from './geometry.js';
 import {WORKCELLS,assemblyPose} from './cycle.js';
 import {factoryCellView,factoryProcess} from './process-view.js';
+import {addTransferStationGeometry} from './transfer-stations.js';
+import {outputHandoffPose,OUTPUT_HANDOFF} from './output-handoff.js';
 import {cartonOpeningPose} from './carton-motion.js';
 import {assemblyStep,CELL_INPUT_OFFSET,CELL_OUTPUT_OFFSET,FACTORY_FLOOR_Z} from './assembly-plan.js';
 
@@ -15,11 +17,11 @@ export function createFactoryWorkcells({THREE}){
     for(const dx of [-5.3,3.7])b.box(.11,6.1,.11,x+dx,y+.1,4.0,'ink');
     b.box(2.7,.1,.1,x-3.95,y+3.1,1.05,'ink');b.box(4.9,.1,.1,x+1.25,y+3.1,1.05,'ink');
     // Jig bed, legs, leveling feet, cross-braces and clamps around a drone frame.
-    b.box(4.0,3.6,.18,x,y,1.22,'face');b.box(3.8,3.2,.08,x,y,1.35,'paper');
-    for(const dx of [-1.7,1.7])for(const dy of [-1.45,1.45]){b.box(.14,.14,1.12,x+dx,y+dy,.58,'muted');b.cylinder(.16,.08,x+dx,y+dy,.06,'dark');}
-    for(const dx of [-1.7,1.7])b.link([x+dx,y-1.45,.25],[x+dx,y+1.45,1.13],.07,.07,'muted');
-    b.box(1.3,1.5,.035,x,y,1.4075,'dark');b.box(1.1,1.3,.025,x,y,1.4375,'face');
-    for(const dx of [-.65,.65])for(const dy of [-.58,.58]){b.box(.12,.12,.34,x+dx,y+dy,1.62,'muted');b.box(.3,.13,.07,x+dx-Math.sign(dx)*.1,y+dy,1.68,'dark');}
+    b.box(4.0,3.6,.18,x,y,1.05,'face');b.box(3.8,3.2,.08,x,y,1.18,'paper');
+    for(const dx of [-1.7,1.7])for(const dy of [-1.45,1.45]){b.box(.14,.14,.95,x+dx,y+dy,.495,'muted');b.cylinder(.16,.08,x+dx,y+dy,.06,'dark');}
+    for(const dx of [-1.7,1.7])b.link([x+dx,y-1.45,.25],[x+dx,y+1.45,.96],.07,.07,'muted');
+    b.box(1.3,1.5,.035,x,y,1.2375,'dark');b.box(1.1,1.3,.025,x,y,1.2675,'face');
+    for(const dx of [-1.78,1.78])for(const dy of [-1.48,1.48])b.box(.08,.08,.10,x+dx,y+dy,1.31,'muted');
 
     // Parts tray, magazine/bin compartments and a vertical tool/cable spine.
     b.box(1.5,1.25,.10,x-1.9,y+2.4,.885,'face');for(const dx of[-2.5,-1.3])b.box(.09,1.05,.835,x+dx,y+2.4,.4175,'muted');
@@ -43,11 +45,9 @@ export function createFactoryWorkcells({THREE}){
   b.box(.8,1.1,.5,-4.8,1,.74,'face');b.cylinder(.22,.4,-5.35,1,.74,'muted',[0,0,Math.PI/2]);
   for(let i=0;i<3;i++){definitions.push({id:'conveyor-pallet-'+i,shape:'box',tone:'face'});definitions.push({id:'conveyor-kit-'+i,shape:'box',tone:'dark'});}
   // Recognizable test fixture: portal, leads/camera carriage and clamped completed aircraft.
-  b.box(6,4,.24,42,26,1.2,'face');for(const x of [39.3,44.7]){b.box(.2,.2,3.8,x,27,1.9,'muted');b.box(.2,.2,1.1,x,24.3,.55,'muted');}
-  b.box(5.6,.4,.3,42,27,3.9,'paper');b.box(5.3,.12,.12,42,26.72,3.8,'dark');
+  addTransferStationGeometry(b);for(const y of[24.1,27.9])b.box(.2,.2,3.8,42,y,1.9,'muted');
+  b.box(.4,4.0,.3,42,26,3.9,'paper');b.box(.12,3.8,.12,41.72,26,3.8,'dark');
   definitions.push({id:'qa-scanner',shape:'box',tone:'paper'},{id:'qa-camera',shape:'cylinder',tone:'dark'});
-  // Finished aircraft sit in open shipping cradles rather than undifferentiated squares.
-  for(const y of [-1,-14]){b.box(4,3.6,.24,59,y,.18,'face');for(const dx of[-1.65,1.65])b.box(.2,3.6,.9,59+dx,y,.58,'paper');b.box(3.6,.2,.9,59,y+1.7,.58,'paper');}
   root.add(b.finish('assembly-station-solids'));const rig=createArticulatedInstances(T,definitions);root.add(rig.group);
   let disposed=false;const lastStates=[];
   function apply(snapshot,allowDemoCycle=false){
@@ -55,10 +55,12 @@ export function createFactoryWorkcells({THREE}){
     for(const cell of WORKCELLS){
       const view=factoryCellView(snapshot,cell.id),connected=view.connected,step=assemblyStep(view.assemblyProgress);
       const partStage=step.step.shape,target=[step.step.point[0],step.step.point[1],CELL_OUTPUT_OFFSET[2]+step.step.point[2]];
-      let pose,opening=null;
+      let pose,opening=null,handoff=null;
       if(connected&&view.active&&view.armAction==='open-box'){
         opening=cartonOpeningPose(view.boxOpen);const t=opening.tool;
         pose=assemblyPose({progress:view.progress,tool:[CELL_INPUT_OFFSET[0]+t[0],CELL_INPUT_OFFSET[1]+t[1],CELL_INPUT_OFFSET[2]+.19+t[2]]});
+      }else if(connected&&view.active&&view.armAction==='handoff-output'){
+        handoff=outputHandoffPose(view.outputTransferProgress);pose=assemblyPose({progress:0});
       }else if(connected&&view.active&&view.armAction==='assemble-drone')pose=assemblyPose({progress:step.phase,pickup:[CELL_INPUT_OFFSET[0]+step.sourcePoint[0],CELL_INPUT_OFFSET[1]+step.sourcePoint[1],CELL_INPUT_OFFSET[2]+.19+step.sourcePoint[2]]},0,target);
       else if(view.legacyPose)pose=assemblyPose({progress:view.progress},0,target);
       else pose=assemblyPose({progress:0},0,target);
@@ -71,13 +73,13 @@ export function createFactoryWorkcells({THREE}){
       rig.hide(prefix+'component');rig.hide(prefix+'component-motor');rig.hide(prefix+'component-shell');
       const partHeld=(view.hasMaterial&&view.armAction==='assemble-drone'&&step.carrying)||(view.legacyPose&&pose.carrying);
       if(partHeld)rig.set(prefix+(partStage==='cylinder'?'component-motor':partStage==='ellipsoid'?'component-shell':'component'),translated(componentPosition),componentScale);
-      lastStates.push(Object.freeze({id:cell.id,stage:pose.stage,progress:pose.phase,carrying:partHeld,installed:view.legacyPose?pose.installed:step.installed,tool:Object.freeze([cell.x+pose.tool[0],cell.y+pose.tool[1],FACTORY_FLOOR_Z+pose.tool[2]]),coordinateSpace:'site-root',active:view.active,cargoId:view.cargoId,processStage:view.stage,boxOpen:view.boxOpen,assemblyProgress:view.assemblyProgress,armAction:view.armAction,contactEngaged:opening?.engaged||false,partId:view.armAction==='assemble-drone'?step.step.id:null}));
+      lastStates.push(Object.freeze({id:cell.id,stage:pose.stage,progress:pose.phase,carrying:partHeld,installed:view.legacyPose?pose.installed:step.installed,tool:Object.freeze([cell.x+pose.tool[0],cell.y+pose.tool[1],FACTORY_FLOOR_Z+pose.tool[2]]),coordinateSpace:'site-root',active:view.active,cargoId:view.cargoId,processStage:view.stage,boxOpen:view.boxOpen,assemblyProgress:view.assemblyProgress,armAction:view.armAction,contactEngaged:opening?.engaged||handoff?.contactEngaged||false,outputProductId:view.outputProductId,outputTransferProgress:view.outputTransferProgress,productSupport:null,handoffPending:!!handoff,handoffPhase:handoff?'awaiting-contact-geometry':null,contactAccepted:false,partId:view.armAction==='assemble-drone'?step.step.id:null}));
     }
     const clock=allowDemoCycle?(snapshot?.timeSeconds||0):0,common=assemblyPose({timeSeconds:clock});
     for(let i=0;i<3;i++){if(factoryProcess(snapshot)){rig.hide('conveyor-pallet-'+i);rig.hide('conveyor-kit-'+i);continue;}const y=((common.conveyor+i/3)%1)*31+1;rig.set('conveyor-pallet-'+i,[-3.5,y,1.28],[1.5,2.1,.2]);rig.set('conveyor-kit-'+i,[-3.5,y,1.48],[.65,.8,.18]);}
-    rig.set('qa-scanner',[42+common.scan,26.7,3.55],[.6,.6,.65]);rig.set('qa-camera',[42+common.scan,26.7,3.15],[.22,.22,.22]);rig.commit();
+    rig.set('qa-scanner',[41.7,26+common.scan,3.55],[.6,.6,.65]);rig.set('qa-camera',[41.7,26+common.scan,3.15],[.22,.22,.22]);rig.commit();
     root.userData.assemblyState=Object.freeze(lastStates.slice());
 
   }
-  root.userData={workcells:WORKCELLS,illustrative:true,update:apply,dispose(){disposed=true;},assemblyState:Object.freeze([]),mounts:Object.freeze(WORKCELLS.map(c=>Object.freeze({id:c.id,input:Object.freeze([c.x+CELL_INPUT_OFFSET[0],c.y+CELL_INPUT_OFFSET[1],FACTORY_FLOOR_Z+CELL_INPUT_OFFSET[2]]),output:Object.freeze([c.x,c.y,FACTORY_FLOOR_Z+CELL_OUTPUT_OFFSET[2]])})))};apply({});return root;
+  root.userData={workcells:WORKCELLS,illustrative:true,update:apply,dispose(){disposed=true;},assemblyState:Object.freeze([]),mounts:Object.freeze(WORKCELLS.map(c=>Object.freeze({id:c.id,input:Object.freeze([c.x+CELL_INPUT_OFFSET[0],c.y+CELL_INPUT_OFFSET[1],FACTORY_FLOOR_Z+CELL_INPUT_OFFSET[2]]),output:Object.freeze([c.x,c.y,FACTORY_FLOOR_Z+CELL_OUTPUT_OFFSET[2]]),carrier:Object.freeze([c.x,c.y,1.53]),pickup:Object.freeze([c.x+OUTPUT_HANDOFF.pickup[0],c.y+OUTPUT_HANDOFF.pickup[1],OUTPUT_HANDOFF.pickup[2]])})))};apply({});return root;
 }
