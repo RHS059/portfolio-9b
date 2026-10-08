@@ -146,7 +146,7 @@ export default function FleetDemoShell() {
   }, [])
 
   return <div ref={rootRef} className={`workspace ${styles.root}`} data-intro="true" data-scene="question" data-playing="false">
-    <PortfolioShell gridClassName={styles.fleetGrid} sidebarWrapClassName={styles.fleetSideWrap} sidebar={<FleetSidebar />} sidebarClassName={`story-panel ${styles.sidebar}`} sidebarLabel="Fleet case study" mainClassName={styles.main}>
+    <PortfolioShell sidebar={<FleetSidebar />} sidebarClassName={`story-panel ${styles.sidebar}`} sidebarLabel="Fleet case study" mainClassName={styles.main}>
       <div className={styles.workspaceBody}>
         <section className={`world-panel ${portfolio.card} ${styles.worldPanel}`} aria-label="Interactive fleet story">
           <div className={styles.stageViewport}>

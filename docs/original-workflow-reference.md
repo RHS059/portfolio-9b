@@ -15,7 +15,7 @@ Approximate observed sequence:
 
 The Missing Asset, Asset Linking and Auto Update annotation overlays are excluded. The final annotation claims future automatic matching, but no further import is shown. The implementation does not invent that import or a Fuel Log destination.
 
-This footage demonstrates fuel-record asset linking, not selecting an odometer source or excluding readings. The right-hand solution narrative explains the original research, vendor discovery, import-flow mapping and validation design. The WEX application is shown over the 3D scene; its asset-linking step remains distinct from odometer authority.
+This footage demonstrates fuel-record asset linking, not selecting an odometer source or excluding readings. The left-hand solution narrative explains the original research, vendor discovery, import-flow mapping and validation design. The WEX application is shown over the 3D scene; its asset-linking step remains distinct from odometer authority.
 
 ## Local sample boundary
 
@@ -44,4 +44,4 @@ Run:
 
 Node tests cover state transitions, immutable evidence, local-only behavior, loop disposal, dialog focus/keyboard lifecycle, the real app mount/controller regression harness and markup parity. They do not replace browser visual testing. The native preview CI lane runs `checkOriginalWorkflow` to check the full modal against the screenshot, manual repair, repeated open/close, pause/reset, keyboard focus, mobile table scrolling, reduced motion and route cleanup.
 
-The design-process copy is grounded in `app/projects/fleet-fuel-integration/page.tsx`: Research & Discovery, How I Knew What to Do, Planning & Collaboration, and Results. Only the solution scene moves its narrative to the right on desktop; narrower layouts stack it with the same readable portfolio treatment.
+The design-process copy is grounded in `app/projects/fleet-fuel-integration/page.tsx`: Research & Discovery, How I Knew What to Do, Planning & Collaboration, and Results. The solution scene keeps the same left sidebar as every other scene. The original-app demonstration stays over the 3D view; narrower layouts retain the shared stacked portfolio treatment.

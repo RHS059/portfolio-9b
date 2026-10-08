@@ -54,7 +54,7 @@ const assertTransport=async(index,{baseline,mobile=false,label=`Scene ${index+1}
  assert.ok(Math.abs(geometry.playCenter-geometry.center)<=1.5,`${label}: Play stays centered: ${JSON.stringify(geometry)}`);
  assert.ok(geometry.scrollWidth<=geometry.clientWidth+1,`${label}: transport has no internal overflow`);
  if(baseline){
-  for(const key of ['width','height'])assert.ok(Math.abs(geometry[key]-baseline[key])<=1.5,`${label}: stable ${key}`);
+  for(const key of ['width','height','playCenter'])assert.ok(Math.abs(geometry[key]-baseline[key])<=1.5,`${label}: stable ${key}`);
  }
  if(mobile){
   const viewport=page.viewportSize();
@@ -124,7 +124,7 @@ try{
   assert.equal(await page.locator('[data-story-overlay]:visible').count(),mapOverlay?1:0);
   assert.equal(await page.locator('[data-story-sidebar]:visible').count(),sidebarScene?1:0);
   if(sidebarScene){const card=page.locator(`[data-story-sidebar="${ids[index]}"]`);assert.equal(await card.evaluate(element=>!!element.closest('aside')),true);assert.equal(await page.locator(`#story-overlays [data-story-sidebar="${ids[index]}"]`).count(),0);const bounds=await card.evaluate(element=>({client:element.clientWidth,scroll:element.scrollWidth}));assert.ok(bounds.scroll<=bounds.client+1,`${ids[index]} sidebar content overflows`);}
-  const panels=await page.evaluate(()=>({story:document.querySelector('aside').getBoundingClientRect().x,scene:document.querySelector('#world').getBoundingClientRect().x}));assert.equal(panels.story>panels.scene,index===6,'Only the solution narrative moves to the right');
+  const panels=await page.evaluate(()=>({story:document.querySelector('aside').getBoundingClientRect().x,scene:document.querySelector('#world').getBoundingClientRect().x}));assert.ok(panels.story<panels.scene,'The sidebar stays on the left in every scene');
   assert.equal(await page.locator('#chapter-number').isVisible(),index!==0&&index!==6);
   assert.equal(await page.locator('#story-content').isVisible(),index!==0);await assertTransport(index,{baseline:initialTransport});if(index===8)await assertGlyphs('last-scene',5);
   const geometry=await dockGeometry();assert.ok(Math.abs(geometry.width-initialDock.width)<=1);assert.ok(Math.abs(geometry.height-initialDock.height)<=1);assert.deepEqual(geometry.controls,initialDock.controls);

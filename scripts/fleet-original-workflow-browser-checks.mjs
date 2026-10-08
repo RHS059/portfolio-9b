@@ -10,7 +10,7 @@ export async function checkOriginalWorkflow(page,{capture=async()=>{}}={}){
  assert.equal(await preview.locator('.ow-preview').getAttribute('role'),'img');
  assert.equal(await preview.evaluate(el=>el.closest('[data-story-overlay]')?.dataset.storyOverlay),'solution');
  assert.equal(await preview.evaluate(el=>!!el.closest('aside')),false);
- const positions=await page.evaluate(()=>({story:document.querySelector('aside').getBoundingClientRect().x,scene:document.querySelector('#world').getBoundingClientRect().x}));assert.ok(positions.story>positions.scene,'Design narrative is on the right');
+ const positions=await page.evaluate(()=>({story:document.querySelector('aside').getBoundingClientRect().x,scene:document.querySelector('#world').getBoundingClientRect().x}));assert.ok(positions.story<positions.scene,'The solution slide keeps the sidebar on the left');
  assert.equal(await preview.locator('.ow-app').getAttribute('inert'),'');
  assert.equal(await preview.locator('.ow-table tbody tr').count(),21);assert.equal(await preview.locator('.ow-app-nav').isVisible(),true);
  for(const [seconds,phase] of [[0,'unmatched'],[5,'asset-dialog'],[7,'asset-picker'],[12,'asset-chosen'],[16,'linked'],[21,'unmatched']]){

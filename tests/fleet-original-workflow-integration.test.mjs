@@ -12,12 +12,12 @@ test('both routes place the original application over the map and keep the proce
   assert.match(overlay,/aria-haspopup="dialog"/);assert.match(markup,/id="open-source-controls"/);
  }
 });
-test('the solution beat alone places the portfolio narrative to the right on desktop',async()=>{
- const css=await read('components/fleet-demo-shell.module.css');
- assert.match(shell,/gridClassName=\{styles.fleetGrid\}/);assert.match(shell,/sidebarWrapClassName=\{styles.fleetSideWrap\}/);
- assert.match(css,/\.root\[data-scene="solution"\] \.fleetSideWrap \{ grid-column: 2/);
- assert.match(css,/\.root\[data-scene="solution"\] \.main \{ grid-column: 1/);
- assert.match(css,/@media \(min-width: 901px\)/);
+test('the solution preserves the shared left-sidebar layout without scene-specific flips',async()=>{
+ const css=await read('components/fleet-demo-shell.module.css'),baseCss=await read('components/portfolio-home.module.css');
+ assert.doesNotMatch(shell,/gridClassName|sidebarWrapClassName|fleetSideWrap|fleetGrid/);
+ assert.doesNotMatch(css,/\[data-scene="solution"\][^}]*grid-(?:column|template|row)/);
+ assert.match(baseCss,/\.side-wrap \{ grid-column: 1;/);
+ assert.match(shell,/data-story-overlay="solution"/);
 });
 test('shared-clock preview and modal lifecycle preserve deliberate story pause',()=>{
  assert.match(app,/if\(stage===6\)originalPreview\?\.render\(story\.elapsedSeconds\*1\.5,\{paused:sim\?\.getState\(\)\.paused\?\?true,reducedMotion:reducedMotion\.matches\}\)/);
