@@ -17,7 +17,7 @@ test('annotated content is in the sidebar and only requested map overlays remain
  const sidebar=shell.slice(shell.indexOf('function FleetSidebar'),shell.indexOf('export default function'));
  const world=shell.slice(shell.indexOf('id="story-overlays"'),shell.indexOf('className={`story-dock'));
  assert.deepEqual([...sidebar.matchAll(/data-story-sidebar="([^"]+)"/g)].map(match=>match[1]),['integration','mileage-loop','solution','agents']);
- assert.deepEqual([...world.matchAll(/data-story-overlay="([^"]+)"/g)].map(match=>match[1]),['provider-switch','cost','learning']);
+ assert.deepEqual([...world.matchAll(/data-story-overlay="([^"]+)"/g)].map(match=>match[1]),['provider-switch','cost','solution','learning']);
  assert.doesNotMatch(world,/data-story-sidebar|Why did it keep|ONE TRUCK/i);assert.doesNotMatch(css,/\[data-scene="mileage-loop"\] \.world \{ filter:/);
  assert.ok(shell.indexOf('data-provider="verizon"')<shell.indexOf('data-provider="samsara"'));assert.match(css,/\[data-scene="provider-switch"\] \.world \{ filter: blur\(7px\) brightness/);
  assert.ok(app.includes("$('#chapter-number').hidden=beatIndex===6"));
@@ -42,7 +42,7 @@ test('story copy removes redundant captions and uses one compact fixed-cost labe
  assert.equal((shell.match(/Example cost/g)||[]).length,1);assert.match(shell,/id="cost-total">\$350/);assert.match(shell,/id="cost-duplicate">\$0/);
  const solution=shell.slice(shell.indexOf('data-story-sidebar="solution"'),shell.indexOf('data-story-sidebar="agents"'));
  const agents=shell.slice(shell.indexOf('data-story-sidebar="agents"'),shell.indexOf('id="chapter-takeaway"'));
- assert.match(solution,/<h2[^>]*>The change I designed<\/h2>/);assert.match(agents,/<h2[^>]*>How I’d approach it today<\/h2>/);
+ assert.match(solution,/<h2[^>]*>How I got to the design<\/h2>/);assert.match(agents,/<h2[^>]*>How I’d approach it today<\/h2>/);
  assert.ok(app.includes("$('#chapter-title').hidden=[1,6,7].includes(beatIndex)"));
 });
 test('single-clock story has a reduced-motion pause, manual override and route cleanup',()=>{

@@ -95,15 +95,10 @@ function FleetSidebar() {
                 <p>The reading resets. The next jump looks like more driving.</p>
               </div>
               <div data-story-sidebar="solution" className={`${styles.solutionCard} ${styles.sidebarScene}`} hidden>
-                <h2 className={portfolio.name}>The change I designed</h2>
-                <p className={styles.dialogueCopy}>I traced the import workflow with support and developers, then designed per-vehicle odometer sources and reading exclusions.</p>
-                <div className={styles.decisionRow}><span>TRK-104</span><strong>Choose its odometer source</strong></div>
-                <div className={styles.decisionRow}><span>OLD READINGS</span><strong>Exclude them from decisions</strong></div>
-                <div className={styles.decisionRow}><span>ORIGINAL HISTORY</span><strong>Keep it intact</strong></div>
-                <p>Each vehicle keeps its own source.</p>
-                <p>The original import tools still needed a person. Here, a WEX fuel record is linked to the right asset.</p>
-                <div id="original-workflow-preview" aria-label="Original WEX asset-linking workflow" />
-                <button id="open-original-workflow" className={portfolio.control} type="button" aria-haspopup="dialog">Expand the original workflow ↗</button>
+                <h2 className={portfolio.name}>How I got to the design</h2>
+                <p>I met with support agents and account managers, then interviewed our import vendors to understand the data and its limits.</p>
+                <p>I mapped the import flow with our developers. Some customers wanted odometers from one vendor and fuel records from another, so I added an integration field to distinguish the sources.</p>
+                <p>I designed checks that flagged missing or bad data, notified customers, and let them resolve errors in the app. The WEX example shows the asset-linking step of that workflow.</p>
               </div>
               <div data-story-sidebar="agents" className={`${styles.agentCard} ${styles.sidebarScene}`} hidden>
                 <h2 className={portfolio.name}>How I’d approach it today</h2>
@@ -151,7 +146,7 @@ export default function FleetDemoShell() {
   }, [])
 
   return <div ref={rootRef} className={`workspace ${styles.root}`} data-intro="true" data-scene="question" data-playing="false">
-    <PortfolioShell sidebar={<FleetSidebar />} sidebarClassName={`story-panel ${styles.sidebar}`} sidebarLabel="Fleet case study" mainClassName={styles.main}>
+    <PortfolioShell gridClassName={styles.fleetGrid} sidebarWrapClassName={styles.fleetSideWrap} sidebar={<FleetSidebar />} sidebarClassName={`story-panel ${styles.sidebar}`} sidebarLabel="Fleet case study" mainClassName={styles.main}>
       <div className={styles.workspaceBody}>
         <section className={`world-panel ${portfolio.card} ${styles.worldPanel}`} aria-label="Interactive fleet story">
           <div className={styles.stageViewport}>
@@ -183,6 +178,11 @@ export default function FleetDemoShell() {
                 <div className={styles.receiptTotal}><span>TOTAL</span><strong id="cost-total">$350.00</strong></div>
                 <div className={styles.receiptDuplicate}><span>DUPLICATE SERVICE</span><strong id="cost-duplicate">$0.00</strong></div>
               </article>
+
+              <div data-story-overlay="solution" className={styles.workflowOverlay} hidden>
+                <div id="original-workflow-preview" aria-label="Original WEX asset-linking workflow" />
+                <button id="open-original-workflow" className={portfolio.control} type="button" aria-haspopup="dialog">Expand the original workflow ↗</button>
+              </div>
 
               <div data-story-overlay="learning" className={styles.learningCard} hidden>
                 <span className={portfolio.eyebrow}>What I learned</span><h2>Good data needs<br />a clear owner.</h2><p>Make the source visible.<br />Make the decision deliberate.<br />Keep the history.</p>

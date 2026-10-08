@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="A nine-scene interactive story about fleet data, repeat maintenance and source authority."><title>The Same Truck. The Same Service. Again.</title><link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"><link rel="stylesheet" href="./src/app/style.css"><script defer src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script><script defer src="https://unpkg.com/three@0.128.0/build/three.min.js"></script></head><body><div  class="workspace root" data-intro="true" data-scene="question" data-playing="false">
-    <div class="page font-sans"><div class="grid"><div class="side-wrap route-panel"><aside class="side sidebar story-panel" aria-label="Fleet case study">
+    <div class="page font-sans"><div class="grid fleetGrid"><div class="side-wrap route-panel fleetSideWrap"><aside class="side sidebar story-panel" aria-label="Fleet case study">
     <div id="sidebar-story-body" class="sidebarStoryBody">
     <div id="intro-panel" class="introPanel">
       <p class="eyebrow">Fleet integrations · A case study</p>
@@ -37,15 +37,10 @@
                 <p>The reading resets. The next jump looks like more driving.</p>
               </div>
               <div data-story-sidebar="solution" class="solutionCard sidebarScene" hidden>
-                <h2 class="name">The change I designed</h2>
-                <p class="dialogueCopy">I traced the import workflow with support and developers, then designed per-vehicle odometer sources and reading exclusions.</p>
-                <div class="decisionRow"><span>TRK-104</span><strong>Choose its odometer source</strong></div>
-                <div class="decisionRow"><span>OLD READINGS</span><strong>Exclude them from decisions</strong></div>
-                <div class="decisionRow"><span>ORIGINAL HISTORY</span><strong>Keep it intact</strong></div>
-                <p>Each vehicle keeps its own source.</p>
-                <p>The original import tools still needed a person. Here, a WEX fuel record is linked to the right asset.</p>
-                <div id="original-workflow-preview" aria-label="Original WEX asset-linking workflow"></div>
-                <button id="open-original-workflow" class="control" type="button" aria-haspopup="dialog">Expand the original workflow ↗</button>
+                <h2 class="name">How I got to the design</h2>
+                <p>I met with support agents and account managers, then interviewed our import vendors to understand the data and its limits.</p>
+                <p>I mapped the import flow with our developers. Some customers wanted odometers from one vendor and fuel records from another, so I added an integration field to distinguish the sources.</p>
+                <p>I designed checks that flagged missing or bad data, notified customers, and let them resolve errors in the app. The WEX example shows the asset-linking step of that workflow.</p>
               </div>
               <div data-story-sidebar="agents" class="agentCard sidebarScene" hidden>
                 <h2 class="name">How I’d approach it today</h2>
@@ -93,6 +88,11 @@
                 <div class="receiptTotal"><span>TOTAL</span><strong id="cost-total">$350.00</strong></div>
                 <div class="receiptDuplicate"><span>DUPLICATE SERVICE</span><strong id="cost-duplicate">$0.00</strong></div>
               </article>
+
+              <div data-story-overlay="solution" class="workflowOverlay" hidden>
+                <div id="original-workflow-preview" aria-label="Original WEX asset-linking workflow" ></div>
+                <button id="open-original-workflow" class="control" type="button" aria-haspopup="dialog">Expand the original workflow ↗</button>
+              </div>
 
               <div data-story-overlay="learning" class="learningCard" hidden>
                 <span class="eyebrow">What I learned</span><h2>Good data needs<br />a clear owner.</h2><p>Make the source visible.<br />Make the decision deliberate.<br />Keep the history.</p>

@@ -37,8 +37,8 @@ test('linked result and asset picker preserve observed labels and actual control
   for(const label of ['Select an Asset','Please select an Asset to link to the record','Select an Item','Asset Category','Asset No.','License Plate No.','VIN','Asset Status','Applied Query: Active Asset'])assert.ok(picker.includes(label),label);
   for(const a of SAMPLE_ASSETS)assert.ok(picker.includes(`data-asset="${a.id}"`));assert.match(picker,/id="unique-link-title"/);assert.match(picker,/inert/);assert.match(picker,/data-action="cancel"/);assert.match(renderWorkflowScreen(sampleWorkflow(5)),/data-action="set-asset"[^>]*disabled/);
 });
-test('preview is inert and compact; dense modal tables remain scrollable with reduced motion',()=>{
-  assert.match(renderWorkflowScreen(createWorkflowState(),{preview:true}),/inert aria-hidden="true"/);assert.match(originalWorkflowStyles,/\.ow-preview \.ow-table\{min-width:0/);assert.match(originalWorkflowStyles,/\.ow-table-scroll\{overflow:auto/);assert.match(originalWorkflowStyles,/@media\(prefers-reduced-motion:reduce\)/);
+test('preview scales the complete original composition; dense modal tables remain scrollable',()=>{
+  assert.match(renderWorkflowScreen(createWorkflowState(),{preview:true}),/inert aria-hidden="true"/);assert.match(originalWorkflowStyles,/\.ow-preview \.ow-scaled-screen\{width:1128px;transform-origin:top left/);assert.doesNotMatch(originalWorkflowStyles,/\.ow-preview \.ow-table \[data-secondary\]\{display:none/);assert.match(originalWorkflowStyles,/\.ow-table-scroll\{overflow:auto/);assert.match(originalWorkflowStyles,/@media\(prefers-reduced-motion:reduce\)/);
 });
 test('local-only module retains the integrator cleanups and creates no preview clock',async()=>{
   const code=await readFile(new URL('../../src/ui/original-workflow/index.js',import.meta.url),'utf8');assert.doesNotMatch(code,/\bfetch\s*\(|XMLHttpRequest|localStorage|sessionStorage|domain\/|reviewImports|createSimulatedReviewProvider|Sample records · changes stay in this demo/);

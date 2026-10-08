@@ -15,14 +15,16 @@ type Props = {
   sidebarClassName?: string
   sidebarLabel?: string
   mainClassName?: string
+  gridClassName?: string
+  sidebarWrapClassName?: string
 }
 
-export default function PortfolioShell({ children, leaving = false, reading = false, alignTop = false, sidebarContent, sidebar, sidebarClassName = "", sidebarLabel, mainClassName = "" }: Props) {
+export default function PortfolioShell({ children, leaving = false, reading = false, alignTop = false, sidebarContent, sidebar, sidebarClassName = "", sidebarLabel, mainClassName = "", gridClassName = "", sidebarWrapClassName = "" }: Props) {
   const Name = reading ? "p" : "h1"
   return (
     <div className={`${styles.page} font-sans`}>
-      <div className={styles.grid}>
-        <div className={`${styles["side-wrap"]} ${styles["route-panel"]} ${leaving ? styles["route-panel-leaving"] : ""}`}>
+      <div className={`${styles.grid} ${gridClassName}`}>
+        <div className={`${styles["side-wrap"]} ${sidebarWrapClassName} ${styles["route-panel"]} ${leaving ? styles["route-panel-leaving"] : ""}`}>
           <aside className={`${styles.side} ${sidebarClassName}`} aria-label={sidebarLabel}>
             {sidebar ?? <>
             <div>

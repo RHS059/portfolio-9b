@@ -8,12 +8,16 @@ export async function checkOriginalWorkflow(page,{capture=async()=>{}}={}){
  await navigateStory(page,6);
  const truth=JSON.stringify((await state()).scenario),preview=page.locator('#original-workflow-preview');
  assert.equal(await preview.locator('.ow-preview').getAttribute('role'),'img');
+ assert.equal(await preview.evaluate(el=>el.closest('[data-story-overlay]')?.dataset.storyOverlay),'solution');
+ assert.equal(await preview.evaluate(el=>!!el.closest('aside')),false);
+ const positions=await page.evaluate(()=>({story:document.querySelector('aside').getBoundingClientRect().x,scene:document.querySelector('#world').getBoundingClientRect().x}));assert.ok(positions.story>positions.scene,'Design narrative is on the right');
  assert.equal(await preview.locator('.ow-app').getAttribute('inert'),'');
+ assert.equal(await preview.locator('.ow-table tbody tr').count(),21);assert.equal(await preview.locator('.ow-app-nav').isVisible(),true);
  for(const [seconds,phase] of [[0,'unmatched'],[5,'asset-dialog'],[7,'asset-picker'],[12,'asset-chosen'],[16,'linked'],[21,'unmatched']]){
   await page.locator('#story-progress').evaluate((input,time)=>{input.value=String(time);input.dispatchEvent(new Event('input',{bubbles:true}));},sceneTime(6)+seconds/1.5);
   assert.equal(await preview.locator('[data-workflow-phase]').getAttribute('data-workflow-phase'),phase);
  }
- await capture('original-workflow-sidebar.png');
+ await capture('original-workflow-scene-overlay.png');
  await page.locator('#open-original-workflow').click();
  const dialog=page.locator('[data-original-workflow-dialog]');
  assert.equal(await dialog.isVisible(),true);assert.equal((await state()).simulation.paused,true);
@@ -24,6 +28,8 @@ export async function checkOriginalWorkflow(page,{capture=async()=>{}}={}){
  await dialog.locator('[data-original-play]').click();
  assert.equal(await dialog.locator('[data-original-play]').innerText(),'Play loop');
  await dialog.locator('[data-original-reset]').click();
+ const frame=await dialog.locator('.ow-screen-shell').boundingBox(),footer=await dialog.locator('.ow-bottom-toolbar').boundingBox();
+ assert.ok(footer.y+footer.height<=frame.y+frame.height+1,'Complete bottom action strip fits in the original app frame');
  await capture('original-workflow-modal-unmatched.png');
  const openAsset=async()=>dialog.locator('[data-action="open-asset"]').click();
  await openAsset();await dialog.locator('[data-action="open-picker"]').click();

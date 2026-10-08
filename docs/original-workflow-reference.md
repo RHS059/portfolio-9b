@@ -15,7 +15,7 @@ Approximate observed sequence:
 
 The Missing Asset, Asset Linking and Auto Update annotation overlays are excluded. The final annotation claims future automatic matching, but no further import is shown. The implementation does not invent that import or a Fuel Log destination.
 
-This footage demonstrates fuel-record asset linking, not selecting an odometer source or excluding readings. The solution panel describes the two honestly and separately.
+This footage demonstrates fuel-record asset linking, not selecting an odometer source or excluding readings. The right-hand solution narrative explains the original research, vendor discovery, import-flow mapping and validation design. The WEX application is shown over the 3D scene; its asset-linking step remains distinct from odometer authority.
 
 ## Local sample boundary
 
@@ -31,7 +31,7 @@ Use a connected workspace root for the dialog, not an ancestor marked hidden. It
 
 Manual actions pause the modal loop before editing. Reset clears the local repair, and reopening starts cleanly. The reduced-motion preference starts paused; a deliberate Play loop command may opt into the demonstration. Visibility loss pauses the modal clock.
 
-The miniature has no separate timer. It samples the solution scene's elapsed time at 1.5×, allowing the 21-second demonstration to complete and restart within the 18-second scene. Secondary columns are hidden in the compact sidebar view; the full modal keeps dense horizontally scrollable tables.
+The scene-overlay preview has no separate timer. It samples the solution scene's elapsed time at 1.5×, allowing the 21-second demonstration to complete and restart within the 18-second scene. The scene overlay scales the complete original composition, including its chrome, columns and records. The full modal keeps dense horizontally scrollable tables.
 
 The visible sample-data caption and long disabled-button tooltip have been removed. The phase status is screen-reader-only; annotations are not overlaid on the recreation.
 
@@ -43,3 +43,5 @@ Run:
 `node --test public/fleet-demo/tests/components/original-workflow*.test.js public/fleet-demo/tests/core/mount.test.js tests/fleet-shell.test.mjs tests/fleet-original-workflow-integration.test.mjs`
 
 Node tests cover state transitions, immutable evidence, local-only behavior, loop disposal, dialog focus/keyboard lifecycle, the real app mount/controller regression harness and markup parity. They do not replace browser visual testing. The native preview CI lane runs `checkOriginalWorkflow` to check the full modal against the screenshot, manual repair, repeated open/close, pause/reset, keyboard focus, mobile table scrolling, reduced motion and route cleanup.
+
+The design-process copy is grounded in `app/projects/fleet-fuel-integration/page.tsx`: Research & Discovery, How I Knew What to Do, Planning & Collaboration, and Results. Only the solution scene moves its narrative to the right on desktop; narrower layouts stack it with the same readable portfolio treatment.

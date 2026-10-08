@@ -8,7 +8,7 @@ const reduced=value=>typeof value==='function'?!!value():typeof value==='boolean
 function createSurface(container,{preview=false,idPrefix}={}){
   const doc=container.ownerDocument,root=doc.createElement('div');root.className=preview?'ow-preview':'ow-player';
   const style=doc.createElement('style'),shell=doc.createElement('div'),screen=doc.createElement('div'),cursor=doc.createElementNS('http://www.w3.org/2000/svg','svg');
-  style.textContent=originalWorkflowStyles;shell.className='ow-screen-shell';shell.dataset.playing='false';screen.dataset.originalScreen='';
+  style.textContent=originalWorkflowStyles;shell.className='ow-screen-shell';shell.dataset.playing='false';screen.dataset.originalScreen='';if(preview)screen.className='ow-scaled-screen';
   cursor.setAttribute('class','ow-cursor');cursor.setAttribute('aria-hidden','true');cursor.setAttribute('viewBox','0 0 20 27');cursor.innerHTML='<path d="M2 1v21l5-5 4 8 4-2-4-8h7Z" fill="#fff" stroke="#273844" stroke-width="1.5" stroke-linejoin="round"/>';
   root.appendChild(style);shell.appendChild(screen);shell.appendChild(cursor);root.appendChild(shell);
   let play=null,status=null;
@@ -24,14 +24,18 @@ function createSurface(container,{preview=false,idPrefix}={}){
     const rect=target.getBoundingClientRect(),base=shell.getBoundingClientRect();
     cursor.style.transform=`translate(${Math.max(0,rect.left-base.left+shell.scrollLeft+Math.min(rect.width*.52,250))}px,${Math.max(0,rect.top-base.top+shell.scrollTop+rect.height*.55)}px)`;
   }
-  const observer=typeof ResizeObserver==='function'?new ResizeObserver(positionCursor):null;observer?.observe(shell);
+  function layout(){
+    if(preview){const scale=(shell.clientWidth||shell.getBoundingClientRect().width)/1128;screen.style.transform=`scale(${scale})`;shell.style.height=`${Math.ceil(screen.offsetHeight*scale+2)}px`;}
+    positionCursor();
+  }
+  const observer=typeof ResizeObserver==='function'?new ResizeObserver(layout):null;observer?.observe(shell);
   return {
     root,screen,shell,
     render(state,{playing=false,showCursor=true,focusKey=null}={}){
       lastState=state;shell.dataset.playing=String(playing);cursorVisible=showCursor;cursor.setAttribute('visibility',showCursor?'visible':'hidden');const key=JSON.stringify(state);
       if(key!==lastKey){lastKey=key;screen.innerHTML=renderWorkflowScreen(state,{preview,idPrefix});if(focusKey)screen.querySelector(`[data-ow-key="${focusKey}"]`)?.focus({preventScroll:true});}
       if(play){play.textContent=playing?'Pause loop':'Play loop';play.setAttribute('aria-pressed',String(playing));}
-      if(status)status.textContent=state.notice||phaseDescription(state);positionCursor();
+      if(status)status.textContent=state.notice||phaseDescription(state);layout();
     },
     dispose(){observer?.disconnect();root.remove();},
   };
