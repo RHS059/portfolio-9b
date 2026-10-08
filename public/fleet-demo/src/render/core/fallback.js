@@ -1,3 +1,5 @@
+import {MAP_REGION} from '../map/region.js';
+import {createSvgRegion} from '../map/region-svg.js';
 import {viewportZoom} from '../camera/controller.js';
 import {createSvgMap} from '../map/svg-map.js';
 import {SITES,ROUTES,toLngLat} from '../map/world.js';
@@ -6,8 +8,8 @@ const el=(name,attrs={})=>{const n=document.createElementNS(NS,name);for(const[k
 const world=(lng,lat,z)=>{const size=256*2**z,s=Math.sin(lat*Math.PI/180);return{x:(lng+180)/360*size,y:(.5-Math.log((1+s)/(1-s))/(4*Math.PI))*size};};
 /** Same OpenFreeMap vector CDN as Grid Command, drawn with SVG without WebGL. */
 export function createFallback({container,onSelect}){
-  const svg=el('svg',{role:'group','aria-label':'Oakland fleet map, 2D fallback'});Object.assign(svg.style,{position:'absolute',inset:'0',width:'100%',height:'100%',background:'#e9ebe6',touchAction:'none'});container.append(svg);
-  const tiles=el('g');const tileMap=createSvgMap(tiles);const routes=el('g'),sites=el('g'),vehicles=el('g');svg.append(tiles,routes,sites,vehicles);
+  const svg=el('svg',{role:'group','aria-label':'Oakland fleet map, 2D fallback'});Object.assign(svg.style,{position:'absolute',inset:'0',width:'100%',height:'100%',background:'#f3f3ed',touchAction:'none'});container.append(svg);
+  const tiles=el('g');const tileMap=createSvgMap(tiles);const routes=el('g'),sites=el('g'),vehicles=el('g');svg.append(tiles,routes,sites,vehicles);const regionMask=createSvgRegion(svg,tiles);
   const allPoints=[...Object.values(ROUTES).flat(),...SITES.flatMap(s=>s.footprintWorld||[])].map(toLngLat);const minLng=Math.min(...allPoints.map(p=>p[0])),maxLng=Math.max(...allPoints.map(p=>p[0])),minLat=Math.min(...allPoints.map(p=>p[1])),maxLat=Math.max(...allPoints.map(p=>p[1]));let width=1,height=1,zoom=14,center=[(minLng+maxLng)/2,(minLat+maxLat)/2],visible=true,disposed=false,tileKey='',last=[],fitted=false;
   let pan={x:0,y:0};let pointer=null;
   function reset(){center=[(minLng+maxLng)/2,(minLat+maxLat)/2];const a=world(minLng,minLat,0),b=world(maxLng,maxLat,0);zoom=Math.max(12,Math.min(16,Math.floor(Math.log2(Math.min(Math.max(1,width-100)/Math.abs(b.x-a.x),Math.max(1,height-150)/Math.abs(b.y-a.y))))));pan={x:0,y:0};redraw();}
@@ -15,7 +17,7 @@ export function createFallback({container,onSelect}){
   function project(v){return projectPoint(toLngLat([v.x,v.y]));}
   function redraw(){if(disposed||!visible)return;
     const c=world(...center,zoom),left=c.x-width/2-pan.x,top=c.y-height/2-pan.y;
-    tileMap.update({left,top,width,height,zoom});
+    tileMap.update({left,top,width,height,zoom});regionMask.update({center:projectPoint(MAP_REGION.lngLat),metersPerPixel:1/(256*2**zoom*MAP_REGION.meterScale),width,height});
     routes.replaceChildren();for(const id of ['port-to-factory','factory-to-depot']){const points=ROUTES[id].map(p=>{const q=project({x:p[0],y:p[1]});return`${q.x},${q.y}`;}).join(' ');routes.append(el('polyline',{points,fill:'none',stroke:'#e3e9df','stroke-width':8}),el('polyline',{points,fill:'none',stroke:'#697d6d','stroke-width':1.5,'stroke-dasharray':id.includes('depot')?'5 4':'none'}));}
     sites.replaceChildren();for(const site of SITES){const p=project(site),group=el('g',{'data-id':site.id});const meters=2**zoom*256/(40075016*Math.cos(center[1]*Math.PI/180));const w=site.width*meters,h=site.depth*meters;
       if(site.footprintWorld){const points=site.footprintWorld.map(([x,y])=>{const q=project({x,y});return `${q.x},${q.y}`;}).join(' ');group.append(el('polygon',{points,fill:'none',stroke:'#68766b','stroke-width':1.25,'stroke-dasharray':'6 4'}));sites.append(group);continue;}
@@ -34,5 +36,5 @@ export function createFallback({container,onSelect}){
   const up=()=>{pointer=null;};
   const wheel=e=>{e.preventDefault();zoom=Math.min(18,Math.max(12,zoom+(e.deltaY<0?1:-1)));pan={x:0,y:0};redraw();};
   svg.addEventListener('pointerdown',down);svg.addEventListener('pointermove',move);svg.addEventListener('pointerup',up);svg.addEventListener('wheel',wheel,{passive:false});
-  return {project,update:drawVehicles,resize(w,h){width=w;height=h;if(!fitted&&w>50&&h>50){const a=world(minLng,minLat,0),b=world(maxLng,maxLat,0);zoom=Math.max(12,Math.min(16,Math.floor(Math.log2(Math.min((w-100)/Math.abs(b.x-a.x),(h-150)/Math.abs(b.y-a.y))))));fitted=true;}svg.setAttribute('viewBox',`0 0 ${w} ${h}`);redraw();},setVisible(value){visible=value;svg.style.display=value?'':'none';if(value)redraw();},setFocus(id,zoomTo=false){if(!id){reset();return;}const s=SITES.find(s=>s.id===id)||last.find(v=>v.id===id);if(s){if(zoomTo&&s.focusBounds){const [a,b]=s.focusBounds,p=world(...a,0),q=world(...b,0);zoom=Math.max(12,Math.min(16,Math.log2(Math.min(Math.max(1,width-80)/Math.abs(q.x-p.x),Math.max(1,height-200)/Math.abs(q.y-p.y)))));center=[(a[0]+b[0])/2,(a[1]+b[1])/2];}else{if(zoomTo)zoom=viewportZoom(s.focusZoom||17,width,height);center=toLngLat([s.focusX??s.x,s.focusY??s.y]);}pan={x:0,y:0};redraw();}},dispose(){disposed=true;tileMap.dispose();svg.remove();},getMetrics(){return{renderer:'SVG + OpenFreeMap vectors (no WebGL)',zoom,...tileMap.getMetrics()};}};
+  return {project,update:drawVehicles,resize(w,h){width=w;height=h;if(!fitted&&w>50&&h>50){const a=world(minLng,minLat,0),b=world(maxLng,maxLat,0);zoom=Math.max(12,Math.min(16,Math.floor(Math.log2(Math.min((w-100)/Math.abs(b.x-a.x),(h-150)/Math.abs(b.y-a.y))))));fitted=true;}svg.setAttribute('viewBox',`0 0 ${w} ${h}`);redraw();},setVisible(value){visible=value;svg.style.display=value?'':'none';if(value)redraw();},setFocus(id,zoomTo=false){if(!id){reset();return;}const s=SITES.find(s=>s.id===id)||last.find(v=>v.id===id);if(s){if(zoomTo&&s.focusBounds){const [a,b]=s.focusBounds,p=world(...a,0),q=world(...b,0);zoom=Math.max(12,Math.min(16,Math.log2(Math.min(Math.max(1,width-80)/Math.abs(q.x-p.x),Math.max(1,height-200)/Math.abs(q.y-p.y)))));center=[(a[0]+b[0])/2,(a[1]+b[1])/2];}else{if(zoomTo)zoom=viewportZoom(s.focusZoom||17,width,height);center=toLngLat([s.focusX??s.x,s.focusY??s.y]);}pan={x:0,y:0};redraw();}},dispose(){disposed=true;regionMask.dispose();tileMap.dispose();svg.remove();},getMetrics(){return{renderer:'SVG + OpenFreeMap vectors (no WebGL)',zoom,...tileMap.getMetrics()};}};
 }

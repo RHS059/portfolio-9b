@@ -1,91 +1,237 @@
-/* Layout mechanics only. The palette, typography, buttons, sidebar and footer
-   come from PortfolioShell and its shared portfolio-home.module.css. */
+/* The story uses the real PortfolioShell palette, typography and controls. */
 .root { min-width: 0; }
 .root [hidden] { display: none !important; }
 .root button { -webkit-tap-highlight-color: transparent; }
-.root button small { display: block; font-size: 12px; font-weight: 400; }
-.root :is(button, select, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.root :is(button,input,select,summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .sidebar { min-width: 0; }
-.introPanel { display: flex; flex-direction: column; flex: 1; gap: 24px; }
-.projectInfo dl { display: grid; gap: 18px; margin: 0; }
-.projectInfo dt { margin-bottom: 6px; }
+.introPanel { display: flex; flex-direction: column; flex: 1; gap: 20px; }
+.introPanel > p { margin: 0; }
+.projectInfo dl { display: grid; gap: 14px; margin: 0; }
+.projectInfo dt { margin-bottom: 5px; }
 .projectInfo dd { margin: 0; }
 .introCta { margin-top: auto; }
-.storyContent { min-width: 0; }
-.storyIntro { margin: 18px 0 22px; }
-.modeSwitch { display: flex; gap: 8px; }
-.modeSwitch button { flex-direction: column; }
-.modeDescription { color: var(--body); font-size: 12.75px; line-height: 1.6; margin: 14px 0 22px; }
-.root :global(.story-steps) { display: flex; flex-direction: column; gap: 8px; }
-.root :global(.story-steps .story-step) { align-items: center; justify-content: flex-start; gap: 10px; text-align: left; }
-.root :global(.step-number) { font-variant-numeric: tabular-nums; opacity: 0.72; }
-.chapter { margin-top: 24px; }
-.chapter h2 { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.25; letter-spacing: -0.02em; }
+.storyContent { display: flex; flex-direction: column; flex: 1; min-width: 0; gap: 28px; }
+.chapterIntro > p { margin: 0 0 46px; }
+.chapterIntro span { display: block; margin-bottom: 16px; }
+.chapterIntro h1 { max-width: 18ch; }
+.chapterCopy { margin: 24px 0 0; line-height: 1.7; }
+.chapterTakeaway:empty { display: none; }
+.chapterTakeaway strong { font-size: 25px; font-weight: 600; letter-spacing: -.03em; }
+.chapterNavigation { margin-top: auto; max-width: none; }
+.root .exampleNote { font-size: 11.5px; color: var(--muted); }
 .root .main { min-width: 0; min-height: calc(100dvh - 56px); }
-.root .siteNavigation { flex-direction: row; margin-top: 0; }
-.workspaceBody { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-width: 0; gap: 14px; }
-.root[data-intro="false"] .workspaceBody { grid-template-columns: minmax(0, 1fr) minmax(270px, 30%); }
+.workspaceBody { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-width: 0; }
 .root .worldPanel { aspect-ratio: auto; position: relative; display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: var(--sidebar); }
-.world { position: relative; flex: 1; min-height: 520px; width: 100%; overflow: hidden; }
+.stageViewport { position: relative; flex: 1; min-height: 520px; overflow: hidden; isolation: isolate; }
+.world { position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; transition: filter 600ms ease; }
 .world canvas { display: block; }
+.root[data-scene="provider-switch"] .world { filter: blur(7px) brightness(.36); }
+.root[data-scene="learning"] .world { filter: blur(3px); }
+.root[data-exploring="true"] .world { filter: none; }
+.root[data-exploring="true"] .storyOverlays { display: none; }
 .sceneLoading { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; font-size: 13px; color: var(--muted); }
-.sceneNotice { position: absolute; top: 20px; left: 20px; right: 20px; z-index: 4; padding: 12px; border: 1px solid var(--sidebar-rule); background: var(--sidebar); font-size: 12.75px; }
-.worldToolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px; border-top: 1px solid var(--sidebar-rule); }
-.root .worldToolbar button { width: auto; padding: 10px 12px; min-height: 44px; }
-.segmented { display: flex; gap: 4px; }
-.toolbarSpacer { flex: 1; }
-.placeLabels { display: flex; gap: 8px; padding: 0 14px 14px; }
-.root .placeLabels button { padding: 10px 12px; min-height: 44px; }
-.impactStrip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; border-top: 1px solid var(--sidebar-rule); padding: 18px; }
-.root[data-intro="true"] .impactStrip { display: none; }
-.impactStrip > div { display: flex; flex-direction: column; gap: 6px; }
-.impactStrip strong { color: var(--ink); font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
-.impactStrip small { color: var(--body); font-size: 12.75px; }
-.aboutPanel { position: absolute; z-index: 9; top: 16px; left: 16px; right: 16px; max-height: calc(100% - 32px); overflow: auto; padding: 24px; border: 1px solid var(--sidebar-rule); border-radius: 4px; background: var(--sidebar); color: var(--body); font-size: 13.5px; line-height: 1.6; }
-.aboutPanel h2 { color: var(--ink); font-size: 22px; font-weight: 600; margin: 0 0 16px; letter-spacing: -0.02em; }
-.aboutPanel p { margin: 12px 0; }
+.sceneNotice { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 5; padding: 8px 12px; border: 1px solid var(--sidebar-rule); background: var(--sidebar); font-size: 11px; }
+.storyOverlays { position: absolute; inset: 0; z-index: 3; pointer-events: none; padding: 32px; display: grid; align-items: center; }
+.storyOverlays h2 { margin: 14px 0 18px; font-size: clamp(22px,2.3vw,36px); line-height: 1.12; letter-spacing: -.035em; font-weight: 600; }
+.storyOverlays p { font-size: 14px; line-height: 1.6; margin: 16px 0; }
+.storyOverlays small { font-size: 11px; line-height: 1.55; color: var(--muted); }
+.openingCaption { align-self: start; width: fit-content; padding: 20px 24px; background: color-mix(in srgb,var(--sidebar) 92%,transparent); border: 1px solid var(--sidebar-rule); border-radius: 4px; }
+.openingCaption p { font-size: clamp(26px,3vw,48px); line-height: 1.04; font-weight: 600; letter-spacing: -.04em; margin: 12px 0 0; }
+.integrationCard, .costCard, .solutionCard, .agentCard, .learningCard { background: color-mix(in srgb,var(--sidebar) 96%,transparent); border: 1px solid var(--sidebar-rule); border-radius: 4px; padding: 26px; width: min(390px,100%); justify-self: end; box-shadow: 0 16px 60px color-mix(in srgb,var(--ink) 10%,transparent); }
+.integrationCard h2 { font-size: 28px; }
+.dataRoute { display: grid; gap: 8px; text-align: center; font-size: 12px; margin-top: 20px; }
+.dataRoute span { padding: 10px; border: 1px solid var(--sidebar-rule); }
+.dataRoute b { color: var(--accent); }
+.serviceCard { align-self: end; justify-self: start; display: grid; gap: 9px; padding: 24px; background: var(--sidebar); border: 1px solid var(--sidebar-rule); border-left: 4px solid var(--accent); border-radius: 4px; }
+.serviceCard strong { font-size: clamp(28px,3vw,44px); font-weight: 600; letter-spacing: -.04em; }
+.providerOverlay { justify-self: center; width: 100%; text-align: center; color: var(--page); }
+.devicePair { display: flex; align-items: center; justify-content: center; gap: clamp(12px,3vw,42px); margin: 0 auto 30px; }
+.device { position: relative; width: 190px; height: 216px; padding: 28px 16px 20px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; background: var(--sidebar); color: var(--ink); border: 7px solid var(--body); border-radius: 17px; box-shadow: inset 0 0 0 1px var(--sidebar-rule),0 16px 40px color-mix(in srgb,var(--ink) 30%,transparent); transform: perspective(700px) rotateY(8deg); }
+.device:last-child { transform: perspective(700px) rotateY(-8deg); }
+.device::before, .device::after { content: ''; position: absolute; left: 28%; right: 28%; height: 8px; background: var(--body); border-radius: 3px; }
+.device::before { top: -12px; }
+.device::after { bottom: -12px; }
+.deviceLight { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; align-self: flex-start; }
+.deviceBrand { display: grid; gap: 2px; align-items: center; justify-items: center; min-height: 72px; }
+.deviceBrand strong { font-size: 24px; letter-spacing: -.06em; }
+.deviceBrand span { font-size: 11px; letter-spacing: .07em; }
+.deviceBrand img { max-width: 132px; max-height: 62px; object-fit: contain; }
+.root .device small { color: var(--muted); font-size: 8px; letter-spacing: .06em; }
+.providerPlus { font-size: 26px; opacity: .6; }
+.providerOverlay h2 { margin-bottom: 12px; }
+.providerOverlay p { max-width: 43ch; margin: 0 auto 20px; color: var(--page); font-size: 16px; }
+.root .providerNote { display: block; color: var(--page); opacity: .7; margin-top: 16px; font-size: 10px; }
+.months { display: block; color: var(--story-danger,#ff7979); font-size: clamp(30px,4vw,56px); font-weight: 700; letter-spacing: .10em; }
+.mileageOverlay { justify-self: center; text-align: center; width: min(600px,100%); color: var(--page); }
+.root .mileageOverlay :is(small,span[class]) { color: var(--page); }
+.mileageValues { display: flex; align-items: center; justify-content: center; gap: 26px; margin: 25px 0; font-size: clamp(24px,3vw,40px); font-variant-numeric: tabular-nums; letter-spacing: -.035em; }
+.mileageValues > span { display: grid; gap: 5px; }
+.mileageValues small { font-size: 9px; letter-spacing: .10em; opacity: .8; }
+.mileageValues b { font-weight: 400; opacity: .55; }
+.odometer { display: grid; gap: 0; padding: 20px; border-top: 1px solid color-mix(in srgb,var(--page) 30%,transparent); border-bottom: 1px solid color-mix(in srgb,var(--page) 30%,transparent); }
+.odometer > span { font-size: clamp(54px,7vw,96px); font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.06em; line-height: 1; }
+.mileageAlert { min-height: 28px; margin-top: 24px; color: var(--page); font-size: 14px; font-weight: 600; }
+.mileageAlert[data-due="true"] { color: var(--story-danger,#ff7979); }
+.mileageOverlay > p { margin-bottom: 8px; }
+.costCard { justify-self: center; width: min(530px,100%); pointer-events: auto; }
+.costDays { display: grid; grid-template-columns: repeat(14,minmax(0,1fr)); gap: 5px; margin-top: 24px; }
+.costDays > span { display: grid; align-items: center; justify-items: center; min-height: 42px; border: 1px solid var(--sidebar-rule); color: var(--muted); font-size: 9px; border-radius: 3px; }
+.costDays > span[data-past="true"] { background: var(--main-bg); color: var(--body); }
+.costDays > span[data-visit="true"][data-past="true"] { background: var(--accent); color: var(--page); }
+.costDays > span::after { content: '·'; font-size: 13px; }
+.costDays > span[data-visit="true"]::after { content: '↺'; }
+.costCard label { display: block; font-size: 12px; margin-top: 20px; font-weight: 600; }
+.costCard label span { font-weight: 400; color: var(--muted); }
+.costCard input { display: block; width: min(230px,100%); border: 1px solid var(--ink); padding: 11px 12px; background: var(--sidebar); color: var(--ink); border-radius: 4px; margin: 9px 0 10px; font-size: 15px; }
+.costCard > small { display: block; }
+.solutionCard { width: min(450px,100%); }
+.decisionRow { display: grid; gap: 8px; border-bottom: 1px solid var(--sidebar-rule); padding: 21px 0; }
+.decisionRow > span { font-size: 10px; letter-spacing: .08em; color: var(--muted); }
+.decisionRow strong { font-size: 19px; line-height: 1.25; font-weight: 500; }
+.agentCard { width: min(460px,100%); }
+.agentSteps { list-style: none; padding: 0; display: grid; gap: 6px; margin: 20px 0; }
+.agentSteps li { display: flex; gap: 14px; border: 1px solid transparent; padding: 13px 10px; opacity: .55; transition: opacity 200ms ease,border-color 200ms ease; }
+.agentSteps li[data-active="true"] { opacity: 1; border-color: var(--sidebar-rule); }
+.agentSteps li > span { font-size: 10px; color: var(--accent); margin-top: 3px; }
+.agentSteps li > div { display: grid; gap: 4px; }
+.agentSteps strong { font-size: 15px; font-weight: 600; }
+.learningCard { justify-self: center; width: min(480px,100%); text-align: center; padding: 40px; }
+.learningCard h2 { font-size: clamp(35px,4vw,56px); }
+.learningCard p { line-height: 1.9; }
+.storyDock { flex: none; width: 100%; background: var(--sidebar); border-top: 1px solid var(--sidebar-rule); padding-top: 15px; }
+.storyTransport { background: var(--ink); color: #fff; margin: 7px 12px 12px; padding: 5px 12px 6px; border-radius: 6px; }
+.storyProgress { display: block; appearance: none; -webkit-appearance: none; width: 100%; height: 18px; margin: 0; padding: 0; border: 0; background-color: transparent; background-image: linear-gradient(to right,#fff 0%,#ffffff40 0%); background-size: 100% 3px; background-position: center; background-repeat: no-repeat; cursor: pointer; }
+.storyProgress::-webkit-slider-runnable-track { height: 3px; background: transparent; }
+.storyProgress::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 10px; height: 10px; margin-top: -3.5px; border: 0; border-radius: 50%; background: #fff; }
+.storyProgress::-moz-range-track { height: 3px; background: transparent; }
+.storyProgress::-moz-range-thumb { width: 10px; height: 10px; border: 0; border-radius: 50%; background: #fff; }
+.transportRow { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: center; min-height: 44px; }
+.playbackControls { grid-column: 2; display: grid; grid-template-columns: repeat(3,44px); align-items: center; gap: 5px; }
+.root .playbackControls button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; min-width: 44px; padding: 0; color: #fff; background: transparent; border: 0; border-radius: 50%; }
+.root .playbackControls button:hover:not(:disabled) { background: #ffffff20; color: #fff; }
+.root .playbackControls :global(#previous-chapter) { grid-column: 1; }
+.root .playbackControls :global(#pause) { grid-column: 2; background: #ffffff12; }
+.root .playbackControls :global(#next-chapter) { grid-column: 3; }
+.playbackTime { grid-column: 3; justify-self: end; white-space: nowrap; font-size: 11px; line-height: 1; font-variant-numeric: tabular-nums; color: #ffffffb3; }
+.playbackTime > span:first-child { color: #fff; }
+.root[data-dialog-open="true"] .storyTransport { visibility: hidden; }
+.materialSymbol { display: block; flex: none; width: 24px; height: 24px; fill: currentColor; }
+.aboutPanel, .sourceDialog { position: absolute; z-index: 9; inset: 16px; max-height: calc(100% - 32px); overflow: auto; padding: 28px; border: 1px solid var(--sidebar-rule); border-radius: 4px; background: var(--sidebar); color: var(--body); font-size: 13px; line-height: 1.65; }
+.aboutPanel h2, .sourceDialog h2 { color: var(--ink); font-size: 25px; font-weight: 600; margin: 0 0 16px; letter-spacing: -.025em; }
+.aboutPanel p, .sourceDialog > p { margin: 14px 0; }
 .aboutPanel details { margin: 18px 0; padding-top: 16px; border-top: 1px solid var(--sidebar-rule); }
 .aboutPanel summary { cursor: pointer; font-weight: 500; }
-.root .aboutPanel .close { width: 44px; height: 44px; float: right; margin-left: 12px; font-size: 20px; padding: 0; }
+.root .close { width: 40px; height: 40px; float: right; margin-left: 12px; font-size: 20px; padding: 0; }
 .aboutPanel a { text-decoration: underline; text-underline-offset: 4px; }
-.root .inspectorPanel { aspect-ratio: auto; min-width: 0; padding: 22px; background: var(--sidebar); max-height: calc(100dvh - 148px); overflow: auto; }
-.inspectorHeading h2 { color: var(--ink); font-size: 23px; font-weight: 600; line-height: 1.2; letter-spacing: -0.03em; margin: 8px 0 12px; }
-.inspectorHeading p { color: var(--body); font-size: 13.5px; line-height: 1.4; margin: 0 0 22px; }
-.vehicleTabs { display: flex; gap: 8px; }
-.root .vehicleTabs button { flex-direction: column; padding: 10px; }
-.feedback { margin-top: 16px; color: var(--body); font-size: 12.75px; line-height: 1.6; }
-/* The imperative evidence UI consumes the same live portfolio tokens. */
-.root :global(.fp-panel) { --fp-ink: var(--ink); --fp-muted: var(--muted); --fp-line: var(--sidebar-rule); --fp-paper: var(--sidebar); font-size: 13.5px; line-height: 1.6; }
+.sceneViewControls { position: absolute; z-index: 6; right: 12px; bottom: 32px; display: flex; gap: 5px; padding: 5px; background: color-mix(in srgb,var(--sidebar) 96%,transparent); border: 1px solid var(--sidebar-rule); border-radius: 4px; }
+.root .sceneViewControls button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; min-width: 44px; padding: 0; }
+.readingContext { display: grid; gap: 6px; margin: 24px 0 18px; }
+.readingContext strong { font-size: 20px; font-weight: 600; }
+.readingContext small { font-size: 12px; }
+.feedback, .modeDescription { font-size: 12px; line-height: 1.6; }
+.feedback:empty { display: none; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.root :global(.fp-panel) { --fp-ink: var(--ink); --fp-muted: var(--muted); --fp-line: var(--sidebar-rule); --fp-paper: var(--sidebar); font-size: 13px; }
 .root :global(.fp-panel .fp-kicker), .root :global(.fp-panel .fp-badge), .root :global(.fp-panel .fp-reading-id), .root :global(.fp-panel .fp-review-mode) { font-family: inherit; }
-.root :global(.fp-panel .fp-kicker) { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: var(--muted-2); }
 .root :global(.fp-panel .fp-card), .root :global(.fp-panel select), .root :global(.fp-panel button) { border-radius: 4px; }
-.root :global(.fp-panel button:hover:not(:disabled)) { background: transparent; color: var(--accent); border-color: var(--accent); }
-.root :global(.fp-panel button[aria-pressed="true"]:hover:not(:disabled)) { background: var(--accent); color: var(--sidebar); }
-.root :global(.fp-panel select) { font-family: inherit; font-size: 13.5px; }
-.root :global(.provenance-fallback) { font-size: 13.5px; line-height: 1.6; color: var(--body); }
-.root :global(.evidence-card) { border: 1px solid var(--sidebar-rule); border-radius: 4px; margin: 14px 0; padding: 14px; }
-.root :global(.record-row) { border-top: 1px solid var(--sidebar-rule); padding: 10px 0; }
-@media (max-width: 1400px) and (min-width: 901px) {
-  .root[data-intro="false"] .workspaceBody { grid-template-columns: minmax(0, 1fr); }
-  .root .inspectorPanel { max-height: none; }
-  .root[data-intro="false"] .world { min-height: 560px; }
-}
+.root :global(.fp-panel button:hover:not(:disabled)) { color: var(--accent); border-color: var(--accent); }
+@media (max-width: 1100px) { .storyOverlays { padding: 22px; } .device { width: 160px; height: 190px; } }
 @media (max-width: 900px) {
-  .introPanel { gap: 24px; }
-  .introCta { margin-top: 8px; max-width: none; }
-  .root .main { min-height: 0; }
-  .root[data-intro="false"] .workspaceBody { grid-template-columns: minmax(0, 1fr); }
-  .world { min-height: 540px; }
-  .root .inspectorPanel { max-height: none; }
-  .toolbarSpacer { display: none; }
+  .storyTransport { position: fixed; z-index: 8; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); margin: 0; box-shadow: 0 5px 24px #0003; }
+  .root { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
+  .playbackTime { font-size: 10px; }
+  .introPanel { gap: 20px; } .introCta { margin-top: 6px; max-width: none; }
+  .storyContent { min-height: 330px; gap: 20px; } .chapterIntro > p { margin-bottom: 24px; }
+  .root .main { min-height: 0; } .stageViewport { min-height: 560px; }
+  .projectInfo dl { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px 24px; }
+  .chapterCopy { max-width: 60ch; margin-top: 16px; } .chapterNavigation { margin-top: 0; }
 }
 @media (max-width: 480px) {
-  .world { min-height: 460px; }
-  .worldToolbar, .placeLabels { padding-left: 12px; padding-right: 12px; }
-  .placeLabels { flex-wrap: wrap; }
-  .root .placeLabels button { flex: 1; min-width: 90px; }
-  .impactStrip { grid-template-columns: minmax(0, 1fr); }
-  .aboutPanel { top: 10px; left: 10px; right: 10px; padding: 18px; }
-}
+  .root .sidebar { padding: 24px; gap: 24px; }
+  .projectInfo dl { grid-template-columns: minmax(0,1fr); } .stageViewport { min-height: 520px; }
+  .storyOverlays { padding: 16px; } .integrationCard,.costCard,.solutionCard,.agentCard { padding: 20px; }
+  .providerOverlay h2 { font-size: 24px; } .providerOverlay p { font-size: 13px; }
+  .devicePair { gap: 10px; margin-bottom: 25px; } .device { width: 126px; height: 160px; padding: 16px 8px; border-width: 5px; border-radius: 12px; }
+  .deviceBrand strong { font-size: 20px; } .deviceBrand span { font-size: 9px; } .root .device small { font-size: 6px; }
+  .deviceBrand img { max-width: 96px; } .providerPlus { font-size: 20px; }
+  .mileageValues { gap: 16px; font-size: 28px; } .mileageOverlay > p { font-size: 12px; }
+  .costDays { gap: 3px; } .costDays > span { min-height: 36px; font-size: 8px; }
 
-.root :global(.fp-panel .fp-card > p:not(.fp-kicker)), .root :global(.fp-panel .fp-meta), .root :global(.fp-panel .fp-state p), .root :global(.fp-panel .fp-label), .root :global(.fp-panel .fp-reason), .root :global(.fp-panel .fp-service-list), .root :global(.fp-panel .fp-scope-hint), .root :global(.fp-panel .fp-review-mode) { font-size: 12.75px; }
+  .aboutPanel,.sourceDialog { inset: 8px; max-height: calc(100% - 16px); padding: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .world,.agentSteps li { transition: none; } }
+
+/* Story copy stays in the dialogue; the cost is a fixed two-visit example. */
+.storyOverlays .dialogueCopy { margin: 12px 0; font-size: 13px; line-height: 1.55; }
+.solutionCard .decisionRow { padding: 14px 0; }
+.agentCard .agentSteps li { padding: 9px 8px; }
+.costVisits { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 26px; }
+.costVisits > div { display: grid; gap: 8px; padding: 18px; border: 1px solid var(--sidebar-rule); opacity: .35; }
+.costVisits > div[data-active="true"] { opacity: 1; border-color: var(--ink); }
+.costVisits span { font-size: 12px; color: var(--muted); }
+.costVisits strong { font-size: 28px; font-weight: 600; letter-spacing: -.025em; }
+.costTotal, .costRepeat { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 17px 0; border-top: 1px solid var(--sidebar-rule); }
+.costTotal span, .costRepeat span { font-size: 13px; }
+.costTotal strong { font-size: 28px; font-weight: 600; }
+.costRepeat strong { font-size: 36px; color: var(--accent); font-weight: 600; letter-spacing: -.035em; }
+.costCard h2 { margin: 8px 0 14px; }
+.costVisits { margin-top: 18px; }
+.costVisits > div { padding: 14px; gap: 6px; }
+.costVisits strong, .costTotal strong, .costRepeat strong { line-height: 1; }
+.costCard :global(#cost-caption) { margin: 12px 0; font-size: 12px; }
+.costTotal, .costRepeat { padding: 12px 0; }
+
+/* Screenshot-directed layout: explanatory content belongs in the left column. */
+.sidebarScenes { min-width: 0; }
+.sidebar .sidebarScene { width: 100%; max-width: none; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; color: var(--ink); text-align: left; }
+.sidebarScene h2 { margin: 0 0 20px; }
+.sidebarScene > p { margin: 16px 0; font-size: 13.5px; line-height: 1.6; color: var(--body); }
+.sidebarScene small { color: var(--muted); font-size: 11px; line-height: 1.55; }
+.sidebarScene > small { display: block; }
+.sidebarScene .dataRoute { margin: 18px 0; }
+.sidebarScene .decisionRow { padding: 16px 0; }
+.sidebarScene .decisionRow strong { font-size: 17px; }
+.sidebarScene .dialogueCopy { margin: 0 0 12px; font-size: 13px; line-height: 1.6; }
+.sidebarScene .agentSteps { margin: 22px 0 0; }
+.sidebarScene .agentSteps li { padding: 12px 8px; }
+.sidebar .mileageOverlay :is(small,span[class]) { color: var(--muted); }
+.sidebar .mileageValues { gap: 10px; margin: 20px 0; justify-content: space-between; font-size: clamp(21px,1.65vw,28px); color: var(--ink); }
+.sidebar .mileageValues small { font-size: 8px; letter-spacing: .04em; }
+.sidebar .odometer { padding: 22px 0; border-color: var(--sidebar-rule); }
+.sidebar .odometer > span { font-size: clamp(42px,4.1vw,62px); color: var(--ink); }
+.sidebar .odometer > small { margin-top: 7px; }
+.sidebar .mileageAlert { color: var(--body); font-size: 12px; line-height: 1.5; margin-top: 20px; min-height: 36px; }
+.sidebar .mileageAlert[data-due="true"] { color: var(--accent); }
+.root[data-scene="solution"] .chapterIntro > p { margin-bottom: 0; }
+.receipt { position: relative; justify-self: center; width: min(410px,100%); padding: 24px 26px 28px; background: var(--page); color: var(--ink); box-shadow: 0 12px 32px color-mix(in srgb,var(--ink) 18%,transparent); font-family: ui-monospace,SFMono-Regular,Consolas,monospace; font-size: 12px; line-height: 1.5; }
+.receipt::after { content: ''; position: absolute; left: 0; right: 0; bottom: -7px; height: 8px; background: linear-gradient(135deg,var(--page) 25%,transparent 25%) -6px 0,linear-gradient(225deg,var(--page) 25%,transparent 25%) -6px 0; background-size: 12px 12px; }
+.receiptHeader { text-align: center; border-bottom: 1px dashed var(--muted); padding-bottom: 16px; }
+.storyOverlays .receiptHeader h2 { margin: 0 0 8px; font-family: inherit; font-size: 22px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.storyOverlays .receiptHeader p { margin: 0; font: inherit; }
+.receiptColumns { display: flex; justify-content: space-between; gap: 14px; padding: 12px 0 6px; font-size: 10px; letter-spacing: .04em; }
+.receiptLines > div { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 14px; padding: 9px 0; opacity: .25; }
+.receiptLines > div[data-active="true"] { opacity: 1; }
+.receiptLines > div > div { display: grid; gap: 2px; }
+.receiptLines strong { font-weight: 500; font-size: 13px; }
+.receiptLines span { color: var(--muted); font-size: 10px; }
+.storyOverlays .receiptCount { margin: 8px 0 12px; font: inherit; font-size: 10px; color: var(--muted); }
+.receiptTotal, .receiptDuplicate { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-variant-numeric: tabular-nums; }
+.receiptTotal { border-top: 1px dashed var(--muted); padding: 13px 0; }
+.receiptTotal > strong { line-height: 1; font-size: 24px; letter-spacing: -.03em; }
+.receiptDuplicate { border-top: 3px double var(--ink); padding-top: 14px; }
+.receiptDuplicate > span { font-size: 10px; }
+.receiptDuplicate > strong { line-height: 1; font-size: 22px; letter-spacing: -.03em; }
+@media (max-width: 900px) { .sidebar .sidebarScene { max-width: 520px; } .sidebar .mileageValues { justify-content: flex-start; gap: 28px; } .sidebar .odometer > span { font-size: 62px; } }
+@media (max-width: 480px) { .receipt { padding: 24px 20px 28px; } .storyOverlays .receiptHeader h2 { font-size: 20px; } .receiptDuplicate > strong { font-size: 21px; } }
+
+
+/* Keep the left story readable while scene copy fades. */
+.root .sidebar { gap: 20px; overflow: hidden; }
+.sidebarStoryBody { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; }
+.storyDock { padding-top: 0; }
+@media (max-width: 900px) { .sidebarStoryBody { flex: none; overflow: visible; } .root .sidebar { overflow: visible; } }
+
+/* The solution pairs the original application over the scene with the design story in the unchanged left sidebar. */
+.workflowOverlay { justify-self: center; align-self: center; width: min(920px,100%); max-height: calc(100% - 48px); overflow: auto; pointer-events: auto; background: var(--sidebar); border-radius: 6px; box-shadow: 0 18px 50px #0003; }
+.workflowOverlay > button { border-radius: 0 0 6px 6px; }
+@media (max-width: 900px) { .workflowOverlay { max-height: calc(100% - 24px); } }

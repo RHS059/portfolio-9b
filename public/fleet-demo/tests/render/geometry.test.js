@@ -18,7 +18,10 @@ actual('uniform-tone instanced batches preserve geometry and need no color attri
 actual('mapped port injection reaches real asset and instanced surfaces use two-sided rendering',async()=>{const {OICT_GEOGRAPHY}=await import('../../src/render/map/oict-geography.js');const {applyFacilityFacePolicy}=await import('../../src/render/core/facilities-adapter.js');const root=createFacilities({THREE:T,geography:{oict:OICT_GEOGRAPHY}}),port=root.children.find(g=>g.userData.siteId==='oict');assert.equal(port.userData.status,'mapped');assert.equal(port.userData.representativeRowCount,61);assert.equal(port.userData.schematicCraneCount,9);applyFacilityFacePolicy(T,root);let count=0;root.traverse(o=>{if(o.isInstancedMesh){count++;assert.equal(o.material.side,T.DoubleSide);}});assert.ok(count>=2);root.userData.dispose();disposeObject(root);});
 actual('actual scene disposes independent Three resources when MapLibre remove omits custom cleanup',async t=>{
  const {installDomHost,Element}=await import('./dom-host.js');const {createFleetScene}=await import('../../src/render/core/index.js');const host=installDomHost(t),container=new Element('div'),maps=[];let disposed=0,lost=0;
- const gl={getExtension:()=>null,getParameter:()=> 'test renderer',RENDERER:0,isContextLost:()=>false};
+ const gl={getExtension:()=>null,getParameter:()=> 'test renderer',RENDERER:0,isContextLost:()=>false,
+  createShader:()=>({}),shaderSource(){},compileShader(){},getShaderParameter:()=>true,deleteShader(){},
+  createProgram:()=>({}),attachShader(){},linkProgram(){},getProgramParameter:()=>true,deleteProgram(){},getAttribLocation:()=>0,getUniformLocation:()=>({}),
+  createBuffer:()=>({}),bindBuffer(){},bufferData(){},deleteBuffer(){}};
  class Renderer{constructor({canvas}){this.info={render:{}};this.gl=canvas.gl ||= {lost:false,isContextLost(){return this.lost;}};}getContext(){return this.gl;}setClearColor(){}setPixelRatio(){}setSize(){}render(){}dispose(){disposed++;}forceContextLoss(){lost++;}}
  class Map471{
   constructor(options){this.options=options;this.canvas=new Element('canvas');this.canvas.className='maplibregl-canvas';options.container.append(this.canvas);this.listeners={};this.layers={};this.sources={};maps.push(this);queueMicrotask(()=>this.listeners.load?.());}

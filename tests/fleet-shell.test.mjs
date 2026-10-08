@@ -1,69 +1,104 @@
-import test from 'node:test'
-import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
-const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8')
-const [page, shell, css, shared, frame] = await Promise.all([
-  read('app/fleet-demo/page.tsx'), read('components/fleet-demo-shell.tsx'),
-  read('components/fleet-demo-shell.module.css'), read('components/portfolio-home.module.css'),
-  read('components/portfolio-shell.tsx'),
-])
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+const read=path=>readFile(new URL(`../${path}`,import.meta.url),'utf8');
+const [page,shell,css]=await Promise.all([read('app/fleet-demo/page.tsx'),read('components/fleet-demo-shell.tsx'),read('components/fleet-demo-shell.module.css')]);
+const app=await read('public/fleet-demo/src/app/index.js'),standalone=await read('public/fleet-demo/index.html');
+test('Fleet stays native in the actual shared PortfolioShell with one scene card',()=>{
+ assert.match(page,/return <FleetDemoShell \/>/);assert.doesNotMatch(page,/iframe|index\.html/);
+ assert.match(shell,/import PortfolioShell from "\.\/portfolio-shell"/);assert.match(shell,/import portfolio from "\.\/portfolio-home\.module\.css"/);
+ assert.equal((shell.match(/portfolio\.card/g)||[]).length,1);assert.doesNotMatch(shell,/PortfolioLinks|Portfolio navigation|Inspect the evidence|<aside|className="topbar"|DM Sans|IBM Plex/);
+});
+test('the opening preserves the project fields and question with an editable working title',()=>{
+ for(const text of ['The Same Truck.','The Same Service.','Again.','UX Designer','User research, systems design, workflow architecture, integration logic, prototyping, and cross-functional collaboration','Figma-style wireframing, whiteboarding, API and integration workflows','UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager','2019 – 2022','Data issue resolution improved by 90%, from weeks to hours','Why were the same trucks getting serviced more than once in a week?'])assert.ok(shell.includes(text),text);
+ assert.match(shell,/id="story-content"[^>]* hidden/);assert.match(shell,/data-intro="true"/);
+});
+test('annotated content is in the sidebar and only requested map overlays remain',()=>{
+ const sidebar=shell.slice(shell.indexOf('function FleetSidebar'),shell.indexOf('export default function'));
+ const world=shell.slice(shell.indexOf('id="story-overlays"'),shell.indexOf('className={`story-dock'));
+ assert.deepEqual([...sidebar.matchAll(/data-story-sidebar="([^"]+)"/g)].map(match=>match[1]),['integration','mileage-loop','solution','agents']);
+ assert.deepEqual([...world.matchAll(/data-story-overlay="([^"]+)"/g)].map(match=>match[1]),['provider-switch','cost','solution','learning']);
+ assert.doesNotMatch(world,/data-story-sidebar|Why did it keep|ONE TRUCK/i);assert.doesNotMatch(css,/\[data-scene="mileage-loop"\] \.world \{ filter:/);
+ assert.ok(shell.indexOf('data-provider="verizon"')<shell.indexOf('data-provider="samsara"'));assert.match(css,/\[data-scene="provider-switch"\] \.world \{ filter: blur\(7px\) brightness/);
+ assert.ok(app.includes("$('#chapter-number').hidden=beatIndex===6"));
+});
+test('the bottom dock contains only the single transport',()=>{
+ assert.equal((shell.match(/story-dock/g)||[]).length,1);
+ const dock=shell.slice(shell.indexOf('className={`story-dock'),shell.indexOf('id="source-dialog"'));
+ for(const id of ['story-transport','story-progress','story-elapsed','story-duration','previous-chapter','pause','next-chapter']){assert.ok(dock.includes(`id="${id}"`),id);assert.equal((shell.match(new RegExp(`id="${id}"`,'g'))||[]).length,1);}
+ assert.match(shell,/htmlFor="story-progress"/);assert.match(shell,/aria-keyshortcuts="ArrowLeft"/);assert.match(shell,/aria-keyshortcuts="ArrowRight"/);assert.match(shell,/aria-keyshortcuts="Space"/);
+ assert.doesNotMatch(dock,/impact-strip|story-position|playback-status|scene-steps|selected-asset|service-visits|maintenance-cost/);
+});
+test('source controls are an optional modal, with human approval and preserved history',()=>{
+ assert.match(shell,/id="source-dialog"[^>]*role="dialog"[^>]*aria-modal="true"[^>]*hidden/);
+ for(const id of ['open-source-controls','run-story-review','source-close','source-inspector','canonical-reading','canonical-source','provenance','app-feedback'])assert.ok(shell.includes(`id="${id}"`));
+ assert.match(app,/hidden=beatIndex!==6/);assert.match(app,/hidden=beatIndex!==7/);
+ assert.ok(app.includes("action.type==='set-authority'||action.type==='add-exclusion'"));
+ assert.ok(app.includes('Original readings and service records are preserved.'));
+ assert.match(app,/event.key==='Tab'/);assert.match(app,/event.key==='Escape'/);
+});
+test('story copy removes redundant captions and uses one compact fixed-cost label',()=>{
+ assert.doesNotMatch(shell,/illustrative|reported provider overlap|Try a service cost|Oil change #2|service-unit-cost|cost-days/i);
+ assert.equal((shell.match(/Example cost/g)||[]).length,1);assert.match(shell,/id="cost-total">\$350/);assert.match(shell,/id="cost-duplicate">\$0/);
+ const solution=shell.slice(shell.indexOf('data-story-sidebar="solution"'),shell.indexOf('data-story-sidebar="agents"'));
+ const agents=shell.slice(shell.indexOf('data-story-sidebar="agents"'),shell.indexOf('id="chapter-takeaway"'));
+ assert.match(solution,/<h2[^>]*>How I got to the design<\/h2>/);assert.match(agents,/<h2[^>]*>How I’d approach it today<\/h2>/);
+ assert.ok(app.includes("$('#chapter-title').hidden=[1,6,7].includes(beatIndex)"));
+});
+test('single-clock story has a reduced-motion pause, manual override and route cleanup',()=>{
+ assert.equal((app.match(/createSimulation\(\{/g)||[]).length,1);
+ assert.match(app,/sim\.setPaused\(true\)/);assert.match(app,/on\(\$\('#story-progress'\),'input'/);
+ assert.match(app,/on\(doc,'visibilitychange'/);assert.match(app,/on\(window,'pagehide'/);assert.match(app,/sim\?\.dispose\(\);scene\?\.dispose\(\);panel\?\.dispose\(\)/);
+ assert.match(shell,/await instance\.ready/);assert.match(shell,/instance\?\.dispose\(\)/);assert.match(css,/@media \(prefers-reduced-motion: reduce\)/);
+});
+test('native and standalone markup expose the same controller hooks',()=>{
+ const ids=[...shell.matchAll(/id="([^"]+)"/g)].map(match=>match[1]);
+ for(const id of ids)assert.ok(standalone.includes(`id="${id}"`),id);
+ assert.doesNotMatch(standalone,/className=|<PortfolioShell|\$\{styles/);
+});
 
-test('Fleet route renders native portfolio components rather than an isolated document', () => {
-  assert.match(page, /return <FleetDemoShell \/>/)
-  assert.doesNotMatch(page, /iframe|index\.html/)
-  assert.match(shell, /import PortfolioShell from "\.\/portfolio-shell"/)
-  assert.match(shell, /import PortfolioLinks from "\.\/portfolio-links"/)
-  assert.match(shell, /import portfolio from "\.\/portfolio-home\.module\.css"/)
-  assert.equal((shell.match(/portfolio\.card/g) || []).length, 2)
-  assert.doesNotMatch(shell, /src\/app\/style\.css|DM Sans|IBM Plex|className="topbar"/)
-})
 
-test('The opening retains all six exact fields before the teaser and Next', () => {
-  for (const text of [
-    'UX Designer',
-    'User research, systems design, workflow architecture, integration logic, prototyping, and cross-functional collaboration',
-    'Figma-style wireframing, whiteboarding, API and integration workflows',
-    'UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager',
-    '2019 – 2022',
-    'Data issue resolution improved by 90%, from weeks to hours',
-  ]) assert.ok(shell.includes(text), text)
-  const intro = shell.slice(shell.indexOf('id="intro-panel"'), shell.indexOf('id="story-content"'))
-  assert.ok(intro.indexOf('Fleet Management') < intro.indexOf('id="project-info"'))
-  assert.ok(intro.indexOf('</dl>') < intro.indexOf('Why were the same trucks'))
-  assert.ok(intro.indexOf('Why were the same trucks') < intro.indexOf('id="start-story"'))
-  assert.match(intro, /className=\{portfolio\.name\}/)
-  assert.match(intro, /className=\{portfolio\.cta\}/)
-  assert.match(shell, /id="story-content"[^>]* hidden/)
-  assert.match(shell, /aria-label="Source controls" hidden/)
-  assert.match(shell, /data-intro="true"/)
-})
+test('story camera sets follow before the atomic focus/view so orientation cannot be cleared afterward',()=>{
+ const body=app.slice(app.indexOf('function applySceneCamera()'),app.indexOf('function renderStory()'));
+ assert.equal((body.match(/scene\?\.setFollow/g)||[]).length,1);
+ assert.ok(body.indexOf('scene?.setFollow(follow)')<body.indexOf('scene?.setView'));
+ assert.match(body,/setView\(view,\{focusId:stage<=1\?'TRK-104':'depot'\}\)/);
+ assert.match(body,/if\(stage===8\)\{scene\?\.setView\(view\);scene\?\.setFocus\(null\);\}/);
+});
 
-test('Shared outline controls reuse the original portfolio declarations', () => {
-  assert.match(shared, /\.page \.links a:not\(\.cta\), \.page \.control \{/)
-  assert.match(shell, /theme: \{ controlClassName: portfolio\.control, eyebrowClassName: portfolio\.eyebrow \}/)
-  assert.doesNotMatch(css, /#[0-9a-fA-F]{3,8}\b|oklch\(|rgb\(|DM Sans|IBM Plex/)
-})
 
-test('PortfolioShell keeps its default sidebar and shared page chrome', () => {
-  assert.match(frame, /sidebar \?\? <>/)
-  assert.match(frame, /Reid Slaughter/)
-  assert.match(frame, /\{sidebarContent\}/)
-  assert.match(frame, /className=\{styles\.grid\}/)
-  assert.match(frame, /<footer className=\{styles\.foot\}>/)
-})
+test('one standard transport replaces Auto/Manual and the duplicate mobile control',()=>{
+ for(const markup of [shell,standalone]){assert.doesNotMatch(markup,/id="(?:start-story|start-story-manual|story-advance-controls|mobile-pause|explore-scene|reset|story-replay)"|Next Slide:|Explore scene/);assert.equal((markup.match(/id="story-transport"/g)||[]).length,1);assert.equal((markup.match(/id="pause"/g)||[]).length,1);assert.match(markup,/id="story-elapsed">0:00/);assert.match(markup,/id="story-duration">2:04/);}
+ assert.ok(app.includes("$('#previous-chapter').hidden=stage===0"));assert.ok(app.includes("$('#next-chapter').hidden=stage===8"));assert.doesNotMatch(app,/IntersectionObserver|positionMobilePlayback|floatingPlaybackBottom/);
+ assert.match(css,/\.transportRow \{[^}]*grid-template-columns: minmax\(0,1fr\) auto minmax\(0,1fr\)/);assert.match(css,/\.playbackControls \{[^}]*grid-template-columns: repeat\(3,44px\)/);assert.match(css,/#pause\) \{ grid-column: 2/);assert.match(css,/\.storyTransport \{ position: fixed/);
+});
 
-test('Native runtime waits for the bridge and cleans up every mounted instance', () => {
-  assert.match(shell, /loadScript\("\/fleet-demo\/src\/app\/bridge\.js", "module"\)/)
-  assert.match(shell, /window\.FleetDemoModule\.mountFleetDemo/)
-  assert.match(shell, /await instance\.ready/)
-  assert.match(shell, /return \(\) => \{ disposed = true; instance\?\.dispose\(\) \}/)
-  assert.equal((shell.match(/if \(disposed\) return/g) || []).length, 3)
-})
+test('receipt uses aligned paper service lines without fabricated shop, tax or payment facts',()=>{
+ const receipt=shell.slice(shell.indexOf('data-story-overlay="cost"'),shell.indexOf('data-story-overlay="learning"'));
+ assert.match(receipt,/Service receipt/);assert.equal((receipt.match(/Oil change/g)||[]).length,2);assert.match(receipt,/\$350\.00/);assert.doesNotMatch(receipt,/address|invoice number|tax|payment|card ending/i);
+ assert.match(css,/\.receipt \{[^}]*background: var\(--page\)/);assert.match(css,/\.receipt \{[^}]*font-family: ui-monospace/);assert.match(css,/border-top: 1px dashed/);
+});
 
-test('Details retain factual limits and use native-safe destinations', () => {
-  const details = shell.slice(shell.indexOf('id="about-panel"'), shell.indexOf('aria-label="Source controls"'))
-  for (const text of ['synthetic demo', 'exact maintenance-trigger rule is unknown', 'id="performance"', 'id="run-status"']) assert.ok(details.includes(text))
-  assert.match(details, /href="\/fleet-demo\/reno\.html"/)
-  assert.match(details, /<AnimatedLink href="\/projects\/fleet-fuel-integration"/)
-  assert.doesNotMatch(shell, /world-heading|world-subtitle|Operations lab|Fictional drone assembly/)
-})
+
+test('removed fact and chapter strips leave the continuous scrubber and readable left story',()=>{
+ assert.ok(app.includes("element:$('#sidebar-story-body')"));assert.match(css,/\.sidebarStoryBody \{[^}]*overflow-y: auto/);
+ assert.doesNotMatch(shell,/id="(?:selected-asset|asset-role|service-visits|service-summary|maintenance-cost|maintenance-cost-note|scene-steps|story-position|playback-status)"/);assert.doesNotMatch(app,/data-scene-index|#selected-asset|#service-visits|#maintenance-cost|#scene-steps|#story-position|#playback-status/);assert.doesNotMatch(shell,/id="about-toggle"|id="about-panel"|id="about-close"/);
+});
+
+test('Material Symbols are self-hosted official assets with license and provenance',async()=>{
+ const manifest=JSON.parse(await read('public/fleet-demo/assets/material-symbols.source.json'));
+ const sprite=await read('public/fleet-demo/assets/material-symbols.svg');
+ assert.equal(manifest.source,'https://github.com/google/material-design-icons');assert.equal(manifest.set,'Material Symbols Outlined');assert.match(manifest.commit,/^[a-f0-9]{40}$/);assert.equal(manifest.license,'Apache-2.0');assert.match(await read('public/fleet-demo/assets/material-symbols-LICENSE.txt'),/Apache License/);
+ for(const icon of ['skip_previous','play_arrow','pause','skip_next','map','view_in_ar','deployed_code']){assert.ok(sprite.includes(`id="${icon}"`));assert.ok(shell.includes(`data-material-symbol="${icon}"`));assert.ok(standalone.includes(`data-material-symbol="${icon}"`));const geometry=sprite.match(new RegExp(`<symbol id="${icon}"[^>]*><path d="([^"]+)"`))[1];assert.ok(shell.includes(`<path d="${geometry}"`));assert.ok(standalone.includes(`<path d="${geometry}"`));assert.ok(manifest.icons.some(item=>item.name===icon&&item.url.includes(manifest.commit)));}
+ assert.doesNotMatch(shell,/<use href=/);assert.doesNotMatch(standalone,/<use href=/);assert.doesNotMatch(sprite,/<script|<foreignObject|onload=|href=/i);assert.doesNotMatch(shell,/▶|Ⅱ|← Back|Next →/);
+});
+test('playback is icon-only and the only camera buttons live in the lower-right stage',()=>{
+ const dock=shell.slice(shell.indexOf('className={`story-dock'),shell.indexOf('id="source-dialog"'));
+ assert.doesNotMatch(dock,/camera-controls|data-view|worldToolbar/);assert.doesNotMatch(shell,/id="overview"|id="follow"|data-focus=/);
+ const stage=shell.slice(shell.indexOf('className={styles.stageViewport}'),shell.indexOf('className={`story-dock'));
+ assert.ok(stage.includes('id="camera-controls"'));assert.equal((stage.match(/data-view=/g)||[]).length,3);assert.match(stage,/data-view="iso"[^>]*aria-pressed="true"/);
+ assert.match(css,/\.sceneViewControls \{[^}]*position: absolute[^}]*right: 12px[^}]*bottom: 32px/);
+ assert.match(css,/\.root \.sceneViewControls button \{[^}]*width: 44px; height: 44px/);
+ assert.doesNotMatch(app,/\$\('#follow'\)|\$\('#overview'\)|\$\('#camera-controls'\)\.hidden/);
+ assert.ok(app.includes("view='iso'"));assert.ok(app.includes("icon.hidden=(icon.dataset.playbackIcon==='play')!==paused"));
+});

@@ -1,13 +1,14 @@
+import {MAP_REGION,MAP_PAPER} from './region.js';
 /** Same map CDN as RHS059/grid_command lib/game/geography.ts (verified 2026-10-06).
  * Original editorial styling; no credentials or copied game assets.
  */
 export const MAP_CDN='https://tiles.openfreemap.org/planet';
 export const MAP_GLYPHS='https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf';
 export const MAP_ATTRIBUTION='<a href="https://openfreemap.org" target="_blank" rel="noreferrer">OpenFreeMap</a> · <a href="https://www.openmaptiles.org/" target="_blank" rel="noreferrer">© OpenMapTiles</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap</a>';
-export function editorialMapStyle(){
+export function editorialMapStyle({sourceURL=MAP_CDN}={}){
  const source='openmaptiles';
- return {version:8,glyphs:MAP_GLYPHS,sources:{[source]:{type:'vector',url:MAP_CDN,attribution:MAP_ATTRIBUTION}},layers:[
-  {id:'background',type:'background',paint:{'background-color':'#f3f3ed'}},
+ return {version:8,glyphs:MAP_GLYPHS,sources:{[source]:{type:'vector',url:sourceURL,bounds:[...MAP_REGION.bounds],attribution:MAP_ATTRIBUTION}},layers:[
+  {id:'background',type:'background',paint:{'background-color':MAP_PAPER}},
   {id:'landuse',type:'fill',source,'source-layer':'landuse',paint:{'fill-color':'#e7e9e0','fill-opacity':.55}},
   {id:'park',type:'fill',source,'source-layer':'park',paint:{'fill-color':'#e2e6dc','fill-opacity':.6}},
   {id:'water',type:'fill',source,'source-layer':'water',paint:{'fill-color':'#d9e0da'}},

@@ -14,5 +14,5 @@ export function createSimulation({onTick, stepHz = 20, now = () => performance.n
     onTick?.({timeSeconds, paused});
   };
   const timer = schedule(tick, 1000 / stepHz);
-  return { getState: () => ({timeSeconds, paused}), setPaused(value) { paused = !!value; last = now(); }, reset() {timeSeconds = 0; accumulator = 0; last = now();}, dispose() {disposed = true; cancel(timer);}, tick };
+  return { getState: () => ({timeSeconds, paused}), setPaused(value) { paused = !!value; last = now(); }, seek(value) {if(disposed)return;if(!Number.isFinite(value)||value<0)throw new RangeError('Scene time must be finite and nonnegative');timeSeconds=value;accumulator=0;last=now();onTick?.({timeSeconds,paused});}, reset() {timeSeconds = 0; accumulator = 0; last = now();}, dispose() {disposed = true; cancel(timer);}, tick };
 }

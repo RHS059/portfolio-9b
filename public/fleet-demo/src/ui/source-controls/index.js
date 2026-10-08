@@ -10,21 +10,16 @@ export function sourceAlreadyExcluded(model, sourceId, scope) {
     (scope === 'integration' ? !rule.vehicleId && !rule.field : scope === 'vehicle' ? (!rule.vehicleId || rule.vehicleId === model.selectedVehicleId) && !rule.field :
       (!rule.vehicleId || rule.vehicleId === model.selectedVehicleId) && (!rule.field || rule.field === 'odometer')));
 }
-export function renderSourceControls(model, {idPrefix, scope = 'field'} = {}) {
+export function renderSourceControls(model, {idPrefix, scope = 'field', compact = false} = {}) {
   const policy = selectedPolicy(model);
   const validScope = Object.hasOwn(EXCLUSION_SCOPES,scope) ? scope : 'field';
   const scopeId = `${idPrefix}-scope`, hintId = `${idPrefix}-scope-hint`;
-  return `<section class="fp-card" aria-label="Vehicle source controls">
-    <p class="fp-kicker">01 / ${esc(model.selectedVehicleId || 'VEHICLE')}</p>
-    <h3>Choose the source</h3>
-    <p>Use the provider installed on this vehicle.</p>
-    <div class="fp-button-row" role="group" aria-label="Chosen odometer source">${model.sources.map(source => {
+  const choices = `<div class="fp-button-row" role="group" aria-label="Chosen odometer source">${model.sources.map(source => {
       const chosen = policy?.sourceId === source;
       return `<button type="button" data-action="set-authority" data-source="${esc(source)}" data-ui-key="authority-${esc(source)}" aria-pressed="${chosen}" ${chosen?'disabled':''}>${chosen?'Using':'Use'} ${esc(source)}</button>`;
-    }).join('') || '<p>No source records are available.</p>'}</div>
-    <details data-details-key="source-settings"><summary>Source settings</summary><p class="fp-meta">Configuration v${esc(model.configurationVersion)}${policy ? ` · effective ${esc(timeLabel(policy.effectiveFrom))}` : ' · no source selected yet'}</p><p>Import order never chooses the source. Raw values and service history stay unchanged.</p></details>
-  </section>
-  <section class="fp-card" aria-label="Integration exclusions">
+    }).join('') || '<p>No source records are available.</p>'}</div>`;
+  const settings = `<details data-details-key="source-settings"><summary>Source settings</summary><p class="fp-meta">Configuration v${esc(model.configurationVersion)}${policy ? ` · effective ${esc(timeLabel(policy.effectiveFrom))}` : ' · no source selected yet'}</p><p>Import order never chooses the source. Raw values and service history stay unchanged.</p></details>`;
+  const exclusions = `<section class="fp-card" aria-label="Integration exclusions">
     <p class="fp-kicker">02 / EXCLUSIONS</p>
     <h3>Exclude old-provider readings</h3>
     <label class="fp-label" for="${scopeId}">Exclusion scope</label>
@@ -39,4 +34,14 @@ export function renderSourceControls(model, {idPrefix, scope = 'field'} = {}) {
     <button type="button" data-action="reimport" data-ui-key="reimport" class="fp-wide">Re-import the same batch</button>
     <details data-details-key="import-behavior"><summary>How recalculation works</summary><p>Excluded readings stay in the history. Re-import ignores duplicates. Recalculating does not add or cancel service records.</p></details>
   </section>`;
+  if (compact) return `<section class="fp-source-choice" aria-label="Vehicle source controls">
+    ${choices}
+    <details data-details-key="more-source-controls"><summary>More source controls</summary>${settings}${exclusions}</details>
+  </section>`;
+  return `<section class="fp-card" aria-label="Vehicle source controls">
+    <p class="fp-kicker">01 / ${esc(model.selectedVehicleId || 'VEHICLE')}</p>
+    <h3>Choose the source</h3>
+    <p>Use the provider installed on this vehicle.</p>
+    ${choices}${settings}
+  </section>${exclusions}`;
 }

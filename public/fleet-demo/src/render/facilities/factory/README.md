@@ -1,36 +1,75 @@
-# Factory close-detail visuals
+# Factory mechanisms and renderer-owned material
 
-Original monochrome procedural geometry for an illustrative drone-assembly interior. It depicts recognizable equipment and staged products, not a validated production line, vendor machine model, manufacturing specification or throughput claim.
+Original monochrome procedural equipment for an illustrative factory. The assets do not create process time, cargo identities, inventory, dispatch decisions or historical maintenance outcomes. Production geometry and motion are illustrative, not a validated manufacturing specification.
 
-## Asset and view API
+## Factory API and coordinates
 
-`createFactory({ THREE })` retains the existing `centerpoint` site ID, local meter frame and 150 × 90 × 12 m envelope. The shared renderer owns geographic transforms and camera decisions. The mapped port and depot/workshop assets are not changed.
+`createFactory({ THREE })` returns the same untransformed `centerpoint` site group. Static/interior children are raised 0.25 m exactly once; the geographic root remains at Z=0. Exterior receiving pads join the floor at Z=0.25 and extend to Y=-47.6. The workshop is unchanged.
 
-- `factory.userData.setDetailLevel('overview' | 'detail')` selects mutually exclusive factory contents. Default is `overview`
-- `factory.userData.update(snapshot)` consumes read-only visual state
-- `factory.userData.workcells` lists stable station IDs, local XY origins and illustrative stage labels
-- `factory.userData.getAssemblyState()` exposes frozen mechanical state for diagnostics
-- `factory.userData.dispose()` prevents further visual updates; the renderer disposes attached geometry/materials
+- `setDetailLevel('overview'|'detail')` selects bounded close-up machinery
+- `update(snapshot)` accepts the renderer's frozen process snapshot
+- `setCellPoses(cells)` directly accepts the agreed cell array
+- `getAssemblyState()` exposes read-only mechanism diagnostics; tool positions are SITE-ROOT coordinates
+- `getCellMounts()` returns site-root input/output support points
+- `getMount('cell:<id>:input'|'cell:<id>:output')` returns the corresponding tagged mount object
+- `getHandledCargoIds()` returns an empty list: the shared renderer owns every cargo object
+- `dispose()` stops setters; the renderer releases attached geometry/materials
 
-The detailed cells have black extrusion frames, robot pedestals, shoulder/elbow/wrist joints, gripper fingers, workpiece clamps, part magazines, control consoles, roller conveyor hardware and an overhead QA camera carriage. Drone stages include a sandwich frame, diagonal arms, four motor pods, propeller blades, a faceted canopy, battery/controller forms, camera gimbal and landing skids. Finished examples rest in open shipping cradles.
+Cell IDs are `frame-jig`, `motor-install`, `propeller-install`, and `final-assembly`. Input support is Z=1.225, output support is Z=1.7 in site-root space. Cell-input XY offsets are (-1.9,+2.4) from each workcell center. The lower rear frame has a feeder opening matching that input path. Do not add the internal 0.25 m floor offset again when using the exported mounts.
 
-## Mechanical-state adapter
+## Explicit mechanism view
 
-The narrow rendering input is `snapshot.factoryAssembly.cells`, containing `{ id, progress }` for the four exported workcell IDs. Progress is a clamped value from 0 through 1; completion does not wrap to the next cycle. This controls pick, lift, transfer, place and retract poses. Shoulder/forearm lengths remain fixed. With no explicit progress, new assembly arms remain idle rather than beginning independent process loops.
+Cells read `active`, `cargoId`, `stage`, `progress`, `boxOpen`, `assemblyProgress`, and `armAction`. Accepted stages are `idle`, `box-opening`, `drone-assembly`, and `complete`; arm actions are `park`, `open-box`, `assemble-drone`, and `handoff-output`. The supported wrappers are `snapshot.process`, `snapshot.cargoProcess`, or a direct process object containing cargo and factoryAssembly. Older explicit mechanical-preview inputs remain supported without claiming cargo ownership.
 
-This interface controls mechanical poses only. It does not create or transfer inventory, assign material ownership, dispatch vehicles or alter source/service records. The displayed drone stages are static staged examples. A connected material-flow controller must provide actual product/carrier IDs, handoff ownership and stage visibility before this can be described as an end-to-end receiving-to-dispatch simulation. Existing overview sorting motion is retained separately for compatibility.
+Inactive cells park. Connected mode disables the earlier independent sorting loop and decorative cargo copies. No local conveyor or assembly timer advances independently of the process snapshot.
 
-The internal workcell constructor also supports explicitly enabled offline preview cycling, which is not enabled by the factory runtime. No timer, RAF callback, clock read or random sampling is created by the asset. Replaying the same supplied progress reproduces the same pose; changing detail level applies the most recent snapshot immediately, including while paused.
+## One cargo object and one product object
 
-## Cost and validation
+The renderer creates and positions its existing pallet/opening-carton object exactly once. Factory machinery does not create another crate. For each sampled state the renderer calls the crate's `setOpen(boxOpen)` and `setAssemblyProgress(assemblyProgress)` together with the factory cell setter.
 
-Palette-batched static solids and two instanced primitive families keep detailed mechanical parts bounded. Factory-only measured complexity:
+`cartonOpeningPose` supplies both the carton flap transforms and the arm's contact path. Flaps open sequentially with an approach/grasp/open/retract sequence. The gripper meets the actual flap edge during engagement. The carton exports `getToolContact()`, `getFlapContact()`, `pickupMount`, and `getPickupContact()` in carton-local coordinates. The pallet adds 0.19 m below the carton.
 
-- Overview: 21 renderable objects / 804 triangles
-- Detail: 26 renderable objects / 15,948 triangles
+`createAssemblyProduct({ THREE })` from `product.js` returns a renderer-owned product at a bottom-support origin. The renderer supplies its position, visibility and identity from `process.products`. `setProgress()` / `setAssemblyProgress()` reveals installed electronics, motor pods, shell and propellers. `partMounts` and `installedPartIds` are read-only diagnostics. The staged base frame represents the product's starting fixture state; it is not an audited bill of materials.
 
-These are geometry counts, not frame-rate measurements. The renderer should enable detail only for a close factory view. The distant factory remains inexpensive and does not evaluate new articulated poses while hidden.
+`assemblyStep` coordinates source, gripper and product appearance. A source part remains in the carton until the pickup contact; it is visible on the gripper during transfer; the product part appears only at the placement contact. These are visual setters for the same explicit progress, not new inventory events. The renderer must apply all corresponding setters from the same snapshot.
 
-Run `node --test src/render/facilities/factory/detail.test.js` from the demo root. Actual geometry tests use a local Three installation or `FLEET_THREE_MODULE`. Tests cover LOD exclusivity, fixed link lengths, explicit-progress behavior, immutable snapshots, pause/replay/reset, finite instance transforms, budgets and disposal ownership. Facility bounds tests account for instance matrices because Three r128's generic `Box3.setFromObject` does not.
+## Operators and equipment
 
-Close-up CPU previews of exported geometry were inspected for recognizable equipment and drone components. Integrated WebGL appearance, close-up selection, shared-process handoffs and hardware frame rate require separate integration checks.
+`createForklift` exposes `payloadMount`, named `seatMount`, `setLiftHeight()` and `update({liftHeight,travelMeters})`. Its operator seat is [0,-0.12,1.05] and foot support is Z=0.58 in forklift-local coordinates. Attach `createFactoryWorker()` at that mount and call `update({seated:true})`; the human keeps scale 1 with bent knees, platform-supported feet and hands at the controls. `operatorPresent` remains the process controller's visibility decision.
+
+The roller AMR's support is local Z=0.975. With actor root Z=0.25 its cargo support is Z=1.225. The renderer supplies the fork-pocket offset and measured pickup lift for its trailer geometry. No terrain height is inferred by these constructors.
+
+## Verification
+
+Run `node --test src/render/facilities/factory/*.test.js` from the demo root; supply `FLEET_THREE_MODULE` for actual Three r128 tests. Contact tests verify real transformed floor/pad support, mount coordinates, the external carton's flap/part contacts, product placement, seated operator scale/fit, pause/reset and no asset-owned cargo copies.
+
+The renderer still owns route clearance, cargo/actor positioning, handoff continuity, LOD activation, context recovery and browser performance. A passing mechanism test is not an end-to-end process acceptance.
+## Outgoing carrier transfer
+
+The outgoing contact contract applies to the original `createProductCarrier({ THREE })` geometry from `carrier.js`. It is not valid for a substituted frame. The sampler and carrier identify themselves as `original-drone-carrier-v1`; both must be used together by the shared renderer. Actual mesh tests cover side-jaw contact, full-size drone/arm clearance, carrier/jig clearance and fixed link lengths. Shared scene docking, routes and custody remain renderer acceptance responsibilities.
+
+`armAction: 'handoff-output'` consumes `outputTransferProgress` (0..1) and `outputProductId`. No wall clock or kit-cycle duration is inferred. `sampleOutputTransfer(progress)` from `output-handoff.js` provides the agreed carrier trajectory for integration. The sampler returns immutable `carrierPosition`, `gripPoint`, `tool`, `wristLift`, `gripHalfWidth`, `contactEngaged`, `phase`, and `supportOrigin: 'carrier-bottom'`. The sampler explicitly tags `coordinateSpace: 'cell-relative-xy/site-root-z'` and `floorOffsetIncluded: true`: add the cell center to XY only, never add the 0.25 m floor to Z again. `factory.userData.getOutputHandoff(cellId, progress)` converts them to site-root coordinates. `productSupport`/`contact` are equivalent diagnostic aliases.
+
+The existing `cell:<id>:output` remains the drone skid base at Z=1.7. The new `cell:<id>:carrier-output` is the cradle bottom at Z=1.53; `cell:<id>:dispatch-pickup` is cell-relative XY(-3,-4), Z=1.225. The renderer keeps the drone at carrier-local Z=0.17 through assembly and transport. The jig is lowered to meet the cradle without a ready-stage jump. The trajectory approaches above the aircraft, descends onto the side handle, lifts the carrier to site-root Z=2.0, clears the jig through XY(-3,-3.5), lowers, releases and returns the tool to its original parked pose. A visible telescopic tool stem supplies the sampled wrist clearance while both robot arm link lengths remain fixed. Product identity, visibility, custody and return routes stay outside these mechanical assets.
+
+## QA and dispatch supports
+
+QA now has one continuous roller bed through the scanner at Z=1.225. Site-root mounts are `qa:QA-01:input` [37,26,1.225], `qa:QA-01:test` [42,26,1.225], and `qa:QA-01:output` [47,26,1.225]. The slot-qualified form `qa:QA-01:<slot>:input|test|output` resolves to the same physical mount; it does not allocate a new station.
+
+Dispatch mount pairs are `dispatch:DISPATCH-01:input` [50,-12,1.225] / `dispatch:DISPATCH-01:pickup` [50,-16,1.225] and corresponding `DISPATCH-02` mounts at X=62. Both stations have physical rollers and supporting frames. `getTransferMounts()` returns these read-only coordinates. All exported Z values already include the internal floor offset.
+
+The renderer must provide physically clear AMR approaches, carrier transfers and forklift pickup routes around these fixed support beds. Matching a support height alone does not establish actor clearance or end-to-end acceptance.
+
+## Original shared carrier
+
+`createProductCarrier({ THREE })` owns one open frame and one `createAssemblyProduct` child. Its root is carrier-bottom; `bodyMount` stays at Z=0.17. `setProgress()` / `setAssemblyProgress()` forwards appearance progress without moving the root, assigning identity or deciding visibility. Do not render a second independent drone on top of it.
+
+`PRODUCT_CARRIER` exports the frame envelope 2.8×2.4×0.17 m, the full ready envelope 2.8×2.4×0.98 m, the side grip [-1.25,0,0.17], actual jaw contact points, jaw half-spacing 0.095 m and fork-pocket top contact 0.10 m. The pocket opening runs from local Z=0.04 to 0.10; these are asset coordinates, not an operational load rating. `gripMount` is a real tagged Object3D. The left frame has a notch so the jaws touch only the handle, and the landing-skid supports keep the aircraft at its original scale throughout assembly.
+
+The carrier geometry is original illustrative work. Its dimensions, strength and shipment clearance are not engineering specifications. Renderer tests must include the complete combined envelope at trucks, AMRs, docks and station transfers. `dispose()` stops setters; the renderer retains geometry/material disposal ownership.
+
+## Dock clearance and paired roller contacts
+
+QA dock IDs remain at X=37/47, Y=26, Z=1.225. Those points are supported by the docked AMRs, not fixed station geometry. The fixed QA bed spans X=37.8..46.2 and its support legs are at X=40/44. Exact top-of-roller contacts are `qa:QA-01:roller-input` [37.855,26,1.225] and `qa:QA-01:roller-output` [46.145,26,1.225]. The carrier bridges the gap during the shared transfer.
+
+Dispatch inlet IDs remain at Y=-12. The north edge of fixed machinery stops at Y=-12.8; `dispatch:DISPATCH-01:roller-input` is [50,-12.855,1.225], with DISPATCH-02 at X=62. The staging/forklift pickup points remain Y=-16. The renderer approaches those pickups from the south. Do not place fixed supports beneath the AMR bodies or interpret a dock anchor as a fixed-bed raycast target.

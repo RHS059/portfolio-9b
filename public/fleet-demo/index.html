@@ -1,46 +1,135 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#eeede7">
-  <meta name="description" content="Why the same trucks kept returning for maintenance: inspect conflicting odometer readings and choose the source for each vehicle.">
-  <title>Fleet / Odometer sources</title>
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
-  <link rel="stylesheet" href="./src/app/style.css">
-  <script defer src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <script defer src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
-</head>
-<body>
-  <div class="app-shell">
-    <header class="topbar">
-      <a href="./" class="wordmark" aria-label="Fleet demo home"><span class="mark" aria-hidden="true">F</span> FLEET</a>
-      <div class="topbar-right"><span class="demo-badge">DEMO</span></div>
-    </header>
-    <main class="workspace" data-intro="true">
-      <aside class="story-panel" aria-label="Fleet case study"><div id="intro-panel" class="intro-panel"><h1>Fleet Management</h1><section id="project-info" class="project-info" aria-label="Project information"><dl><div><dt>Role</dt><dd>UX Designer</dd></div><div><dt>Responsibilities</dt><dd>User research, systems design, workflow architecture, integration logic, prototyping, and cross-functional collaboration</dd></div><div><dt>Tools</dt><dd>Figma-style wireframing, whiteboarding, API and integration workflows</dd></div><div><dt>Team</dt><dd>UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager</dd></div><div><dt>Timeline</dt><dd>2019 – 2022</dd></div><div class="project-outcome"><dt>Outcome</dt><dd>Data issue resolution improved by 90%, from weeks to hours</dd></div></dl></section><div class="intro-cta"><p>Why were the same trucks getting serviced more than once in a week?</p><button id="start-story" class="primary-button" type="button">Next <span aria-hidden="true">↗</span></button></div></div><div id="story-content" hidden>
-        <h1>Why the same trucks kept coming back <em>to the shop.</em></h1>
-        <p class="intro">Shop technicians noticed the same trucks returning for oil changes and tire rotations within one week.</p>
-        <div class="mode-switch" aria-label="Approach"><button type="button" data-mode="then" aria-pressed="true">Then <small>2021–22</small></button><button type="button" data-mode="today" aria-pressed="false">Today <small>Agent review</small></button></div>
-        <p id="mode-description" class="mode-description"></p>
-        <nav id="story-steps" class="story-steps" aria-label="Story chapters"></nav>
-        <section class="chapter-card" aria-live="polite"><span id="chapter-number" class="eyebrow"></span><h2 id="chapter-title"></h2><p id="chapter-copy"></p><button id="next-chapter" class="primary-button" type="button">Continue <span>↗</span></button></section>
-        </div>
-      </aside>
-      <section class="world-panel" aria-label="Oakland operations scene">
-
-        <div id="world" class="world"><div id="scene-loading" class="scene-loading">Preparing operations scene…</div></div>
-        <div id="scene-notice" class="scene-notice" role="status" hidden></div>
-        <div class="world-toolbar"><div class="segmented" role="group" aria-label="Camera view"><button data-view="2d" type="button" aria-pressed="false">2D</button><button data-view="3d" type="button" aria-pressed="false">3D</button><button data-view="iso" type="button" aria-pressed="true">ISO</button></div><button id="overview" type="button" class="tool-button">Overview</button><button id="follow" type="button" class="tool-button" aria-pressed="false">◎ Follow vehicle</button><span class="toolbar-spacer"></span><button id="pause" type="button" class="tool-button">Ⅱ Pause</button><button id="reset" type="button" class="tool-button" aria-label="Reset demo">↺ Reset</button><button id="about-toggle" class="tool-button" type="button" aria-label="About this demo" aria-expanded="false">Details</button></div>
-        <div class="place-labels"><button data-focus="oict" type="button"><span class="location-number">01</span><span><strong>OICT</strong></span></button><button data-focus="centerpoint" type="button"><span class="location-number">02</span><span><strong>Drone factory</strong></span></button><button data-focus="depot" type="button"><span class="location-number">03</span><span><strong>Workshop</strong></span></button></div>
-        <div class="impact-strip"><div><span class="eyebrow">SELECTED ASSET</span><strong id="selected-asset">TRK-104</strong><small id="asset-role">Migrated vehicle</small></div><div><span class="eyebrow">ODOMETER USED FOR MAINTENANCE</span><strong id="canonical-reading">Unresolved</strong><small id="canonical-source">Choose an odometer source</small></div></div>
-        <div id="about-panel" class="about-panel" hidden><button id="about-close" class="icon-button" type="button" aria-label="Close demo details">×</button><h3>About this demo</h3><p>The incident is real. Vehicle IDs, readings, dates and shop visits in this synthetic demo are examples, not live telemetry. The Oakland map provides geographic context; the workshop, factory activity and routes are illustrative.</p><p>The exact maintenance-trigger rule is unknown. The animation shows the reported repeat visits without claiming to reproduce that rule.</p><p>Provider A and Provider B are anonymous. Networkfleet / Verizon, Samsara and Wright Express / WEX are examples from the integration ecosystem, not identified as either provider in this incident.</p><details><summary>Data and performance</summary><p id="integrity-count"></p><p>Original readings and service history are preserved. Settings are versioned and recalculated results are derived views.</p><p><span id="run-status">Scene running</span> · 20 Hz simulation with interpolated rendering.</p><p id="performance">Performance measurement pending</p><p>Browser frame cadence is not a physical-GPU benchmark.</p></details><p><a href="./reno.html">Original Reno console ↗</a></p><a href="https://www.reidhslaughter.com/projects/fleet-fuel-integration" target="_blank" rel="noreferrer">Read the original case study ↗</a></div>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="A nine-scene interactive story about fleet data, repeat maintenance and source authority."><title>The Same Truck. The Same Service. Again.</title><link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css"><link rel="stylesheet" href="./src/app/style.css"><script defer src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script><script defer src="https://unpkg.com/three@0.128.0/build/three.min.js"></script></head><body><div  class="workspace root" data-intro="true" data-scene="question" data-playing="false">
+    <div class="page font-sans"><div class="grid"><div class="side-wrap route-panel"><aside class="side sidebar story-panel" aria-label="Fleet case study">
+    <div id="sidebar-story-body" class="sidebarStoryBody">
+    <div id="intro-panel" class="introPanel">
+      <p class="eyebrow">Fleet integrations · A case study</p>
+      <h1 class="name">The Same Truck.<br />The Same Service.<br />Again.</h1>
+      <section id="project-info" class="projectInfo" aria-label="Project information">
+        <dl><div><dt class="eyebrow">Role</dt><dd class="metric">UX Designer</dd></div><div><dt class="eyebrow">Responsibilities</dt><dd class="metric">User research, systems design, workflow architecture, integration logic, prototyping, and cross-functional collaboration</dd></div><div><dt class="eyebrow">Tools</dt><dd class="metric">Figma-style wireframing, whiteboarding, API and integration workflows</dd></div><div><dt class="eyebrow">Team</dt><dd class="metric">UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager</dd></div><div><dt class="eyebrow">Timeline</dt><dd class="metric">2019 – 2022</dd></div><div><dt class="eyebrow">Outcome</dt><dd class="metric">Data issue resolution improved by 90%, from weeks to hours</dd></div></dl>
       </section>
-      <aside class="inspector-panel" aria-label="Source controls" hidden><div id="source-inspector" hidden><div class="inspector-heading"><span class="eyebrow">ODOMETER SOURCES</span><h2>Inspect the evidence</h2><p>Choose which source supplies each vehicle’s odometer.</p></div><div class="vehicle-tabs" role="group" aria-label="Inspect vehicle"><button type="button" data-vehicle="TRK-104" aria-pressed="true">TRK-104 <small>Migrated</small></button><button type="button" data-vehicle="TRK-208" aria-pressed="false">TRK-208 <small>Still on A</small></button></div><div id="provenance"></div><div id="app-feedback" role="status" aria-live="polite"></div></div></aside>
-    </main>
+      <div class="bio introCta">
+        <p>Why were the same trucks getting serviced more than once in a week?</p>
 
-  </div>
-  <noscript><p class="noscript">JavaScript is needed to run this interactive demo. The original case study is at reidhslaughter.com/projects/fleet-fuel-integration.</p></noscript>
-  <script type="module" src="./src/app/bootstrap.js"></script>
-</body>
-</html>
+      </div>
+    </div>
+    <div id="story-content" class="storyContent" hidden>
+      <div class="chapterIntro">
+        <p class="eyebrow">Fleet integrations</p>
+        <div aria-live="polite" aria-atomic="true">
+          <span id="chapter-number" class="eyebrow"></span>
+          <h1 id="chapter-title" class="name" tabindex="-1"></h1>
+          <p id="chapter-copy" class="metric chapterCopy"></p>
+        </div>
+      </div>
+      <div id="sidebar-scenes" class="sidebarScenes" hidden>
+              <div data-story-sidebar="integration" class="integrationCard sidebarScene" hidden>
+                <span class="eyebrow">What is an integration?</span>
+                <h2 class="name">A connection that keeps work moving.</h2>
+                <div class="dataRoute"><span>Fuel &amp; telematics providers</span><b aria-hidden="true">↓</b><span>API · automated data exchange</span><b aria-hidden="true">↓</b><span>Fleet operations software</span></div>
+                <p>Fuel: purchases and consumption.<br />Telematics: mileage and vehicle activity.</p>
+                <small>Teams use this data to budget, schedule service and keep trucks on the road.</small>
+              </div>
+              <div data-story-sidebar="mileage-loop" class="mileageOverlay sidebarScene" hidden>
+                <span class="eyebrow">Day <span id="mileage-day">1</span></span>
+                <div class="mileageValues"><span><small>OLD SOURCE</small>30,000</span><b aria-hidden="true">→</b><span><small>CURRENT SOURCE</small><span id="mileage-current">50,000</span></span></div>
+                <div class="odometer"><span id="mileage-value">30,000</span><small>miles in the system</small></div>
+                <div id="mileage-alert" class="mileageAlert">Stale reading imported again</div>
+                <p>The reading resets. The next jump looks like more driving.</p>
+              </div>
+              <div data-story-sidebar="solution" class="solutionCard sidebarScene" hidden>
+                <h2 class="name">How I got to the design</h2>
+                <p>I met with support agents and account managers, then interviewed our import vendors to understand the data and its limits.</p>
+                <p>I mapped the import flow with our developers. Some customers wanted odometers from one vendor and fuel records from another, so I added an integration field to distinguish the sources.</p>
+                <p>I designed checks that flagged missing or bad data, notified customers, and let them resolve errors in the app. The WEX example shows the asset-linking step of that workflow.</p>
+              </div>
+              <div data-story-sidebar="agents" class="agentCard sidebarScene" hidden>
+                <h2 class="name">How I’d approach it today</h2>
+                <p class="dialogueCopy">Agents would flag conflicting readings and notify the fleet manager. A person would approve the source change.</p>
+                <ol class="agentSteps"><li data-agent-step="0"><span>01</span><div><strong>Check incoming data</strong><small>Agent compares sources and reading patterns</small></div></li><li data-agent-step="1"><span>02</span><div><strong>Flag &amp; notify</strong><small>Show the conflict and supporting evidence</small></div></li><li data-agent-step="2"><span>03</span><div><strong>A person decides</strong><small>Approve the source; preserve the history</small></div></li></ol>
+              </div>
+      </div>
+      <div id="chapter-takeaway" class="bio chapterTakeaway"></div>
+      <div class="bio chapterNavigation">
+        <p>Pause, scrub or step through at any time.</p>
+        <button id="open-source-controls" class="control" type="button" hidden>Try the source controls ↗</button>
+        <button id="run-story-review" class="control" type="button" hidden>Run an example review ↗</button>
+      </div>
+    </div>
+    </div>
+</aside></div><main id="work" class="stack route-panel main">
+      <div class="workspaceBody">
+        <section class="world-panel card worldPanel" aria-label="Interactive fleet story">
+          <div class="stageViewport">
+            <div id="world" class="world world"><div id="scene-loading" class="sceneLoading">Preparing operations scene…</div></div>
+            <div id="scene-notice" class="sceneNotice" role="status" hidden></div>
+            <div id="story-overlays" class="storyOverlays">
+
+
+
+              <div data-story-overlay="provider-switch" class="providerOverlay" hidden>
+                <div class="devicePair">
+                  <div class="device" data-provider="verizon"><span class="deviceLight"></span><div class="deviceBrand"><strong>Verizon</strong><span>Networkfleet</span></div><small>DAILY IMPORT · ACTIVE</small></div>
+                  <span class="providerPlus" aria-hidden="true">+</span>
+                  <div class="device" data-provider="samsara"><span class="deviceLight"></span><div class="deviceBrand"><strong>Samsara</strong></div><small>DAILY IMPORT · ACTIVE</small></div>
+                </div>
+                <h2>The customer switched providers</h2>
+                <p>but didn’t inform us, so we were importing from both, daily</p>
+                <strong class="months">FOR MONTHS</strong>
+              </div>
+
+              <article data-story-overlay="cost" class="receipt" hidden aria-label="Service receipt">
+                <header class="receiptHeader"><h2>Service receipt</h2><p>TRK-104 · Example cost</p></header>
+                <div class="receiptColumns"><span>SERVICE</span><span>AMOUNT</span></div>
+                <div class="receiptLines">
+                  <div data-cost-visit="1"><div><strong>Oil change</strong><span>Visit 1</span></div><strong>$350.00</strong></div>
+                  <div data-cost-visit="2"><div><strong>Oil change</strong><span>Visit 2 · same week</span></div><strong>$350.00</strong></div>
+                </div>
+                <p id="cost-caption" class="receiptCount">1 service</p>
+                <div class="receiptTotal"><span>TOTAL</span><strong id="cost-total">$350.00</strong></div>
+                <div class="receiptDuplicate"><span>DUPLICATE SERVICE</span><strong id="cost-duplicate">$0.00</strong></div>
+              </article>
+
+              <div data-story-overlay="solution" class="workflowOverlay" hidden>
+                <div id="original-workflow-preview" aria-label="Original WEX asset-linking workflow" ></div>
+                <button id="open-original-workflow" class="control" type="button" aria-haspopup="dialog">Expand the original workflow ↗</button>
+              </div>
+
+              <div data-story-overlay="learning" class="learningCard" hidden>
+                <span class="eyebrow">What I learned</span><h2>Good data needs<br />a clear owner.</h2><p>Make the source visible.<br />Make the decision deliberate.<br />Keep the history.</p>
+              </div>
+            </div>
+            <div id="camera-controls" class="sceneViewControls" role="group" aria-label="Camera view">
+              <button class="control" data-view="2d" type="button" aria-label="2D" title="2D map" aria-pressed="false" disabled><svg class="materialSymbol" width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="map"><path d="m600-120-240-84-186 72q-20 8-37-4.5T120-170v-560q0-13 7.5-23t20.5-15l212-72 240 84 186-72q20-8 37 4.5t17 33.5v560q0 13-7.5 23T812-192l-212 72Zm-40-98v-468l-160-56v468l160 56Zm80 0 120-40v-474l-120 46v468Zm-440-10 120-46v-468l-120 40v474Zm440-458v468-468Zm-320-56v468-468Z" /></svg></button>
+              <button class="control" data-view="3d" type="button" aria-label="3D" title="3D perspective" aria-pressed="false" disabled><svg class="materialSymbol" width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="view_in_ar"><path d="M440-181 240-296q-19-11-29.5-29T200-365v-230q0-22 10.5-40t29.5-29l200-115q19-11 40-11t40 11l200 115q19 11 29.5 29t10.5 40v230q0 22-10.5 40T720-296L520-181q-19 11-40 11t-40-11Zm0-92v-184l-160-93v185l160 92Zm80 0 160-92v-185l-160 93v184ZM80-680v-120q0-33 23.5-56.5T160-880h120v80H160v120H80ZM280-80H160q-33 0-56.5-23.5T80-160v-120h80v120h120v80Zm400 0v-80h120v-120h80v120q0 33-23.5 56.5T800-80H680Zm120-600v-120H680v-80h120q33 0 56.5 23.5T880-800v120h-80ZM480-526l158-93-158-91-158 91 158 93Zm0 45Zm0-45Zm40 69Zm-80 0Z" /></svg></button>
+              <button class="control" data-view="iso" type="button" aria-label="ISO" title="Isometric 3D" aria-pressed="true" disabled><svg class="materialSymbol" width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="deployed_code"><path d="M440-183v-274L200-596v274l240 139Zm80 0 240-139v-274L520-457v274Zm-40-343 237-137-237-137-237 137 237 137ZM160-252q-19-11-29.5-29T120-321v-318q0-22 10.5-40t29.5-29l280-161q19-11 40-11t40 11l280 161q19 11 29.5 29t10.5 40v318q0 22-10.5 40T800-252L520-91q-19 11-40 11t-40-11L160-252Zm320-228Z" /></svg></button>
+            </div>
+          </div>
+          <div class="story-dock storyDock" aria-label="Story playback">
+            <div id="story-transport" class="storyTransport" role="group" aria-label="Story playback">
+              <label class="srOnly" for="story-progress">Scrub through the story</label>
+              <input id="story-progress" disabled class="storyProgress" type="range" min="0" max="124" step="0.1" value="0" aria-valuetext="Scene 1 of 9" />
+              <div class="transportRow">
+                <div class="playbackControls">
+                  <button id="previous-chapter" class="control" type="button" aria-label="Previous scene" aria-keyshortcuts="ArrowLeft" title="Previous scene" disabled hidden><svg class="materialSymbol" width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="skip_previous"><path d="M220-240v-480h80v480h-80Zm520 0L380-480l360-240v480Zm-80-240Zm0 90v-180l-136 90 136 90Z" /></svg></button>
+                  <button id="pause" class="cta" type="button" aria-label="Play story" aria-keyshortcuts="Space" title="Play story" disabled><span data-playback-icon="play"><svg class="materialSymbol" width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="play_arrow"><path d="M320-200v-560l440 280-440 280Zm80-280Zm0 134 210-134-210-134v268Z" /></svg></span><span data-playback-icon="pause" hidden><svg class="materialSymbol" width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="pause"><path d="M520-200v-560h240v560H520Zm-320 0v-560h240v560H200Zm400-80h80v-400h-80v400Zm-320 0h80v-400h-80v400Zm0-400v400-400Zm320 0v400-400Z" /></svg></span></button>
+                  <button id="next-chapter" class="control" type="button" aria-label="Next scene" aria-keyshortcuts="ArrowRight" title="Next scene" disabled><svg class="materialSymbol" width="24" height="24" viewBox="0 -960 960 960" aria-hidden="true" focusable="false" data-material-symbol="skip_next"><path d="M660-240v-480h80v480h-80Zm-440 0v-480l360 240-360 240Zm80-240Zm0 90 136-90-136-90v180Z" /></svg></button>
+                </div>
+                <span class="playbackTime" aria-label="Playback time"><span id="story-elapsed">0:00</span><span aria-hidden="true"> / </span><span id="story-duration">2:04</span></span>
+              </div>
+            </div>
+
+          </div>
+          <div id="source-dialog" class="sourceDialog" role="dialog" aria-modal="true" aria-labelledby="source-dialog-title" hidden>
+            <button id="source-close" class="control close" type="button" aria-label="Close source controls">×</button>
+            <h2 id="source-dialog-title">Choose the source. Keep the history.</h2>
+            <p>Choose which provider supplies this vehicle’s odometer.</p>
+            <div id="reading-context" class="readingContext"><span class="eyebrow">Odometer used for maintenance</span><strong id="canonical-reading">Unresolved</strong><small id="canonical-source">Choose an odometer source</small></div>
+            <div id="source-inspector"><div id="provenance"></div><div id="app-feedback" class="feedback" role="status" aria-live="polite"></div></div>
+            <p id="mode-description" class="modeDescription"></p>
+          </div>
+
+        </section>
+      </div>
+      <noscript><p>JavaScript is needed to run this interactive story. <a href="/projects/fleet-fuel-integration">Read the original case study.</a></p></noscript>
+    </main><footer class="foot"><div>Client work shown remains the property of its owners.</div><div>Copyright © Reid Slaughter</div><div></div></footer></div></div>
+  </div><script type="module" src="./src/app/bootstrap.js"></script></body></html>

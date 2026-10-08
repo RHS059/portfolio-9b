@@ -23,16 +23,19 @@ export const SITES = Object.freeze([
 ]);
 // Roads follow an OSM/OSRM general-driving reconstruction. Final yard connectors are illustrative.
 const road=ROAD_ROUTE_LNGLAT.map(toLocal);
-const delivery=[port,...road,factory];
+// Final connectors are authored yard movements. Stops stay outside the factory footprint.
+export const FACTORY_DISPATCH_STOP=Object.freeze([factory[0]+52,factory[1]-56.5]);
+const factoryWest=[factory[0]-155,factory[1]+82],factorySouth=[factory[0]-155,factory[1]-70],dispatchApproach=[factory[0]+52,factory[1]-70];
+const delivery=[port,...road.slice(0,-4),factoryWest,factorySouth,dispatchApproach,FACTORY_DISPATCH_STOP];
 const bay=[depot[0]-12,depot[1]+6];
-const service=[factory,[factory[0]-40,factory[1]],[factory[0]-40,depot[1]-40],[bay[0],depot[1]-40],bay];
+const service=[FACTORY_DISPATCH_STOP,[FACTORY_DISPATCH_STOP[0],depot[1]-40],[bay[0],depot[1]-40],bay];
 const reverse = p => [...p].reverse();
 export const ROUTES = Object.freeze({
   'port-to-factory': delivery,
   'factory-to-port': reverse(delivery),
   'factory-to-depot': service,
   'depot-to-factory': reverse(service),
-  delivery: [...delivery, ...reverse(delivery).slice(1)],
+  delivery: [...delivery,[factory[0]+96,factory[1]-56.5],[factory[0]+96,factory[1]-70],dispatchApproach,...reverse(delivery.slice(0,-1)).slice(1)],
   depot: [...service, ...reverse(service).slice(1)],
   'depot-bay': [bay,bay]
 });
