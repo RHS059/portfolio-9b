@@ -3,6 +3,7 @@ import { Mail } from "lucide-react"
 import PortfolioLinks from "./portfolio-links"
 import AnimatedLink from "./animated-link"
 import styles from "./portfolio-home.module.css"
+import CookieSettingsLink from "./cookie-settings-link"
 
 type Props = { children: ReactNode; leaving?: boolean; reading?: boolean; alignTop?: boolean; sidebarContent?: ReactNode }
 
@@ -59,6 +60,8 @@ export default function PortfolioShell({ children, leaving = false, reading = fa
             <a href="https://github.com/RHS059" target="_blank" rel="noopener noreferrer">GitHub</a>
             <a href="https://www.linkedin.com/in/reid59slaughter/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
             <a href="https://x.com/reidhslaughter" target="_blank" rel="noopener noreferrer">X</a>
+            <a href="/privacy">Privacy</a>
+            <CookieSettingsLink />
           </div>
         </footer>
       </div>

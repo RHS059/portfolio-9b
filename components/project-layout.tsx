@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react"
 import ProjectSidebar from "./project-sidebar"
+import CookieSettingsLink from "./cookie-settings-link"
 
 interface Section {
   id: string
@@ -40,6 +41,8 @@ export default function ProjectLayout({ sections, children }: ProjectLayoutProps
           <a href="https://x.com/reidhslaughter" target="_blank" rel="noopener noreferrer">
             X
           </a>
+          <a href="/privacy">Privacy</a>
+          <CookieSettingsLink />
         </div>
       </footer>
 
