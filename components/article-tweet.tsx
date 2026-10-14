@@ -1,15 +1,24 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import type { TweetReference } from "@/lib/article-schema"
 import { loadTwitterWidgets } from "@/lib/twitter-widgets"
+import { getConsent, onConsentChange } from "@/lib/consent"
 import styles from "./article-tweet.module.css"
 
 export default function ArticleTweet({ tweet }: { tweet: TweetReference }) {
   const container = useRef<HTMLDivElement>(null)
+  const [accepted, setAccepted] = useState(false)
+
+  // X's widget script sets tracking cookies, so it only loads after consent.
+  // Until then the server-rendered link below is the whole embed.
+  useEffect(() => {
+    setAccepted(getConsent() === "accepted")
+    return onConsentChange((value) => setAccepted(value === "accepted"))
+  }, [])
 
   useEffect(() => {
-    if (!container.current) return
+    if (!accepted || !container.current) return
     // Each mount gets its own target so an old async render cannot duplicate or
     // overwrite a new embed after client navigation or a Strict Mode remount.
     const target = document.createElement("div")
@@ -35,7 +44,7 @@ export default function ArticleTweet({ tweet }: { tweet: TweetReference }) {
       cancelled = true
       target.remove()
     }
-  }, [tweet.id])
+  }, [accepted, tweet.id])
 
   return (
     <figure className={styles.tweet} aria-label={`Post by @${tweet.handle} on X`}>

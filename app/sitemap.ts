@@ -12,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/projects/arma-reforger-texture-wizard`, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/projects/library-holding-app`, changeFrequency: "yearly", priority: 0.8 },
     { url: `${base}/enfusion_field_kit_beta`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/privacy`, changeFrequency: "yearly", priority: 0.3 },
     ...getPublishedArticles().map((article) => ({
       url: `${base}/writing/${article.slug}`,
       lastModified: article.updatedAt ?? article.publishedAt,
