@@ -7,6 +7,7 @@ import { Analytics } from "@vercel/analytics/next"
 import {
   clearTrackingCookies,
   getConsent,
+  hasGlobalPrivacyControl,
   onConsentChange,
   onCookieSettingsOpen,
   setConsent,
@@ -19,9 +20,11 @@ export default function ConsentBanner() {
   const [consent, setState] = useState<Consent | null>(null)
   const [ready, setReady] = useState(false)
   const [open, setOpen] = useState(false)
+  const [gpc, setGpc] = useState(false)
 
   useEffect(() => {
     setState(getConsent())
+    setGpc(hasGlobalPrivacyControl())
     setReady(true)
     const offChange = onConsentChange(setState)
     const offOpen = onCookieSettingsOpen(() => setOpen(true))
@@ -70,7 +73,11 @@ export default function ConsentBanner() {
           <p className="text-sm text-gray-300">
             This site uses cookies and analytics (Microsoft Clarity, Vercel Analytics, and embedded X posts) to understand
             how visitors use it. Nothing loads unless you accept.{" "}
-            {consent && <>You currently {consent === "accepted" ? "accept" : "decline"}. </>}
+            {gpc ? (
+              <>Your browser&apos;s Global Privacy Control signal is on, so tracking stays off. </>
+            ) : (
+              consent && <>You currently {consent === "accepted" ? "accept" : "decline"}. </>
+            )}
             <Link href="/privacy" className="underline underline-offset-2 hover:text-white">
               Privacy policy
             </Link>
@@ -81,15 +88,15 @@ export default function ConsentBanner() {
               onClick={() => choose("declined")}
               className="rounded-md px-3 py-2 text-sm font-semibold text-gray-300 hover:bg-white/10 hover:text-white"
             >
-              Decline
+              {gpc ? "Close" : "Decline"}
             </button>
-            <button
+            {!gpc && <button
               type="button"
               onClick={() => choose("accepted")}
               className="rounded-md bg-[#685c84] px-3 py-2 text-sm font-semibold text-white hover:bg-[#3b2d56]"
             >
               Accept
-            </button>
+            </button>}
           </div>
         </div>
       )}

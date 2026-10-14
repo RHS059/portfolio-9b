@@ -3,9 +3,16 @@ export type Consent = "accepted" | "declined"
 const KEY = "cookie-consent"
 const EVENT = "cookie-consent-change"
 
+// Global Privacy Control is a browser-level opt-out that must be honored, so it
+// overrides any stored choice.
+export function hasGlobalPrivacyControl() {
+  return (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true
+}
+
 // Anything other than an explicit "accepted" (no choice yet, storage blocked)
 // counts as no consent, so trackers never load by default.
 export function getConsent(): Consent | null {
+  if (hasGlobalPrivacyControl()) return "declined"
   try {
     const value = localStorage.getItem(KEY)
     return value === "accepted" || value === "declined" ? value : null

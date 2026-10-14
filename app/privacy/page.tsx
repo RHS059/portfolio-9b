@@ -68,6 +68,14 @@ export default function PrivacyPage() {
               reloads the page. Cookies set by third-party domains (such as clarity.ms or x.com) can be removed in your
               browser settings.
             </p>
+            <p>
+              If your browser sends a{" "}
+              <a href="https://globalprivacycontrol.org" target="_blank" rel="noopener noreferrer">
+                Global Privacy Control
+              </a>{" "}
+              (GPC) signal, the site treats it as a Decline: none of the services above load, the banner is not shown,
+              and Accept is unavailable while the signal is on.
+            </p>
             <p>Your choice is stored in your browser and is not sent to this site&apos;s server.</p>
 
             <h2>Contact</h2>
