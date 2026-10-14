@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#eeede7">
+  <meta name="description" content="Why the same trucks kept returning for maintenance: inspect conflicting odometer readings and choose the source for each vehicle.">
+  <title>Fleet / Odometer sources</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="./src/app/style.css">
+  <script defer src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script defer src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a href="./" class="wordmark" aria-label="Fleet demo home"><span class="mark" aria-hidden="true">F</span> FLEET</a>
+      <div class="topbar-right"><span class="demo-badge">DEMO</span></div>
+    </header>
+    <main class="workspace" data-intro="true">
+      <aside class="story-panel" aria-label="Fleet case study"><div id="intro-panel" class="intro-panel"><h1>Fleet Management</h1><section id="project-info" class="project-info" aria-label="Project information"><dl><div><dt>Role</dt><dd>UX Designer</dd></div><div><dt>Responsibilities</dt><dd>User research, systems design, workflow architecture, integration logic, prototyping, and cross-functional collaboration</dd></div><div><dt>Tools</dt><dd>Figma-style wireframing, whiteboarding, API and integration workflows</dd></div><div><dt>Team</dt><dd>UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager</dd></div><div><dt>Timeline</dt><dd>2019 – 2022</dd></div><div class="project-outcome"><dt>Outcome</dt><dd>Data issue resolution improved by 90%, from weeks to hours</dd></div></dl></section><div class="intro-cta"><p>Why were the same trucks getting serviced more than once in a week?</p><button id="start-story" class="primary-button" type="button">Next <span aria-hidden="true">↗</span></button></div></div><div id="story-content" hidden>
+        <h1>Why the same trucks kept coming back <em>to the shop.</em></h1>
+        <p class="intro">Shop technicians noticed the same trucks returning for oil changes and tire rotations within one week.</p>
+        <div class="mode-switch" aria-label="Approach"><button type="button" data-mode="then" aria-pressed="true">Then <small>2021–22</small></button><button type="button" data-mode="today" aria-pressed="false">Today <small>Agent review</small></button></div>
+        <p id="mode-description" class="mode-description"></p>
+        <nav id="story-steps" class="story-steps" aria-label="Story chapters"></nav>
+        <section class="chapter-card" aria-live="polite"><span id="chapter-number" class="eyebrow"></span><h2 id="chapter-title"></h2><p id="chapter-copy"></p><button id="next-chapter" class="primary-button" type="button">Continue <span>↗</span></button></section>
+        </div>
+      </aside>
+      <section class="world-panel" aria-label="Oakland operations scene">
+
+        <div id="world" class="world"><div id="scene-loading" class="scene-loading">Preparing operations scene…</div></div>
+        <div id="scene-notice" class="scene-notice" role="status" hidden></div>
+        <div class="world-toolbar"><div class="segmented" role="group" aria-label="Camera view"><button data-view="2d" type="button" aria-pressed="false">2D</button><button data-view="3d" type="button" aria-pressed="false">3D</button><button data-view="iso" type="button" aria-pressed="true">ISO</button></div><button id="overview" type="button" class="tool-button">Overview</button><button id="follow" type="button" class="tool-button" aria-pressed="false">◎ Follow vehicle</button><span class="toolbar-spacer"></span><button id="pause" type="button" class="tool-button">Ⅱ Pause</button><button id="reset" type="button" class="tool-button" aria-label="Reset demo">↺ Reset</button><button id="about-toggle" class="tool-button" type="button" aria-label="About this demo" aria-expanded="false">Details</button></div>
+        <div class="place-labels"><button data-focus="oict" type="button"><span class="location-number">01</span><span><strong>OICT</strong></span></button><button data-focus="centerpoint" type="button"><span class="location-number">02</span><span><strong>Drone factory</strong></span></button><button data-focus="depot" type="button"><span class="location-number">03</span><span><strong>Workshop</strong></span></button></div>
+        <div class="impact-strip"><div><span class="eyebrow">SELECTED ASSET</span><strong id="selected-asset">TRK-104</strong><small id="asset-role">Migrated vehicle</small></div><div><span class="eyebrow">ODOMETER USED FOR MAINTENANCE</span><strong id="canonical-reading">Unresolved</strong><small id="canonical-source">Choose an odometer source</small></div></div>
+        <div id="about-panel" class="about-panel" hidden><button id="about-close" class="icon-button" type="button" aria-label="Close demo details">×</button><h3>About this demo</h3><p>The incident is real. Vehicle IDs, readings, dates and shop visits in this synthetic demo are examples, not live telemetry. The Oakland map provides geographic context; the workshop, factory activity and routes are illustrative.</p><p>The exact maintenance-trigger rule is unknown. The animation shows the reported repeat visits without claiming to reproduce that rule.</p><p>Provider A and Provider B are anonymous. Networkfleet / Verizon, Samsara and Wright Express / WEX are examples from the integration ecosystem, not identified as either provider in this incident.</p><details><summary>Data and performance</summary><p id="integrity-count"></p><p>Original readings and service history are preserved. Settings are versioned and recalculated results are derived views.</p><p><span id="run-status">Scene running</span> · 20 Hz simulation with interpolated rendering.</p><p id="performance">Performance measurement pending</p><p>Browser frame cadence is not a physical-GPU benchmark.</p></details><p><a href="./reno.html">Original Reno console ↗</a></p><a href="https://www.reidhslaughter.com/projects/fleet-fuel-integration" target="_blank" rel="noreferrer">Read the original case study ↗</a></div>
+      </section>
+      <aside class="inspector-panel" aria-label="Source controls" hidden><div id="source-inspector" hidden><div class="inspector-heading"><span class="eyebrow">ODOMETER SOURCES</span><h2>Inspect the evidence</h2><p>Choose which source supplies each vehicle’s odometer.</p></div><div class="vehicle-tabs" role="group" aria-label="Inspect vehicle"><button type="button" data-vehicle="TRK-104" aria-pressed="true">TRK-104 <small>Migrated</small></button><button type="button" data-vehicle="TRK-208" aria-pressed="false">TRK-208 <small>Still on A</small></button></div><div id="provenance"></div><div id="app-feedback" role="status" aria-live="polite"></div></div></aside>
+    </main>
+
+  </div>
+  <noscript><p class="noscript">JavaScript is needed to run this interactive demo. The original case study is at reidhslaughter.com/projects/fleet-fuel-integration.</p></noscript>
+  <script type="module" src="./src/app/bootstrap.js"></script>
+</body>
+</html>

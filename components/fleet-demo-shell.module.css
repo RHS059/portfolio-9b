@@ -1,0 +1,91 @@
+/* Layout mechanics only. The palette, typography, buttons, sidebar and footer
+   come from PortfolioShell and its shared portfolio-home.module.css. */
+.root { min-width: 0; }
+.root [hidden] { display: none !important; }
+.root button { -webkit-tap-highlight-color: transparent; }
+.root button small { display: block; font-size: 12px; font-weight: 400; }
+.root :is(button, select, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.sidebar { min-width: 0; }
+.introPanel { display: flex; flex-direction: column; flex: 1; gap: 24px; }
+.projectInfo dl { display: grid; gap: 18px; margin: 0; }
+.projectInfo dt { margin-bottom: 6px; }
+.projectInfo dd { margin: 0; }
+.introCta { margin-top: auto; }
+.storyContent { min-width: 0; }
+.storyIntro { margin: 18px 0 22px; }
+.modeSwitch { display: flex; gap: 8px; }
+.modeSwitch button { flex-direction: column; }
+.modeDescription { color: var(--body); font-size: 12.75px; line-height: 1.6; margin: 14px 0 22px; }
+.root :global(.story-steps) { display: flex; flex-direction: column; gap: 8px; }
+.root :global(.story-steps .story-step) { align-items: center; justify-content: flex-start; gap: 10px; text-align: left; }
+.root :global(.step-number) { font-variant-numeric: tabular-nums; opacity: 0.72; }
+.chapter { margin-top: 24px; }
+.chapter h2 { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.25; letter-spacing: -0.02em; }
+.root .main { min-width: 0; min-height: calc(100dvh - 56px); }
+.root .siteNavigation { flex-direction: row; margin-top: 0; }
+.workspaceBody { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-width: 0; gap: 14px; }
+.root[data-intro="false"] .workspaceBody { grid-template-columns: minmax(0, 1fr) minmax(270px, 30%); }
+.root .worldPanel { aspect-ratio: auto; position: relative; display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: var(--sidebar); }
+.world { position: relative; flex: 1; min-height: 520px; width: 100%; overflow: hidden; }
+.world canvas { display: block; }
+.sceneLoading { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; font-size: 13px; color: var(--muted); }
+.sceneNotice { position: absolute; top: 20px; left: 20px; right: 20px; z-index: 4; padding: 12px; border: 1px solid var(--sidebar-rule); background: var(--sidebar); font-size: 12.75px; }
+.worldToolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 14px; border-top: 1px solid var(--sidebar-rule); }
+.root .worldToolbar button { width: auto; padding: 10px 12px; min-height: 44px; }
+.segmented { display: flex; gap: 4px; }
+.toolbarSpacer { flex: 1; }
+.placeLabels { display: flex; gap: 8px; padding: 0 14px 14px; }
+.root .placeLabels button { padding: 10px 12px; min-height: 44px; }
+.impactStrip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; border-top: 1px solid var(--sidebar-rule); padding: 18px; }
+.root[data-intro="true"] .impactStrip { display: none; }
+.impactStrip > div { display: flex; flex-direction: column; gap: 6px; }
+.impactStrip strong { color: var(--ink); font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+.impactStrip small { color: var(--body); font-size: 12.75px; }
+.aboutPanel { position: absolute; z-index: 9; top: 16px; left: 16px; right: 16px; max-height: calc(100% - 32px); overflow: auto; padding: 24px; border: 1px solid var(--sidebar-rule); border-radius: 4px; background: var(--sidebar); color: var(--body); font-size: 13.5px; line-height: 1.6; }
+.aboutPanel h2 { color: var(--ink); font-size: 22px; font-weight: 600; margin: 0 0 16px; letter-spacing: -0.02em; }
+.aboutPanel p { margin: 12px 0; }
+.aboutPanel details { margin: 18px 0; padding-top: 16px; border-top: 1px solid var(--sidebar-rule); }
+.aboutPanel summary { cursor: pointer; font-weight: 500; }
+.root .aboutPanel .close { width: 44px; height: 44px; float: right; margin-left: 12px; font-size: 20px; padding: 0; }
+.aboutPanel a { text-decoration: underline; text-underline-offset: 4px; }
+.root .inspectorPanel { aspect-ratio: auto; min-width: 0; padding: 22px; background: var(--sidebar); max-height: calc(100dvh - 148px); overflow: auto; }
+.inspectorHeading h2 { color: var(--ink); font-size: 23px; font-weight: 600; line-height: 1.2; letter-spacing: -0.03em; margin: 8px 0 12px; }
+.inspectorHeading p { color: var(--body); font-size: 13.5px; line-height: 1.4; margin: 0 0 22px; }
+.vehicleTabs { display: flex; gap: 8px; }
+.root .vehicleTabs button { flex-direction: column; padding: 10px; }
+.feedback { margin-top: 16px; color: var(--body); font-size: 12.75px; line-height: 1.6; }
+/* The imperative evidence UI consumes the same live portfolio tokens. */
+.root :global(.fp-panel) { --fp-ink: var(--ink); --fp-muted: var(--muted); --fp-line: var(--sidebar-rule); --fp-paper: var(--sidebar); font-size: 13.5px; line-height: 1.6; }
+.root :global(.fp-panel .fp-kicker), .root :global(.fp-panel .fp-badge), .root :global(.fp-panel .fp-reading-id), .root :global(.fp-panel .fp-review-mode) { font-family: inherit; }
+.root :global(.fp-panel .fp-kicker) { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: var(--muted-2); }
+.root :global(.fp-panel .fp-card), .root :global(.fp-panel select), .root :global(.fp-panel button) { border-radius: 4px; }
+.root :global(.fp-panel button:hover:not(:disabled)) { background: transparent; color: var(--accent); border-color: var(--accent); }
+.root :global(.fp-panel button[aria-pressed="true"]:hover:not(:disabled)) { background: var(--accent); color: var(--sidebar); }
+.root :global(.fp-panel select) { font-family: inherit; font-size: 13.5px; }
+.root :global(.provenance-fallback) { font-size: 13.5px; line-height: 1.6; color: var(--body); }
+.root :global(.evidence-card) { border: 1px solid var(--sidebar-rule); border-radius: 4px; margin: 14px 0; padding: 14px; }
+.root :global(.record-row) { border-top: 1px solid var(--sidebar-rule); padding: 10px 0; }
+@media (max-width: 1400px) and (min-width: 901px) {
+  .root[data-intro="false"] .workspaceBody { grid-template-columns: minmax(0, 1fr); }
+  .root .inspectorPanel { max-height: none; }
+  .root[data-intro="false"] .world { min-height: 560px; }
+}
+@media (max-width: 900px) {
+  .introPanel { gap: 24px; }
+  .introCta { margin-top: 8px; max-width: none; }
+  .root .main { min-height: 0; }
+  .root[data-intro="false"] .workspaceBody { grid-template-columns: minmax(0, 1fr); }
+  .world { min-height: 540px; }
+  .root .inspectorPanel { max-height: none; }
+  .toolbarSpacer { display: none; }
+}
+@media (max-width: 480px) {
+  .world { min-height: 460px; }
+  .worldToolbar, .placeLabels { padding-left: 12px; padding-right: 12px; }
+  .placeLabels { flex-wrap: wrap; }
+  .root .placeLabels button { flex: 1; min-width: 90px; }
+  .impactStrip { grid-template-columns: minmax(0, 1fr); }
+  .aboutPanel { top: 10px; left: 10px; right: 10px; padding: 18px; }
+}
+
+.root :global(.fp-panel .fp-card > p:not(.fp-kicker)), .root :global(.fp-panel .fp-meta), .root :global(.fp-panel .fp-state p), .root :global(.fp-panel .fp-label), .root :global(.fp-panel .fp-reason), .root :global(.fp-panel .fp-service-list), .root :global(.fp-panel .fp-scope-hint), .root :global(.fp-panel .fp-review-mode) { font-size: 12.75px; }
