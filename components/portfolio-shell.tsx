@@ -4,6 +4,7 @@ import PortfolioLinks from "./portfolio-links"
 import AnimatedLink from "./animated-link"
 import styles from "./portfolio-home.module.css"
 import CookieSettingsLink from "./cookie-settings-link"
+import MobileNav from "./mobile-nav"
 
 type Props = { children: ReactNode; leaving?: boolean; reading?: boolean; alignTop?: boolean; sidebarContent?: ReactNode }
 
@@ -11,6 +12,7 @@ export default function PortfolioShell({ children, leaving = false, reading = fa
   const Name = reading ? "p" : "h1"
   return (
     <div className={`${styles.page} font-sans`}>
+      <MobileNav name={Name} workHref={reading ? "/#work" : "#work"} />
       <div className={styles.grid}>
         <div className={`${styles["side-wrap"]} ${styles["route-panel"]} ${leaving ? styles["route-panel-leaving"] : ""}`}>
           <aside className={styles.side}>
