@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Cookie, Github, Linkedin, Mail, Menu, Shield, X } from "lucide-react"
 import PortfolioLinks from "./portfolio-links"
 import AnimatedLink from "./animated-link"
@@ -9,20 +9,31 @@ import styles from "./portfolio-home.module.css"
 
 export default function MobileNav({ name: Name, workHref }: { name: "h1" | "p"; workHref: string }) {
   const [open, setOpen] = useState(false)
+  const toggleRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     if (!open) return
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false)
     }
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node
+      if (!menuRef.current?.contains(target) && !toggleRef.current?.contains(target)) setOpen(false)
+    }
     window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
+    document.addEventListener("pointerdown", onPointerDown)
+    return () => {
+      window.removeEventListener("keydown", onKey)
+      document.removeEventListener("pointerdown", onPointerDown)
+    }
   }, [open])
 
   return (
     <>
       <header className={styles["m-head"]}>
         <button
+          ref={toggleRef}
           type="button"
           className={styles["m-toggle"]}
           aria-label={open ? "Close menu" : "Open menu"}
@@ -37,6 +48,7 @@ export default function MobileNav({ name: Name, workHref }: { name: "h1" | "p"; 
       </header>
       <div className={`${styles["m-scrim"]} ${open ? styles["m-open"] : ""}`} aria-hidden="true" onClick={() => setOpen(false)} />
       <nav
+        ref={menuRef}
         id="mobile-menu"
         aria-label="Mobile navigation"
         className={`${styles["m-menu"]} ${open ? styles["m-open"] : ""}`}
