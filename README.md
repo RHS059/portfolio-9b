@@ -124,3 +124,16 @@ To learn more, take a look at the following resources:
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 - [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+
+## Fleet Console app
+
+`https://www.reidhslaughter.com/apps/fleet-management` serves the standalone Fleet
+Console. `next.config.mjs` proxies the document and nested assets to the path-aware
+`portfolio/` build published by `RHS059/fleet_manager` on GitHub Pages. This bypasses
+the portfolio layout, preventing its styles and React runtime from affecting the app.
+
+Successful Fleet Manager Pages deployments update this route automatically, subject
+to CDN caching. No copied source, extra secrets, scheduled sync or portfolio rebuild
+is required. The upstream Pages site must remain available. Keep the route prefix in
+sync with Fleet Manager's `build:portfolio` script. Internal links to the app should
+use a normal `<a href="/apps/fleet-management">` for full-document navigation.
