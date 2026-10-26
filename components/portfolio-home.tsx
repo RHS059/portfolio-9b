@@ -12,6 +12,9 @@ type Project = {
   slug: string
   title: string
   date: string
+  role: string
+  business: string
+  outcome: string
   href?: string
   hero: string | null
   rest: { src: string; alt: string }[]
@@ -22,6 +25,9 @@ const projects: Project[] = [
     slug: "fleet-fuel",
     title: "Streamlining Fuel Management for Large Fleets",
     date: "Apr 2024",
+    role: "Product Designer",
+    business: "Collective Data · Enterprise fleet management",
+    outcome: "90% faster resolution of fuel-integration data issues.",
     href: "/projects/fleet-fuel-integration",
     hero: "/fleet-management-overview.webp",
     rest: [
@@ -33,6 +39,9 @@ const projects: Project[] = [
     slug: "enfusion-field-kit",
     title: "Enfusion Field Kit",
     date: "Jan 2026",
+    role: "Product Designer & Design Engineer",
+    business: "Independent project · Game-development tools",
+    outcome: "Combines mesh, material, and texture workflows in one browser tool.",
     href: "/enfusion_field_kit_beta",
     hero: "/enfusion-field-kit.webp",
     rest: [],
@@ -41,6 +50,9 @@ const projects: Project[] = [
     slug: "texture-wizard",
     title: "Arma Reforger Texture Wizard",
     date: "Sep 2025",
+    role: "Solo Designer & Builder",
+    business: "Independent project · Tools for Arma Reforger creators",
+    outcome: "Reduced a 14-set texture workflow from ~45 minutes to ~90 seconds.",
     href: "/projects/arma-reforger-texture-wizard",
     hero: "/arma-texture-wizard.png",
     rest: [
@@ -113,6 +125,11 @@ function Card({ p, onNavigate }: { p: Project; onNavigate: (href: string) => voi
       <div className={styles.caption}>
         <span className={styles.t}>{p.title}</span>
         <span className={styles.d}>{p.date}</span>
+      </div>
+      <div className={styles["project-details"]}>
+        <p className={styles["project-business"]}>{p.business}</p>
+        <p className={styles["project-role"]}>{p.role}</p>
+        <p className={styles["project-outcome"]}>{p.outcome}</p>
       </div>
     </article>
   )
