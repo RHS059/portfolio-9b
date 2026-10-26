@@ -21,9 +21,10 @@ const projectData = {
   dateShipped: "Summer 2021",
   title: "Streamlining Fuel Management for Large Fleets",
   heroImage: {
-    src: "/fleet-dashboard.png",
-    alt: "Fleet management dashboard showing fuel transaction data and analytics",
+    src: "/fleet-management-overview.webp",
+    alt: "2026 Fleet Management prototype overview showing fleet status and operational metrics",
   },
+  prototypeHref: "/apps/fleet-management",
   role: "UX Designer",
   timeline: "2019 – 2022",
   team: "UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager",
