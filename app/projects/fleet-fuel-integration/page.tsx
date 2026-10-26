@@ -252,7 +252,7 @@ export default function FleetFuelIntegrationProject() {
         <ProjectHero {...projectData} />
 
         {sectionContent.map((section) => (
-          <ProjectSection key={section.id} id={section.id} title={section.title} content={section.content} />
+          <ProjectSection key={section.id} id={section.id} title={section.title} content={section.content} imagesSideBySide={section.id === "system-architecture" || section.id === "planning-collaboration"} />
         ))}
       </div>
     </ProjectLayout>

@@ -20,9 +20,10 @@ interface ProjectSectionProps {
   id: string
   title: string
   content: ContentBlock[]
+  imagesSideBySide?: boolean
 }
 
-export default function ProjectSection({ id, title, content }: ProjectSectionProps) {
+export default function ProjectSection({ id, title, content, imagesSideBySide = false }: ProjectSectionProps) {
   const [lightbox, setLightbox] = useState<{ src: string; title: string; caption: string } | null>(null)
 
   const openLightbox = useCallback((src: string, title: string, caption: string) => {
@@ -205,7 +206,13 @@ export default function ProjectSection({ id, title, content }: ProjectSectionPro
         >
           {title}
         </h2>
-        <div className="space-y-4">{content.map((block, index) => renderContentBlock(block, index))}</div>
+        <div className={imagesSideBySide ? "grid grid-cols-1 md:grid-cols-2 gap-4 items-start" : "space-y-4"}>
+          {content.map((block, index) => imagesSideBySide ? (
+            <div key={index} className={block.type === "image-card" ? "min-w-0" : "md:col-span-2 min-w-0"}>
+              {renderContentBlock(block, index)}
+            </div>
+          ) : renderContentBlock(block, index))}
+        </div>
       </section>
 
       {lightbox && (
