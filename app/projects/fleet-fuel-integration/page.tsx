@@ -215,15 +215,7 @@ const sectionContent = [
           "Users avoid costly data cleanup",
         ],
       },
-      {
-        type: "button" as const,
-        content: {
-          text: "View Prototype on",
-          logo: "/lovable-logo.png",
-          logoAlt: "Lovable",
-          url: "https://preview--fleet-ai-pilot.lovable.app/fuel",
-        },
-      },
+
     ],
   },
   {
