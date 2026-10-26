@@ -1,0 +1,24 @@
+{
+  "name": "reid-clarity-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "node src/http.mjs",
+    "stdio": "node src/stdio.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check:upstream": "node scripts/check-upstream.mjs"
+  },
+  "dependencies": {
+    "@microsoft/clarity-mcp-server": "2.0.1",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "express": "5.3.0",
+    "jose": "6.2.13"
+  },
+  "overrides": {
+    "zod": "4.6.7"
+  }
+}
