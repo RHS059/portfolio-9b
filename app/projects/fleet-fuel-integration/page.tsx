@@ -5,8 +5,7 @@ import ProjectSection from "../../../components/project-section"
 const sections = [
   { id: "impact", title: "Impact" },
   { id: "overview", title: "Overview" },
-  { id: "the-problem-surface-level", title: "The Problem (surface level)" },
-  { id: "the-problem-under-the-hood", title: "The Problem (under the hood)" },
+  { id: "the-problem-surface-level", title: "The Problem" },
   { id: "research-and-discovery", title: "Research & Discovery" },
   { id: "opportunity", title: "Opportunity" },
   { id: "how-i-knew-what-to-do", title: "How I Knew What to Do" },
@@ -67,23 +66,22 @@ const sectionContent = [
   },
   {
     id: "the-problem-surface-level",
-    title: "The Problem (surface level)",
+    title: "The Problem",
     content: [
       {
-        type: "paragraph" as const,
-        content:
-          "The company's engineering resources were being wasted dealing with re-occurring support tickets caused by infrastructural issues with the fuel transaction import. Engineers could not focus on the main product.",
-      },
-    ],
-  },
-  {
-    id: "the-problem-under-the-hood",
-    title: "The Problem (under the hood)",
-    content: [
-      {
-        type: "paragraph" as const,
-        content:
-          "The middleware handling the data was not robust enough to handle certain scenarios. Simple scenarios such as 'Does this vehicle exist in the system?' did not gracefully fail or notify users. A data issue could persist for months before anyone noticed. Data clean-up is expensive for users.",
+        type: "cards" as const,
+        tone: "primary" as const,
+        content: [
+          {
+            header: "Surface level",
+            text: "The company's engineering resources were being wasted dealing with re-occurring support tickets caused by infrastructural issues with the fuel transaction import. Engineers could not focus on the main product.",
+          },
+          {
+            id: "the-problem-under-the-hood",
+            header: "Under the hood",
+            text: "The middleware handling the data was not robust enough to handle certain scenarios. Simple scenarios such as 'Does this vehicle exist in the system?' did not gracefully fail or notify users. A data issue could persist for months before anyone noticed. Data clean-up is expensive for users.",
+          },
+        ],
       },
     ],
   },

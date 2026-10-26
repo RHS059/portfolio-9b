@@ -15,6 +15,7 @@ interface ContentBlock {
     | { headers: string[]; rows: string[][] }
     | { header: string; text: string; image?: string; imagePlaceholder?: string }[]
   caption?: string
+  tone?: "primary"
 }
 
 interface ProjectSectionProps {
@@ -73,10 +74,10 @@ export default function ProjectSection({ id, title, content, imagesSideBySide = 
       case "cards":
         return (
           <div key={index} className="grid md:grid-cols-2 gap-4">
-            {(block.content as { header: string; text: string }[]).map((card, i) => (
-              <div key={i} className="bg-[#9b95b2]/15 rounded-lg p-6 space-y-3">
-                <h3 className="font-semibold text-[#181425] text-lg">{card.header}</h3>
-                <p className="text-[#181425] leading-relaxed text-base">{card.text}</p>
+            {(block.content as { id?: string; header: string; text: string }[]).map((card, i) => (
+              <div key={i} id={card.id} className={`rounded-lg p-6 space-y-3 scroll-mt-[96px] ${block.tone === "primary" ? "bg-[#3b2d56] text-white" : "bg-[#9b95b2]/15 text-[#181425]"}`}>
+                <h3 className="font-semibold text-lg">{card.header}</h3>
+                <p className="leading-relaxed text-base">{card.text}</p>
               </div>
             ))}
           </div>
