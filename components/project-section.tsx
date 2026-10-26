@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
+import { createPortal } from "react-dom"
 
 interface ContentBlock {
   type: "paragraph" | "list" | "image" | "quote" | "cards" | "image-card" | "button" | "placeholder-image" | "table" | "decision-cards"
@@ -25,6 +26,20 @@ interface ProjectSectionProps {
 
 export default function ProjectSection({ id, title, content, imagesSideBySide = false }: ProjectSectionProps) {
   const [lightbox, setLightbox] = useState<{ src: string; title: string; caption: string } | null>(null)
+
+  const dialogRef = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => {
+    if (!lightbox) return
+    const previousFocus = document.activeElement as HTMLElement | null
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    dialogRef.current?.showModal()
+    return () => {
+      document.body.style.overflow = overflow
+      previousFocus?.focus()
+    }
+  }, [lightbox])
 
   const openLightbox = useCallback((src: string, title: string, caption: string) => {
     setLightbox({ src, title, caption })
@@ -70,14 +85,25 @@ export default function ProjectSection({ id, title, content, imagesSideBySide = 
       case "image-card":
         const imageContent = block.content as { src: string; alt: string; caption: string }
         return (
-          <div key={index} className="bg-[#9b95b2]/15 rounded-lg p-6 space-y-4">
-            <img
-              src={imageContent.src || "/placeholder.svg"}
-              alt={imageContent.alt}
-              className="w-full h-auto rounded-lg shadow-md"
-            />
-            <p className="text-sm text-[#181425] text-center italic">{imageContent.caption}</p>
-          </div>
+          <figure key={index} className="bg-[#9b95b2]/15 rounded-lg p-4 md:p-6 h-full flex flex-col gap-4">
+            <button
+              type="button"
+              onClick={() => openLightbox(imageContent.src, imageContent.alt, imageContent.caption)}
+              aria-label={`Enlarge image: ${imageContent.caption}`}
+              className="group relative block w-full aspect-[4/3] shrink-0 overflow-hidden rounded-lg shadow-md cursor-zoom-in focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#685c84]"
+            >
+              <img
+                src={imageContent.src || "/placeholder.svg"}
+                alt={imageContent.alt}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 group-focus-visible:scale-105 motion-reduce:transition-none motion-reduce:scale-100"
+              />
+              <span aria-hidden="true" className="absolute bottom-3 right-3 inline-flex items-center gap-2 rounded-full bg-black/80 px-3 py-2 text-xs font-medium text-white shadow-sm transition-transform duration-200 group-hover:-translate-y-1 group-focus-visible:-translate-y-1 motion-reduce:transition-none motion-reduce:translate-y-0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6M7 10h6M10 7v6"/></svg>
+                Zoom in
+              </span>
+            </button>
+            <figcaption className="text-sm text-[#181425] text-center italic">{imageContent.caption}</figcaption>
+          </figure>
         )
 
       case "image":
@@ -206,7 +232,7 @@ export default function ProjectSection({ id, title, content, imagesSideBySide = 
         >
           {title}
         </h2>
-        <div className={imagesSideBySide ? "grid grid-cols-1 md:grid-cols-2 gap-4 items-start" : "space-y-4"}>
+        <div className={imagesSideBySide ? "grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch" : "space-y-4"}>
           {content.map((block, index) => imagesSideBySide ? (
             <div key={index} className={block.type === "image-card" ? "min-w-0" : "md:col-span-2 min-w-0"}>
               {renderContentBlock(block, index)}
@@ -215,41 +241,34 @@ export default function ProjectSection({ id, title, content, imagesSideBySide = 
         </div>
       </section>
 
-      {lightbox && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={closeLightbox}
-          onKeyDown={(e) => e.key === "Escape" && closeLightbox()}
-          role="dialog"
-          aria-modal="true"
+      {lightbox && createPortal(
+        <dialog
+          ref={dialogRef}
           aria-label="Image preview"
+          className="fixed inset-0 m-0 h-[100dvh] w-screen max-h-none max-w-none border-0 bg-transparent p-4 md:p-8 text-white backdrop:bg-black/80"
+          onCancel={(event) => { event.preventDefault(); closeLightbox() }}
+          onClick={(event) => { if (event.target === event.currentTarget) closeLightbox() }}
         >
           <button
             type="button"
             onClick={closeLightbox}
-            className="absolute top-6 right-6 text-white hover:text-gray-300 transition-colors z-10"
+            autoFocus
+            className="fixed top-4 right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/70 text-white hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             aria-label="Close image preview"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
           </button>
-          <div
-            className="flex flex-col items-center gap-4 max-w-[90vw] max-h-[90vh]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={lightbox.src || "/placeholder.svg"}
-              alt={lightbox.title}
-              className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl"
-            />
-            <div className="text-center space-y-1">
-              <p className="text-white font-semibold text-lg">{lightbox.title}</p>
-              <p className="text-white/80 text-sm">{lightbox.caption}</p>
-            </div>
+          <div className="pointer-events-none flex min-h-full items-center justify-center">
+            <figure className="pointer-events-auto flex max-w-[90vw] flex-col items-center gap-4">
+              <img
+                src={lightbox.src || "/placeholder.svg"}
+                alt={lightbox.title}
+                className="max-w-full max-h-[75dvh] object-contain rounded-lg shadow-2xl"
+              />
+              <figcaption className="max-w-3xl text-center text-sm text-white/90">{lightbox.caption}</figcaption>
+            </figure>
           </div>
-        </div>
+        </dialog>, document.body
       )}
     </>
   )
