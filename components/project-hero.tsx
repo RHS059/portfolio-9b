@@ -50,7 +50,7 @@ export default function ProjectHero({
       <h1 className="text-3xl md:text-5xl font-semibold text-[#181425] leading-tight">{title}</h1>
 
       {/* Hero Image */}
-      <div className="mx-auto max-w-[911px]">
+      <div className={prototypeHref ? "w-full" : "mx-auto max-w-[911px]"}>
         {prototypeHref ? (
           <div
             className="relative overflow-hidden rounded-lg shadow-lg"
