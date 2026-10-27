@@ -40,10 +40,10 @@ export default function PortfolioShell({ children, leaving = false, reading = fa
               <nav aria-label="Areas of expertise">
                 <p>
                   <strong>Areas:</strong>{" "}
-                  <a href="/about">Product Design</a> ·{" "}
-                  <a href="/projects/fleet-fuel-integration">UX Design</a> ·{" "}
-                  <a href="/enfusion_field_kit_beta">Design Engineering</a> ·{" "}
-                  <a href="/writing">AI-assisted Development</a> ·{" "}
+                  <a href="/about">Product Design</a>,{" "}
+                  <a href="/projects/fleet-fuel-integration">UX Design</a>,{" "}
+                  <a href="/enfusion_field_kit_beta">Design Engineering</a>,{" "}
+                  <a href="/writing">AI-assisted Development</a>,{" "}
                   <a href="/projects/arma-reforger-texture-wizard">Prototyping</a>
                 </p>
               </nav>

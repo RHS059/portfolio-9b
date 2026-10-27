@@ -182,7 +182,7 @@
 
             <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
               <div style="border:1px solid #BF6505;position:relative;padding:66px 28px;display:flex;flex-direction:column;align-items:center;gap:22px;animation:rise .35s ease both;overflow:hidden">
-                <div style="position:absolute;top:16px;left:16px;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">TASK · 04</div>
+                <div style="position:absolute;top:16px;left:16px;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">TASK, 04</div>
                 <div style="position:relative;width:132px;height:132px;display:grid;place-items:center">
                   <div style="position:absolute;width:130px;height:130px;border:1px solid #0644BF;opacity:.5;animation:ring 2.6s ease-out infinite"></div>
                   <div style="position:absolute;width:130px;height:130px;border:1px solid #0644BF;opacity:.35;animation:ring 2.6s ease-out .85s infinite"></div>
@@ -219,7 +219,7 @@
                     <div style="font-family:Archivo,sans-serif;font-variation-settings:'wdth' 125,'wght' 800;font-size:22px;color:#E6EDFF">{{ readyCount }}</div>
                   </div>
                   <div style="padding:14px 16px;display:flex;flex-direction:column;gap:6px">
-                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">SKIPPED · ALREADY OK</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">SKIPPED, ALREADY OK</div>
                     <div style="font-family:Archivo,sans-serif;font-variation-settings:'wdth' 125,'wght' 800;font-size:22px;color:#ABA49B">{{ skipSummary }}</div>
                   </div>
                 </div>
@@ -269,7 +269,7 @@
             <div style="display:flex;justify-content:flex-end;align-items:flex-start;gap:20px;flex-wrap:wrap">
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <button onClick="{{ onToggleSettings }}" style="{{ settingsBtnStyle }}" style-hover="border-color:#E8A055;color:#E8A055">Settings</button>
-                <button onClick="{{ onDownloadAll }}" disabled="{{ dlAllDisabled }}" style="{{ dlAllStyle }}" style-hover="filter:brightness(1.14)">Download all · ZIP</button>
+                <button onClick="{{ onDownloadAll }}" disabled="{{ dlAllDisabled }}" style="{{ dlAllStyle }}" style-hover="filter:brightness(1.14)">Download all, ZIP</button>
                 <button onClick="{{ onAddSet }}" style-hover="filter:brightness(1.14)" style="appearance:none;border:none;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:10px 16px;cursor:pointer;transition:filter .15s" style-hover="filter:brightness(1.15)">+ Add set</button>
               </div>
             </div>
@@ -330,7 +330,7 @@
                   <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
                     <div style="font-size:16px;font-weight:800;letter-spacing:-0.01em;color:#E8A055">Drop texture files here</div>
                   </div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:#ABA49B;text-transform:uppercase">TGA · PNG · JPG · WEBP · AUTO SORTED</div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:#ABA49B;text-transform:uppercase">TGA, PNG, JPG, WEBP, AUTO SORTED</div>
                 </div>
               </div>
             </sc-if>
@@ -394,7 +394,7 @@
                       <div style="{{ set.crmPreviewStyle }}">{{ set.crmThumb }}</div>
                     </sc-if>
                     <sc-if value="{{ set.crmMissing }}" hint-placeholder-val="{{ true }}">
-                      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:#ABA49B;text-transform:uppercase;line-height:1.7">LOAD AO · ROUGHNESS · METALLIC TO GENERATE A LIVE PREVIEW.</div>
+                      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:#ABA49B;text-transform:uppercase;line-height:1.7">LOAD AO, ROUGHNESS, METALLIC TO GENERATE A LIVE PREVIEW.</div>
                     </sc-if>
                   </div>
                   <div style="padding:14px;display:flex;flex-direction:column;gap:9px">
@@ -650,7 +650,7 @@ const META_NAME = /\bName\s+"([^"]+\.edds)"/i;
 const SUFFIXES = ["bcr", "crm", "nmo"];
 const TYPES = ["normal", "ao", "metallic", "basecolor", "roughness"];
 const TYPE_LABELS = { normal: "Normal", ao: "Ambient occl.", metallic: "Metallic", basecolor: "Base color", roughness: "Roughness" };
-const CHANNEL_HINTS = { normal: "RG → NMO", ao: "A → NMO · R → CRM", metallic: "B → NMO · B → CRM", basecolor: "RGB → BCR", roughness: "A → BCR · G → CRM" };
+const CHANNEL_HINTS = { normal: "RG → NMO", ao: "A → NMO, R → CRM", metallic: "B → NMO, B → CRM", basecolor: "RGB → BCR", roughness: "A → BCR, G → CRM" };
 const DEFAULT_ALIASES = TYPES.map(t => ({ id: "default-" + t, textureType: t, alias: "_" + t }));
 const SETTINGS_KEY = "texture-wizard-settings";
 const APP_VERSION = "1.59";
@@ -1391,7 +1391,7 @@ class Component extends DCLogic {
     }
     this.actClear();
     this.setState({ applying: false, doneMsg: ok + (ok === 1 ? " material" : " materials") + " rewritten as MatPBRCamo" +
-      (this.state.backup ? " · backups written" : "") + (failed ? " · " + failed + " failed" : "") });
+      (this.state.backup ? ", backups written" : "") + (failed ? ", " + failed + " failed" : "") });
   }
 
   /* ================= MODULE 2 - texture packing ================= */
@@ -1726,7 +1726,7 @@ class Component extends DCLogic {
       const depthDrop = entry.isPng && entry.srcBitDepth === 16 && entry.targetSize !== entry.nativeWidth;
       const fresh = await this.writeEntry(entry);
       this.patchTga(id, Object.assign({ status: "done", modified: true }, fresh));
-      this.setState({ resizeStatus: entry.name + " overwritten in place" + (depthDrop ? " · 16-bit written back as 8-bit" : ""), resizeError: false });
+      this.setState({ resizeStatus: entry.name + " overwritten in place" + (depthDrop ? ", 16-bit written back as 8-bit" : ""), resizeError: false });
     } catch (err) {
       this.patchTga(id, { status: "error" });
       this.setState({ resizeStatus: entry.name + ": " + ((err && err.message) || err), resizeError: true });
@@ -1758,7 +1758,7 @@ class Component extends DCLogic {
     this.actClear();
     const failed = this.state.tgaFiles.filter(f => f.status === "error").length;
     const ok = this.state.tgaFiles.filter(f => f.status === "done").length;
-    this.setState({ reducingAll: false, resizeStatus: ok + " file(s) overwritten in place" + (failed ? " · " + failed + " failed" : ""), resizeError: failed > 0 && ok === 0 });
+    this.setState({ reducingAll: false, resizeStatus: ok + " file(s) overwritten in place" + (failed ? ", " + failed + " failed" : ""), resizeError: failed > 0 && ok === 0 });
   }
 
   async undoAll() {
@@ -2010,7 +2010,7 @@ class Component extends DCLogic {
     this.setState({ fbxInfo: null, fbxName: "", atlasMats: [], tileDrag: null });
     this.actClear();
     this.toast(this._texPool.length
-      ? "Mesh unloaded · " + this._texPool.length + (this._texPool.length === 1 ? " texture set held" : " texture sets held")
+      ? "Mesh unloaded, " + this._texPool.length + (this._texPool.length === 1 ? " texture set held" : " texture sets held")
       : "Mesh unloaded");
   }
 
@@ -2135,7 +2135,7 @@ class Component extends DCLogic {
       const blob = await zip.generateAsync({ type: "blob" });
       downloadBlob(blob, name + ".zip");
       this.actClear();
-      this.toast("Exported " + name + ".zip · " + res.remapped + " polygons remapped", "success");
+      this.toast("Exported " + name + ".zip, " + res.remapped + " polygons remapped", "success");
     } catch (e) {
       this.actClear();
       this.toast(e.message || "Atlas export failed", "error");
@@ -2329,7 +2329,7 @@ class Component extends DCLogic {
     return {
       noFbx: !s.fbxInfo, hasFbx: !!s.fbxInfo,
       fbxSummary: s.fbxInfo
-        ? s.fbxName + " · " + s.atlasMats.length + (s.atlasMats.length === 1 ? " material" : " materials") + " · " + s.fbxInfo.meshes.length + (s.fbxInfo.meshes.length === 1 ? " mesh" : " meshes")
+        ? s.fbxName + ", " + s.atlasMats.length + (s.atlasMats.length === 1 ? " material" : " materials") + ", " + s.fbxInfo.meshes.length + (s.fbxInfo.meshes.length === 1 ? " mesh" : " meshes")
         : "No mesh loaded",
       fbxLoadStyle: this.btn("primary", false),
       fbxLoadLabel: s.fbxInfo ? "↥ Swap .FBX" : "↥ Load .FBX",
@@ -2354,7 +2354,7 @@ class Component extends DCLogic {
       },
       atlasExportDisabled: !ready || s.atlasBusy,
       atlasExportStyle: this.btn("primary", !ready || s.atlasBusy),
-      atlasExportLabel: s.atlasBusy ? "⟳ Working" : ready ? "⬇ Export BCR · NMO · FBX" : "⬇ Fill every slot to export",
+      atlasExportLabel: s.atlasBusy ? "⟳ Working" : ready ? "⬇ Export BCR, NMO, FBX" : "⬇ Fill every slot to export",
       fbxDropStyle: "cursor:pointer;transition:all .16s;background-blend-mode:multiply;" +
         (s.fbxDragOver ? "border:1px solid #BF6505;background:rgba(191,101,5,.28)" : "border:1px dashed #4C4741;background:rgba(178,168,156,.10)"),
       onPickFbx: () => this.pickFbx(),
@@ -2377,7 +2377,7 @@ class Component extends DCLogic {
       atlasRef: this.atlasRef,
       atlasBoxStyle: "position:relative;width:100%;aspect-ratio:" + W + " / " + H + ";border:1px solid #4C4741;background:#141312;overflow:hidden;touch-action:none",
       atlasGridStyle: "position:absolute;inset:0;pointer-events:none;opacity:.5;background-image:linear-gradient(#38342F 1px,transparent 1px),linear-gradient(90deg,#38342F 1px,transparent 1px);background-size:" + (GRID / W * 100) + "% " + (GRID / H * 100) + "%",
-      atlasDims: W + " × " + H + " · " + GRID + " grid",
+      atlasDims: W + " × " + H + ", " + GRID + " grid",
       atlasFill: Math.round(used / (W * H) * 100) + "% used",
       atlasTiles: s.atlasMats.map(m => ({
         label: m.tile + (m.rot ? " ↻" : ""),
@@ -2404,7 +2404,7 @@ class Component extends DCLogic {
       onLightUp: () => { this._lightDown = false; },
       atlasMats: s.atlasMats.map(m => ({
         name: m.name,
-        meta: m.polys + (m.polys === 1 ? " polygon" : " polygons") + " · " + m.tile + " px tile · " + Object.keys(m.textures).length + "/5 maps",
+        meta: m.polys + (m.polys === 1 ? " polygon" : " polygons") + ", " + m.tile + " px tile, " + Object.keys(m.textures).length + "/5 maps",
         cardStyle: "display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid #38342F;background:#1A1817",
         chipStyle: "width:12px;height:34px;flex:none;background:" + m.color,
         onRename: (e) => this.patchMat(m.id, { name: e.target.value }),
@@ -2483,9 +2483,9 @@ class Component extends DCLogic {
       /* Each tab icon is up to three stacked Font Awesome layers: a faint plate,
          the subject glyph, and an optional accent. Layers are absolutely centered
          in a fixed 34px box so the rail keeps its rhythm open or collapsed. */
-      { id: 4, code: "01", title: "Atlas combine", sub: "merge · rewrite UVs",
+      { id: 4, code: "01", title: "Atlas combine", sub: "merge, rewrite UVs",
         l: [["fa-solid fa-square", 34, .16, "0,0"], ["fa-solid fa-table-cells-large", 17, 1, "-3,-3"], ["fa-solid fa-object-group", 13, .95, "9,9"]] },
-      { id: 2, code: "02", title: "Texture pack", sub: "PBR → BCR · NMO · CRM",
+      { id: 2, code: "02", title: "Texture pack", sub: "PBR → BCR, NMO, CRM",
         l: [["fa-solid fa-square", 34, .16, "0,0"], ["fa-solid fa-layer-group", 18, 1, "0,-2"], ["fa-solid fa-arrow-down-long", 9, .85, "11,8"]] },
       { id: 3, code: "03", title: "Resize", sub: "in-place resample",
         l: [["fa-solid fa-square", 34, .16, "0,0"], ["fa-solid fa-image", 17, 1, "-3,-3"], ["fa-solid fa-down-left-and-up-right-to-center", 12, .95, "9,9"]] },
@@ -2565,7 +2565,7 @@ class Component extends DCLogic {
 
     const tgaRows = s.tgaFiles.map(f => ({
       name: f.name,
-      dims: f.width + "×" + f.height + " · " + (f.bytesPerPixel === 4 ? "RGBA" : "RGB") + (f.targetSize !== f.width ? " → " + f.targetSize + "×" + f.targetSize : ""),
+      dims: f.width + "×" + f.height + ", " + (f.bytesPerPixel === 4 ? "RGBA" : "RGB") + (f.targetSize !== f.width ? " → " + f.targetSize + "×" + f.targetSize : ""),
       rowStyle: "display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid #2D2926;flex-wrap:wrap;transition:background .15s;" +
         (f.status === "error" ? "background:rgba(250,61,30,.07)" : f.status === "done" ? "background:rgba(178,168,156,.05)" : ""),
       sizes: [["4K", 4096], ["2K", 2048], ["1K", 1024], ["NATIVE", f.nativeWidth]].map(([label, size]) => ({
@@ -2597,7 +2597,7 @@ class Component extends DCLogic {
         (s.activity ? "transform:translateY(0);opacity:1" : "transform:translateY(calc(100% + 30px));opacity:0;pointer-events:none"),
       activityLabel: s.activity ? s.activity.label : "",
       activityCount: s.activity && s.activity.total > 1 ? s.activity.done + "/" + s.activity.total : "",
-      activityPercent: s.activity ? (s.activity.total ? Math.round((s.activity.done / s.activity.total) * 100) + "%" : "···") : "0%",
+      activityPercent: s.activity ? (s.activity.total ? Math.round((s.activity.done / s.activity.total) * 100) + "%" : "…") : "0%",
       activityBarStyle: "height:100%;background:#BF6505;transition:width .25s ease;" +
         (s.activity
           ? (s.activity.total ? "width:" + Math.round((s.activity.done / s.activity.total) * 100) + "%"
@@ -2626,7 +2626,7 @@ class Component extends DCLogic {
         "font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;transition:color .22s ease .06s;" +
         "color:" + (s.demo ? "#2A1601" : "#ABA49B"),
       isMod1: s.module === 1, isMod2: s.module === 2, isMod3: s.module === 3, isMod4: s.module === 4,
-      footerStatus: s.module === 4 ? "TASK 01 · ATLAS COMBINE" : s.module === 2 ? "TASK 02 · CHANNEL PACK" : s.module === 3 ? "TASK 03 · RESAMPLE" : "TASK 04 · MATERIAL PATCH",
+      footerStatus: s.module === 4 ? "TASK 01, ATLAS COMBINE" : s.module === 2 ? "TASK 02, CHANNEL PACK" : s.module === 3 ? "TASK 03, RESAMPLE" : "TASK 04, MATERIAL PATCH",
       ...this.mod4View(),
       toasts: s.toasts.map(t => ({
         message: t.message,
@@ -2641,9 +2641,9 @@ class Component extends DCLogic {
       dirName: s.dirName || "-", ematCount: String(s.ematCount),
       readyLabel: patched && !ready.length ? "PATCHED" : "NEED PATCHING",
       readyCount: String(ready.length || patched),
-      skipSummary: s.skipped + " · " + s.ignored,
+      skipSummary: s.skipped + ", " + s.ignored,
       scanPhaseLabel: s.scanPhase,
-      scanDetail: s.scanPhase === "Reading materials" ? s.scanned + " of " + s.ematCount + " materials read" : s.scanned + " files seen · " + s.metas + " descriptors indexed",
+      scanDetail: s.scanPhase === "Reading materials" ? s.scanned + " of " + s.ematCount + " materials read" : s.scanned + " files seen, " + s.metas + " descriptors indexed",
       emptyDetail: s.ematCount
         ? "CHECKED " + s.ematCount + " MATERIAL" + (s.ematCount === 1 ? "" : "S") + " IN " + s.dirName + " - EVERY ONE ALREADY CARRIES A REAL DEFINITION."
         : "NO .EMAT FILES UNDER " + s.dirName + ". POINT THE UNIT AT THE FOLDER THAT HOLDS YOUR MATERIALS.",

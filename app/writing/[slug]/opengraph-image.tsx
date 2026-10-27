@@ -16,7 +16,7 @@ export default async function ArticleImage({ params }: { params: Promise<{ slug:
       <div style={{ display: "flex", fontSize: 24, color: "#685c84", letterSpacing: 3 }}>WRITING / REID SLAUGHTER</div>
       <div style={{ display: "flex", fontSize: 64, lineHeight: 1.12, letterSpacing: -2 }}>{article.title}</div>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 23, color: "#685c84" }}>
-        <span>Product design · AI · Design engineering</span><span>reidhslaughter.com</span>
+        <span>Product design, AI, Design engineering</span><span>reidhslaughter.com</span>
       </div>
     </div>,
     size,

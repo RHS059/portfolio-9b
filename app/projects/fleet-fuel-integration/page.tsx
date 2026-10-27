@@ -232,7 +232,7 @@ const sectionContent = [
       {
         type: "paragraph" as const,
         content:
-          "But—this shouldn't have taken 8 years. A sales rep originally designed the feature in 2011, bypassing design/dev. I redesigned it after joining in 2017, shipping in 2019.",
+          "But this shouldn't have taken 8 years. A sales rep originally designed the feature in 2011, bypassing design/dev. I redesigned it after joining in 2017, shipping in 2019.",
       },
       {
         type: "paragraph" as const,

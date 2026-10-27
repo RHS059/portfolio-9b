@@ -13,7 +13,7 @@ export default function ProjectsSection() {
       description:
         "Eliminating hours of manual work by implementing automated 3D texture resizing, combining, and packing.",
       results:
-        "• 14 texture sets: ~45 min in Photoshop to ~1 min\n• Automated channel packing and format conversion\n• One-click zip export of all textures\n• Browser-based, no software installation required\n• Reduces time it takes to combine models/textures from hours to minutes",
+        "14 texture sets: ~45 min in Photoshop to ~1 min\nAutomated channel packing and format conversion\nOne-click zip export of all textures\nBrowser-based, no software installation required\nReduces time it takes to combine models/textures from hours to minutes",
       link: "/enfusion_field_kit_beta",
       backgroundImage: "/enfusion-field-kit.webp",
     },
@@ -23,7 +23,7 @@ export default function ProjectsSection() {
       description:
         "Automating texture conversion for game modders, eliminating hours of manual Photoshop work.",
       results:
-        "• 14 texture sets: ~45 min in Photoshop to ~1 min\n• Automated channel packing and format conversion\n• One-click zip export of all textures\n• Browser-based, no software installation required",
+        "14 texture sets: ~45 min in Photoshop to ~1 min\nAutomated channel packing and format conversion\nOne-click zip export of all textures\nBrowser-based, no software installation required",
       link: "/projects/arma-reforger-texture-wizard",
       backgroundImage: "/arma-texture-wizard.png",
     },
@@ -33,7 +33,7 @@ export default function ProjectsSection() {
       description:
         "Redesigned fuel transaction import framework to address infrastructural issues and reduce engineering overhead.",
       results:
-        "• Improved time to resolve data issues by 90% (weeks to hours)\n• Immediate notification of data issues via email\n• Data issues (when they occur), are detected immediately\n• Users avoid costly data cleanup",
+        "Improved time to resolve data issues by 90% (weeks to hours)\nImmediate notification of data issues via email\nData issues (when they occur), are detected immediately\nUsers avoid costly data cleanup",
       link: "/projects/fleet-fuel-integration",
       backgroundImage: "/fleet-dashboard.png",
     },
@@ -67,7 +67,7 @@ export default function ProjectsSection() {
                     <div className="text-left text-white w-full">
                       <h4 className="text-lg font-bold mb-4">Results</h4>
                       <div className="bg-[#9b95b2]/20 rounded-lg p-4">
-                        <div className="text-sm leading-relaxed whitespace-pre-line text-white">{project.results}</div>
+                        <ul className="list-disc pl-5 text-sm leading-relaxed text-white">{project.results.split("\n").map((result) => <li key={result}>{result}</li>)}</ul>
                       </div>
                     </div>
                   </div>
@@ -81,9 +81,9 @@ export default function ProjectsSection() {
                   <div className="mt-4 lg:hidden">
                     <h4 className="font-bold text-[#181425] mb-2">Results:</h4>
                     <div className="bg-[#9b95b2]/20 rounded-lg p-4">
-                      <div className="text-sm text-[#181425] leading-relaxed whitespace-pre-line">
-                        {project.results}
-                      </div>
+                      <ul className="list-disc pl-5 text-sm text-[#181425] leading-relaxed">
+                        {project.results.split("\n").map((result) => <li key={result}>{result}</li>)}
+                      </ul>
                     </div>
                   </div>
                 </div>
