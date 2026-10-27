@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react"
 import ProjectSidebar from "./project-sidebar"
 import CookieSettingsLink from "./cookie-settings-link"
+import readingStyles from "@/app/writing/writing.module.css"
 
 interface Section {
   id: string
@@ -28,7 +29,9 @@ export default function ProjectLayout({ sections, children }: ProjectLayoutProps
         <ProjectSidebar sections={sections} />
       </div>
 
-      <main className="cs-main cs-route-panel">{children}</main>
+      <main className="cs-main cs-route-panel">
+        <div className={readingStyles.content}>{children}</div>
+      </main>
 
       <footer className="cs-foot">
         <div>Client work shown remains the property of its owners.</div>
@@ -64,7 +67,7 @@ export default function ProjectLayout({ sections, children }: ProjectLayoutProps
           max-width: 2200px;
           margin: 0 auto;
           display: grid;
-          grid-template-columns: minmax(280px, 25vw) 1fr;
+          grid-template-columns: minmax(280px, 25vw) minmax(0, 1fr);
           align-items: start;
           background: var(--cs-main-bg);
           color: var(--cs-ink);
@@ -86,7 +89,7 @@ export default function ProjectLayout({ sections, children }: ProjectLayoutProps
         .cs-main {
           grid-column: 2;
           grid-row: 1;
-          padding: clamp(28px, 3vw, 56px) clamp(20px, 3vw, 60px);
+          padding: 28px 0 48px;
           min-width: 0;
           background: var(--cs-main-bg);
         }
