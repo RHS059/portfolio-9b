@@ -81,7 +81,7 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--white);
+  background: var(--cream);
   transition: box-shadow 0.25s var(--ease);
 }
 
@@ -168,7 +168,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 2px solid var(--ink);
+  border: 0;
   border-radius: 8px;
   background: var(--orange);
   color: var(--ink);
@@ -220,10 +220,6 @@
   background: var(--white);
 }
 
-.hero .cta {
-  border-color: var(--ink);
-}
-
 .hero .cta:hover:not(:disabled) {
   box-shadow: 4px 4px 0 var(--orange-ink);
 }
@@ -243,7 +239,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: min(760px, calc(100svh - 72px));
+  min-height: calc(100svh - 72px);
   background: #000;
   color: var(--white);
   overflow: hidden;
@@ -582,6 +578,10 @@
   .heroInner {
     padding-left: 16px;
     padding-right: 16px;
+  }
+
+  .hero {
+    min-height: calc(100svh - 64px);
   }
 
   .headerInner {

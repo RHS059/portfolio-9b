@@ -39,7 +39,7 @@ Google Material Symbols Outlined, weight 400, unfilled. Rendered with the `Sym` 
 
 ## Components
 
-- **CTA button:** orange fill, 2px ink border, 8px radius, bold. Hover lifts `-2px, -2px` with a hard `4px 4px 0` ink shadow; active presses flat. Arrow icon nudges right on hover. Sizes: small 44px tall, large 56px.
+- **CTA button:** orange fill, no border, 8px radius, bold. Hover lifts `-2px, -2px` with a hard `4px 4px 0` ink shadow; active presses flat. Arrow icon nudges right on hover. Sizes: small 44px tall, large 56px.
 - **Email form:** white pill-ish container (12px radius, 8px padding) holding the input and large CTA. Focus shows a 3px orange ring on the container, not the input.
 - **Step card:** `--card` surface, 1px `--line` border, 16px radius, 32px padding. Hover lifts 4px, border turns ink, soft shadow; icon tile rotates `-8deg` and fills orange.
 - **Hero slideshow:** slides cross-fade every 6s; no tabs, labels, controls, or caption.
@@ -54,5 +54,6 @@ Google Material Symbols Outlined, weight 400, unfilled. Rendered with the `Sym` 
 ## Layout
 
 - Max content width 1280px, 32px side padding (smaller on mobile).
-- Sticky header gains a shadow once the page scrolls.
+- Sticky eggshell header gains a shadow once the page scrolls.
+- Hero fills the first screen (viewport height minus the header).
 - Visible focus: 3px outline, ink on light surfaces, orange on dark.
