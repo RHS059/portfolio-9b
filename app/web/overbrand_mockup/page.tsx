@@ -286,10 +286,6 @@ export default function OverbrandMockup() {
         </div>
         <div className={`${styles.container} ${styles.footerBottom}`}>
           <p>© 2026 <span translate="no">overbrand.ai</span></p>
-          <p>
-            Concept by <a href="/" className={styles.footerLink}>Reid Slaughter</a>. overbrand.ai and Northwind are
-            fictional.
-          </p>
         </div>
       </footer>
     </div>
