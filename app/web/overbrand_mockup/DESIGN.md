@@ -42,14 +42,14 @@ Google Material Symbols Outlined, weight 400, unfilled. Rendered with the `Sym` 
 - **CTA button:** orange fill, 2px ink border, 8px radius, bold. Hover lifts `-2px, -2px` with a hard `4px 4px 0` ink shadow; active presses flat. Arrow icon nudges right on hover. Sizes: small 44px tall, large 56px.
 - **Email form:** white pill-ish container (12px radius, 8px padding) holding the input and large CTA. Focus shows a 3px orange ring on the container, not the input.
 - **Step card:** `--card` surface, 1px `--line` border, 16px radius, 32px padding. Hover lifts 4px, border turns ink, soft shadow; icon tile rotates `-8deg` and fills orange.
-- **Hero slideshow:** slides cross-fade every 6s with a pause/play button at the bottom; no tabs or labels.
+- **Hero slideshow:** slides cross-fade every 6s; no tabs, labels, controls, or caption.
 
 ## Motion
 
 - Easing: `cubic-bezier(0.22, 1, 0.36, 1)` everywhere.
 - Animate `transform`, `opacity`, colors, and shadows only. List transition properties explicitly.
 - Entry: content rises 16–24px and fades in. Hero image slowly scales from 1.08 to 1.
-- `prefers-reduced-motion` disables all of the above and pauses the slideshow.
+- `prefers-reduced-motion` disables all of the above and stops the slideshow from advancing.
 
 ## Layout
 

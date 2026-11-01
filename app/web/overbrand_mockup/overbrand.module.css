@@ -383,55 +383,6 @@
   color: #ffb49a;
 }
 
-/* Slide controls */
-.controls {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 32px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 32px;
-}
-
-.tabs {
-  display: flex;
-  align-items: flex-end;
-  gap: 16px;
-}
-
-.pause {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.4);
-  color: var(--white);
-  cursor: pointer;
-  transition: background-color 0.2s var(--ease), transform 0.2s var(--ease);
-}
-
-.pause:hover {
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.pause:active {
-  transform: scale(0.94);
-}
-
-.caption {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-}
-
 /* How it works */
 .how {
   padding: 96px 0 112px;
@@ -628,8 +579,7 @@
 @media (max-width: 640px) {
   .container,
   .headerInner,
-  .heroInner,
-  .controls {
+  .heroInner {
     padding-left: 16px;
     padding-right: 16px;
   }
@@ -677,18 +627,6 @@
 
   .input {
     min-height: 48px;
-  }
-
-  .controls {
-    bottom: 24px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .tabs {
-    gap: 12px;
-    width: 100%;
   }
 
   .how {

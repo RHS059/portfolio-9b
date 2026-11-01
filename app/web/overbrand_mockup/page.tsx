@@ -69,15 +69,10 @@ function Logo() {
 export default function OverbrandMockup() {
   const reduceMotion = useReducedMotion()
   const [active, setActive] = useState(0)
-  const [paused, setPaused] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [email, setEmail] = useState("")
   const [formState, setFormState] = useState<FormState>("idle")
   const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (reduceMotion) setPaused(true)
-  }, [reduceMotion])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
@@ -87,10 +82,10 @@ export default function OverbrandMockup() {
   }, [])
 
   useEffect(() => {
-    if (paused) return
+    if (reduceMotion) return
     const id = window.setTimeout(() => setActive((i) => (i + 1) % SLIDES.length), 6000)
     return () => window.clearTimeout(id)
-  }, [active, paused])
+  }, [active, reduceMotion])
 
   const focusForm = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -222,19 +217,6 @@ export default function OverbrandMockup() {
             </div>
           </div>
 
-          <div className={styles.controls}>
-            <div className={styles.tabs}>
-              <button
-                type="button"
-                className={styles.pause}
-                onClick={() => setPaused((p) => !p)}
-                aria-label={paused ? "Play slideshow" : "Pause slideshow"}
-              >
-                {paused ? <Sym name="play_arrow" size={16} /> : <Sym name="pause" size={16} />}
-              </button>
-            </div>
-            <p className={styles.caption}>Northwind is a fictional sample brand</p>
-          </div>
         </section>
 
         <section id="how-it-works" className={styles.how} aria-labelledby="how-title">
