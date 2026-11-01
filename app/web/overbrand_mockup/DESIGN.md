@@ -13,7 +13,7 @@ Warm, confident, print-shop energy. Cream paper, near-black ink, one hot orange.
 | `--orange` | `#ee6432` | Primary accent, CTA fill, hero headline accent, focus ring on dark |
 | `--orange-ink` | `#b93e0c` | Orange text or icons on white/cream (AA contrast) |
 | `--ink` | `#141210` | Body text, borders, button text, focus ring on light |
-| `--cream` | `#f2ebe4` | Page background |
+| `--cream` | `#ebe8e0` | Page background (eggshell) |
 | `--card` | `#fbf7f3` | Card surface |
 | `--line` | `#ddd2c8` | Card borders, dividers |
 | `--muted` | `#5b524b` | Secondary text on cream |
