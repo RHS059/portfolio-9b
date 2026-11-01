@@ -81,7 +81,11 @@ export default function OverbrandMockup() {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
-  const next = () => setActive((i) => (i + 1) % SLIDES.length)
+  useEffect(() => {
+    if (paused) return
+    const id = window.setTimeout(() => setActive((i) => (i + 1) % SLIDES.length), 6000)
+    return () => window.clearTimeout(id)
+  }, [active, paused])
 
   const focusForm = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -224,16 +228,6 @@ export default function OverbrandMockup() {
                   onClick={() => setActive(i)}
                 >
                   <span className={styles.tabLabel}>{s.label}</span>
-                  <span className={styles.track}>
-                    {i === active ? (
-                      <span
-                        key={`${active}-${paused}`}
-                        className={styles.fill}
-                        style={{ animationPlayState: paused ? "paused" : "running" }}
-                        onAnimationEnd={next}
-                      />
-                    ) : null}
-                  </span>
                 </button>
               ))}
               <button

@@ -432,37 +432,6 @@
   text-transform: uppercase;
 }
 
-.track {
-  position: relative;
-  display: block;
-  width: 136px;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.3);
-  overflow: hidden;
-}
-
-.tab:hover .track {
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.fill {
-  position: absolute;
-  inset: 0;
-  background: var(--orange);
-  transform-origin: left;
-  animation: fill 6s linear forwards;
-}
-
-@keyframes fill {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-
 .pause {
   display: grid;
   place-items: center;
@@ -754,14 +723,6 @@
     flex: 1;
   }
 
-  .tabLabel {
-    display: none;
-  }
-
-  .track {
-    width: 100%;
-  }
-
   .how {
     padding: 64px 0 80px;
     scroll-margin-top: 64px;
@@ -793,7 +754,6 @@
   }
 
   .slideActive .slideImg,
-  .fill,
   .spin {
     animation: none;
   }
