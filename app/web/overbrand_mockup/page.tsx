@@ -8,7 +8,7 @@ import styles from "./overbrand.module.css"
 
 function Sym({ name, size, className }: { name: string; size: number; className?: string }) {
   return (
-    <span className={`material-symbols-outlined ${className ?? ""}`} style={{ fontSize: size }} aria-hidden="true">
+    <span className={`material-symbols-outlined ${className ?? ""}`} style={{ fontSize: size }} aria-hidden="true" translate="no">
       {name}
     </span>
   )
@@ -35,17 +35,17 @@ const SLIDES = [
 const STEPS = [
   {
     icon: "language",
-    title: "Paste your URL",
-    body: "Our AI reads your website and pulls your logo, colors, typefaces, headlines and product imagery into a brand kit.",
+    title: "Paste Your URL",
+    body: "The AI reads your website and pulls your logo, colors, typefaces, headlines and product imagery into a brand kit.",
   },
   {
     icon: "auto_fix_high",
-    title: "AI lays out every piece",
+    title: "AI Lays Out Every Piece",
     body: "It designs brochures, booth graphics, business cards and email signatures that follow your brand, sized for print or screen.",
   },
   {
     icon: "auto_awesome",
-    title: "Refine and download",
+    title: "Refine & Download",
     body: "Ask for changes in plain language, like “shorter headline” or “use the team photo,” then download print-ready files.",
   },
 ]
@@ -62,7 +62,7 @@ function Logo() {
           <line x1="5.9" y1="25" x2="30.1" y2="11" />
         </g>
       </svg>
-      <span className={styles.display}>
+      <span className={styles.display} translate="no">
         overbrand<span className={styles.logoTld}>.ai</span>
       </span>
     </a>
@@ -132,11 +132,11 @@ export default function OverbrandMockup() {
           <Logo />
           <nav aria-label="Primary" className={styles.nav}>
             <a href="#top" className={styles.navLink}>Examples</a>
-            <a href="#how-it-works" className={styles.navLink}>How it works</a>
-            <a href="#top" className={styles.navLink}>Free email signature</a>
+            <a href="#how-it-works" className={styles.navLink}>How It Works</a>
+            <a href="#top" className={styles.navLink}>Free Email Signature</a>
           </nav>
           <a href="#top" onClick={focusForm} className={`${styles.cta} ${styles.ctaSmall}`}>
-            Get my free preview
+            Get Your Free Preview
             <Sym name="arrow_forward" size={16} className={styles.ctaArrow} />
           </a>
         </div>
@@ -199,18 +199,18 @@ export default function OverbrandMockup() {
                   {formState === "loading" && (
                     <>
                       <Sym name="progress_activity" size={20} className={styles.spin} />
-                      Building preview…
+                      Building Preview…
                     </>
                   )}
                   {formState === "done" && (
                     <>
                       <Sym name="check" size={20} />
-                      Preview requested
+                      Preview Requested
                     </>
                   )}
                   {(formState === "idle" || formState === "error") && (
                     <>
-                      Get my free preview
+                      Get Your Free Preview
                       <Sym name="arrow_forward" size={20} className={styles.ctaArrow} />
                     </>
                   )}
@@ -254,7 +254,7 @@ export default function OverbrandMockup() {
         <section id="how-it-works" className={styles.how} aria-labelledby="how-title">
           <div className={styles.container}>
             <h2 id="how-title" className={`${styles.display} ${styles.h2}`}>
-              How it works
+              How It Works
             </h2>
             <p className={styles.howIntro}>
               Three steps from homepage to print-ready brand kit. The AI does the layout work; you stay in control of
@@ -309,15 +309,15 @@ export default function OverbrandMockup() {
           </div>
           <nav aria-label="Footer">
             <ul className={styles.footerLinks}>
-              <li><a href="#" className={styles.footerLink}>Log in</a></li>
-              <li><a href="#how-it-works" className={styles.footerLink}>How it works</a></li>
-              <li><a href="#" className={styles.footerLink}>Privacy policy</a></li>
-              <li><a href="#" className={styles.footerLink}>Cookie settings</a></li>
+              <li><a href="#" className={styles.footerLink}>Log In</a></li>
+              <li><a href="#how-it-works" className={styles.footerLink}>How It Works</a></li>
+              <li><a href="#" className={styles.footerLink}>Privacy Policy</a></li>
+              <li><a href="#" className={styles.footerLink}>Cookie Settings</a></li>
             </ul>
           </nav>
         </div>
         <div className={`${styles.container} ${styles.footerBottom}`}>
-          <p>© 2026 overbrand.ai</p>
+          <p>© 2026 <span translate="no">overbrand.ai</span></p>
           <p>
             Concept by <a href="/" className={styles.footerLink}>Reid Slaughter</a>. overbrand.ai and Northwind are
             fictional.
