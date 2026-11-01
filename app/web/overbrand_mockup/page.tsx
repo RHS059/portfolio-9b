@@ -3,8 +3,16 @@
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import Image from "next/image"
 import { motion, useReducedMotion } from "framer-motion"
-import { ArrowRight, Check, Globe, Instagram, Linkedin, Loader2, Pause, Play, Sparkles, Twitter, Wand2 } from "lucide-react"
+import { Instagram, Linkedin, Twitter } from "lucide-react"
 import styles from "./overbrand.module.css"
+
+function Sym({ name, size, className }: { name: string; size: number; className?: string }) {
+  return (
+    <span className={`material-symbols-outlined ${className ?? ""}`} style={{ fontSize: size }} aria-hidden="true">
+      {name}
+    </span>
+  )
+}
 
 const SLIDES = [
   {
@@ -26,17 +34,17 @@ const SLIDES = [
 
 const STEPS = [
   {
-    icon: Globe,
+    icon: "language",
     title: "Paste your URL",
     body: "Our AI reads your website and pulls your logo, colors, typefaces, headlines and product imagery into a brand kit.",
   },
   {
-    icon: Wand2,
+    icon: "auto_fix_high",
     title: "AI lays out every piece",
     body: "It designs brochures, booth graphics, business cards and email signatures that follow your brand, sized for print or screen.",
   },
   {
-    icon: Sparkles,
+    icon: "auto_awesome",
     title: "Refine and download",
     body: "Ask for changes in plain language, like “shorter headline” or “use the team photo,” then download print-ready files.",
   },
@@ -129,7 +137,7 @@ export default function OverbrandMockup() {
           </nav>
           <a href="#top" onClick={focusForm} className={`${styles.cta} ${styles.ctaSmall}`}>
             Get my free preview
-            <ArrowRight className={styles.ctaArrow} size={16} aria-hidden="true" />
+            <Sym name="arrow_forward" size={16} className={styles.ctaArrow} />
           </a>
         </div>
       </header>
@@ -190,20 +198,20 @@ export default function OverbrandMockup() {
                 >
                   {formState === "loading" && (
                     <>
-                      <Loader2 size={20} className={styles.spin} aria-hidden="true" />
+                      <Sym name="progress_activity" size={20} className={styles.spin} />
                       Building preview…
                     </>
                   )}
                   {formState === "done" && (
                     <>
-                      <Check size={20} aria-hidden="true" />
+                      <Sym name="check" size={20} />
                       Preview requested
                     </>
                   )}
                   {(formState === "idle" || formState === "error") && (
                     <>
                       Get my free preview
-                      <ArrowRight size={20} className={styles.ctaArrow} aria-hidden="true" />
+                      <Sym name="arrow_forward" size={20} className={styles.ctaArrow} />
                     </>
                   )}
                 </button>
@@ -236,7 +244,7 @@ export default function OverbrandMockup() {
                 onClick={() => setPaused((p) => !p)}
                 aria-label={paused ? "Play slideshow" : "Pause slideshow"}
               >
-                {paused ? <Play size={16} aria-hidden="true" /> : <Pause size={16} aria-hidden="true" />}
+                {paused ? <Sym name="play_arrow" size={16} /> : <Sym name="pause" size={16} />}
               </button>
             </div>
             <p className={styles.caption}>Northwind is a fictional sample brand</p>
@@ -254,7 +262,6 @@ export default function OverbrandMockup() {
             </p>
             <ol className={styles.cards}>
               {STEPS.map((step, i) => {
-                const Icon = step.icon
                 return (
                   <motion.li
                     key={step.title}
@@ -266,7 +273,7 @@ export default function OverbrandMockup() {
                   >
                     <span className={styles.step}>Step {i + 1}</span>
                     <span className={styles.icon}>
-                      <Icon size={24} aria-hidden="true" />
+                      <Sym name={step.icon} size={24} />
                     </span>
                     <h3 className={`${styles.display} ${styles.h3}`}>{step.title}</h3>
                     <p className={styles.cardBody}>{step.body}</p>
