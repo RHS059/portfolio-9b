@@ -28,7 +28,7 @@ Orange is the only accent. Never add a second accent hue.
 
 - **Display:** League Spartan 600/700 for the logo, H1–H3. Tight tracking (`-0.03em` on H1), line-height 1.
 - **Body:** Inter, 16px, line-height 1.5.
-- **Labels:** 12px, weight 600, uppercase, `0.08em` tracking (step labels, tab labels).
+- **Labels:** 12px, weight 600, uppercase, `0.08em` tracking (step labels).
 - All font sizes are multiples of 4px. H1 72px, H2 48px, H3 24px, lede 20px.
 - Headings use `text-wrap: balance`; paragraphs use `text-wrap: pretty`.
 - Title Case for headings, nav, and buttons. Second person ("your"), not first person.
@@ -42,7 +42,7 @@ Google Material Symbols Outlined, weight 400, unfilled. Rendered with the `Sym` 
 - **CTA button:** orange fill, 2px ink border, 8px radius, bold. Hover lifts `-2px, -2px` with a hard `4px 4px 0` ink shadow; active presses flat. Arrow icon nudges right on hover. Sizes: small 44px tall, large 56px.
 - **Email form:** white pill-ish container (12px radius, 8px padding) holding the input and large CTA. Focus shows a 3px orange ring on the container, not the input.
 - **Step card:** `--card` surface, 1px `--line` border, 16px radius, 32px padding. Hover lifts 4px, border turns ink, soft shadow; icon tile rotates `-8deg` and fills orange.
-- **Hero tabs:** uppercase labels under the hero, active label full white, others 72% white. Pause/play button beside them. Slides cross-fade every 6s.
+- **Hero slideshow:** slides cross-fade every 6s with a pause/play button at the bottom; no tabs or labels.
 
 ## Motion
 

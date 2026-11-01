@@ -17,17 +17,14 @@ function Sym({ name, size, className }: { name: string; size: number; className?
 const SLIDES = [
   {
     src: "/overbrand-mockup/booth.webp",
-    label: "Booth graphics",
     alt: "Northwind trade show booth with a cobalt blue backdrop and matching counter",
   },
   {
     src: "/overbrand-mockup/brochure.webp",
-    label: "Tri-fold brochure",
     alt: "Open Northwind tri-fold brochure laid flat on a grey surface",
   },
   {
     src: "/overbrand-mockup/cards.webp",
-    label: "Business cards",
     alt: "Northwind business cards, fronts and backs, laid flat on a grey surface",
   },
 ]
@@ -226,18 +223,7 @@ export default function OverbrandMockup() {
           </div>
 
           <div className={styles.controls}>
-            <div className={styles.tabs} role="group" aria-label="Example mockups">
-              {SLIDES.map((s, i) => (
-                <button
-                  key={s.label}
-                  type="button"
-                  className={`${styles.tab} ${i === active ? styles.tabActive : ""}`}
-                  aria-pressed={i === active}
-                  onClick={() => setActive(i)}
-                >
-                  <span className={styles.tabLabel}>{s.label}</span>
-                </button>
-              ))}
+            <div className={styles.tabs}>
               <button
                 type="button"
                 className={styles.pause}
