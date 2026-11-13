@@ -1,7 +1,5 @@
 "use client"
 
-import { useState } from "react"
-
 interface ProjectHeroProps {
   company: string
   dateShipped: string
@@ -34,10 +32,6 @@ export default function ProjectHero({
   outcome,
   prototypeHref,
 }: ProjectHeroProps) {
-  const [isHovered, setIsHovered] = useState(false)
-
-  const showPrototype = isHovered
-
   return (
     <div className="space-y-8 md:space-y-10">
       {/* Meta Line */}
@@ -51,33 +45,23 @@ export default function ProjectHero({
       {/* Hero Image */}
       <div className={prototypeHref ? "w-full" : "mx-auto max-w-[911px]"}>
         {prototypeHref ? (
-          <a
-            href={prototypeHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="View the 2026 Fleet Management prototype (opens in a new tab)"
-            className="relative block overflow-hidden rounded-lg shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-700"
-            onPointerEnter={(event) => { if (event.pointerType === "mouse") setIsHovered(true) }}
-            onPointerLeave={(event) => { if (event.pointerType === "mouse") setIsHovered(false) }}
-            onFocus={() => setIsHovered(true)}
-            onBlur={() => setIsHovered(false)}
-          >
-            <img src={heroImage.src} alt={heroImage.alt} className="block w-full h-auto" />
-            <div
-              id="fleet-prototype-overlay"
-              className={`absolute inset-0 flex items-center justify-center bg-black/75 p-4 text-center text-white pointer-events-none transition-opacity duration-200 motion-reduce:transition-none ${showPrototype ? "visible opacity-100" : "invisible opacity-0"}`}
+          <figure className="space-y-3">
+            <a
+              href={prototypeHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Open the 2026 Fleet Management prototype (opens in a new tab)"
+              className="group relative block overflow-hidden rounded-lg shadow-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-700"
             >
-              <p className="text-sm md:text-base leading-relaxed">
-                This work was originally done 2019–2022.
-                <br />
-                <span className="inline-block py-2 font-semibold underline underline-offset-4">
-                  View the 2026 Prototype here
-                </span>
-                <br />
-                to get an idea of my current skills! 👍
-              </p>
-            </div>
-          </a>
+              <img src={heroImage.src} alt={heroImage.alt} className="block w-full h-auto transition-transform duration-500 group-hover:scale-[1.015] motion-reduce:transition-none motion-reduce:group-hover:scale-100" />
+              <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs md:text-sm font-semibold text-[#181425] shadow-md transition-transform duration-200 group-hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
+                Open the live prototype <span aria-hidden="true">↗</span>
+              </span>
+            </a>
+            <figcaption className="text-sm text-gray-600">
+              The original work shipped 2019–2022. This is my 2026 rebuild of the same product as a working prototype.
+            </figcaption>
+          </figure>
         ) : (
           <img src={heroImage.src || "/placeholder.svg"} alt={heroImage.alt} className="w-full h-auto max-h-[512px] object-cover rounded-lg shadow-lg" />
         )}

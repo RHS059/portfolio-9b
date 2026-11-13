@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 
 interface ContentBlock {
-  type: "paragraph" | "list" | "image" | "quote" | "cards" | "image-card" | "button" | "placeholder-image" | "table" | "decision-cards"
+  type: "paragraph" | "list" | "image" | "quote" | "cards" | "image-card" | "button" | "placeholder-image" | "table" | "decision-cards" | "stat"
   content:
     | string
     | string[]
@@ -13,6 +13,7 @@ interface ContentBlock {
     | { text: string; url: string; logo?: string; logoAlt?: string }
     | { description: string }
     | { headers: string[]; rows: string[][] }
+    | { value: string; label: string; from: string; to: string }
     | { header: string; text: string; image?: string; imagePlaceholder?: string }[]
   caption?: string
   tone?: "primary"
@@ -58,6 +59,23 @@ export default function ProjectSection({ id, title, content, imagesSideBySide = 
             {block.content as string}
           </p>
         )
+
+      case "stat": {
+        const stat = block.content as { value: string; label: string; from: string; to: string }
+        return (
+          <div key={index} className="flex flex-col gap-4 rounded-lg bg-[#9b95b2]/15 p-6 md:flex-row md:items-center md:gap-8 md:p-8">
+            <p className="text-6xl md:text-7xl font-semibold leading-none tracking-tight text-[#3b2d56]">{stat.value}</p>
+            <div className="space-y-2">
+              <p className="text-lg md:text-xl font-semibold text-[#181425]">{stat.label}</p>
+              <p className="flex flex-wrap items-center gap-2 text-sm md:text-base text-[#181425]">
+                <span className="rounded-full border border-[#181425]/25 px-3 py-0.5 line-through decoration-[#181425]/40">{stat.from}</span>
+                <span aria-hidden="true">→</span>
+                <span className="rounded-full bg-[#3b2d56] px-3 py-0.5 font-medium text-white">{stat.to}</span>
+              </p>
+            </div>
+          </div>
+        )
+      }
 
       case "list":
         return (

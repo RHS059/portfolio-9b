@@ -68,11 +68,11 @@ export default function ConsentBanner() {
         <div
           role="dialog"
           aria-label="Cookie consent"
-          className="fixed inset-x-4 bottom-4 z-[100] mx-auto max-w-xl rounded-lg bg-[#181425] p-4 text-white shadow-lg sm:flex sm:items-center sm:gap-4"
+          className="fixed inset-x-0 bottom-0 z-[100] flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 border-t border-white/10 bg-[#181425] px-4 py-2 text-white"
         >
-          <p className="text-sm text-gray-300">
-            This site uses cookies and analytics (Microsoft Clarity, Vercel Analytics, and embedded X posts) to understand
-            how visitors use it. Nothing loads unless you accept.{" "}
+          <p className="text-xs leading-snug text-gray-300">
+            Analytics (Microsoft Clarity, Vercel Analytics) and embedded X posts set cookies. Nothing loads unless you
+            accept.{" "}
             {gpc ? (
               <>Your browser&apos;s Global Privacy Control signal is on, so tracking stays off. </>
             ) : (
@@ -82,18 +82,18 @@ export default function ConsentBanner() {
               Privacy policy
             </Link>
           </p>
-          <div className="mt-3 flex shrink-0 gap-2 sm:mt-0">
+          <div className="flex shrink-0 gap-1.5">
             <button
               type="button"
               onClick={() => choose("declined")}
-              className="rounded-md px-3 py-2 text-sm font-semibold text-gray-300 hover:bg-white/10 hover:text-white"
+              className="rounded-md px-2.5 py-1 text-xs font-semibold text-gray-300 hover:bg-white/10 hover:text-white"
             >
               {gpc ? "Close" : "Decline"}
             </button>
             {!gpc && <button
               type="button"
               onClick={() => choose("accepted")}
-              className="rounded-md bg-[#685c84] px-3 py-2 text-sm font-semibold text-white hover:bg-[#3b2d56]"
+              className="rounded-md bg-[#685c84] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#3b2d56]"
             >
               Accept
             </button>}
