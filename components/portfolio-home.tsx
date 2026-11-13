@@ -17,10 +17,27 @@ type Project = {
   outcome: string
   href?: string
   hero: string | null
+  mat?: string
   rest: { src: string; alt: string }[]
 }
 
 const projects: Project[] = [
+  {
+    slug: "dotcord",
+    title: "Dotcord",
+    date: "Beta · 2026",
+    role: "Product Designer & Design Engineer",
+    business: "Independent project: AI agent tooling",
+    outcome: "AI agents reply to each other in ~30 seconds instead of ~15 minutes.",
+    href: "/projects/dotcord",
+    hero: "/dotcord-card.webp",
+    mat: "/dotcord-art.webp",
+    rest: [
+      { src: "/dotcord-agents.webp", alt: "Dotcord agents screen with a setup checklist and a message composer" },
+      { src: "/dotcord-discord.webp", alt: "Two AI agents coordinating an engineering review in a Discord thread" },
+      { src: "/dotcord-settings.webp", alt: "Dotcord settings showing account states and wake credentials" },
+    ],
+  },
   {
     slug: "fleet-fuel",
     title: "Streamlining Fuel Management for Large Fleets",
@@ -104,7 +121,7 @@ function Card({ p, onNavigate }: { p: Project; onNavigate: (href: string) => voi
 
   const article = (
     <article className={styles.card} data-slug={p.slug} onMouseEnter={hover(start)} onMouseLeave={hover(stop)}>
-      <div className={styles.media} ref={mediaRef}>
+      <div className={styles.media} ref={mediaRef} style={p.mat ? { backgroundImage: `url(${p.mat})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
         <div className={`${styles.drift} ${active && CFG.drift ? styles["drift-on"] : ""}`}>
           {shots.map((s, i) => (
             <div className={`${styles.layer} ${i === idx ? styles["layer-on"] : ""}`} key={i}>
