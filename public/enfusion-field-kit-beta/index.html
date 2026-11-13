@@ -119,6 +119,7 @@
     .efk-h2 { font-size:20px; }
     .efk-step-r { flex:1 1 100%; margin-left:38px; }
     .efk-bar { margin:22px -6px 0; bottom:8px; }
+    .efk-toasts { top:auto !important; bottom:104px !important; left:12px; right:12px !important; max-width:none !important; }
   }
 </style>
 </helmet>
@@ -715,7 +716,7 @@
   </div>
 
 
-  <div style="position:fixed;right:20px;top:20px;z-index:80;display:flex;flex-direction:column;gap:8px;max-width:360px">
+  <div class="efk-toasts" style="position:fixed;right:20px;top:20px;z-index:80;display:flex;flex-direction:column;gap:8px;max-width:360px">
     <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="0">
       <div style="{{ t.style }}">{{ t.message }}</div>
     </sc-for>
