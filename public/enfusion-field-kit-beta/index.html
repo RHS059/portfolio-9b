@@ -89,7 +89,7 @@
   .efk-card { background:#FFFFFF; border:1px solid #C6C6C6; padding:32px; position:relative; min-height:480px; display:flex; flex-direction:column; }
   .efk-cardhead { display:flex; flex-direction:column; gap:24px; margin-bottom:32px; }
   .efk-h2 { margin:0; font-size:32px; font-weight:600; letter-spacing:-0.03em; line-height:40px; color:#161616; }
-  .efk-stepper { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); border-top:1px solid #C6C6C6; }
+  .efk-stepper { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
   .efk-stepper li { display:flex; }
   .efk-stepbtn { appearance:none; flex:1; border:none; border-radius:0; border-bottom:4px solid #E0E0E0; background:transparent; padding:12px 0; justify-content:flex-start !important; gap:12px !important; font-size:16px; line-height:24px; font-weight:500; color:#A8A8A8; text-align:left; cursor:not-allowed; transition:color .15s,border-color .15s; }
   .efk-stepbtn .efk-n { font-size:12px; line-height:16px; font-weight:600; font-variant-numeric:tabular-nums; }
@@ -179,7 +179,6 @@
       <div class="efk-content efk-card">
 
         <div class="efk-cardhead">
-          <h2 class="efk-h2">{{ briefTitle }}</h2>
           <ol class="efk-stepper">
             <sc-for list="{{ briefSteps }}" as="st" hint-placeholder-count="3">
               <li><button class="{{ st.cls }}" onClick="{{ st.onClick }}" disabled="{{ st.disabled }}"><span class="efk-n">{{ st.n }}</span><span>{{ st.label }}</span></button></li>
@@ -256,6 +255,9 @@
             <sc-if value="{{ showResults }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex;flex-direction:column;gap:16px;animation:rise .3s ease both">
             <div class="h0 h1 efk-view">
+              <div class="efk-tools ">
+                    <button onClick="{{ onApply }}" disabled="{{ applyDisabled }}" style="{{ applyStyle }}">{{ applyLabel }}</button>
+              </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));border:1px solid #C6C6C6">
                   <div style="padding:16px 16px;border-right:1px solid #C6C6C6;display:flex;flex-direction:column;gap:8px;min-width:0">
                     <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252">Folder</div>
@@ -382,6 +384,9 @@
               </div>
             </div>
             <div class="h0 efk-view">
+              <div class="efk-tools h0 h1">
+              <button onClick="{{ onDownloadAll }}" disabled="{{ dlAllDisabled }}" style="{{ dlAllStyle }}" style-hover="filter:brightness(1.12)"><i class="fa-solid fa-download" aria-hidden="true"></i>Download everything (.zip)</button>
+              </div>
             <sc-if value="{{ hasSets }}" hint-placeholder-val="{{ false }}">
               <div onDragOver="{{ onSetsDragOver }}" onDragLeave="{{ onSetsDragLeave }}" onDrop="{{ onSetsDrop }}" style="{{ setsAreaStyle }}">
                 <sc-if value="{{ texDragOver }}" hint-placeholder-val="{{ false }}">
@@ -501,6 +506,11 @@
             </sc-if>
             </div>
             <div class="h0 efk-view">
+              <div class="efk-tools h0 h1">
+                <button onClick="{{ onResizeClear }}" disabled="{{ noResizeFiles }}" style="{{ clearStyle }}"><i class="fa-solid fa-trash" aria-hidden="true"></i>Clear all</button>
+                <button onClick="{{ onUndoAll }}" disabled="{{ undoAllDisabled }}" style="{{ undoAllStyle }}"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i>Undo all</button>
+                <button onClick="{{ onReduceAll }}" disabled="{{ noResizeFiles }}" style="{{ reduceAllStyle }}">{{ reduceAllLabel }}</button>
+              </div>
             <sc-if value="{{ hasResizeFiles }}" hint-placeholder-val="{{ false }}">
               <div style="border:1px solid #C6C6C6">
                 <sc-for list="{{ resizeRows }}" as="row" hint-placeholder-count="3">
@@ -604,6 +614,7 @@
               <div class="efk-tools">
                 <button onClick="{{ onAutoPack }}" style="{{ utilBtn }}" style-hover="border-color:#161616;color:#161616"><i class="fa-solid fa-table-cells" aria-hidden="true"></i>Auto-arrange</button>
                 <button onClick="{{ onSmallestFit }}" style="{{ utilBtn }}" style-hover="border-color:#161616;color:#161616"><i class="fa-solid fa-compress" aria-hidden="true"></i>Smallest sheet</button>
+                <button onClick="{{ onExportAtlas }}" disabled="{{ atlasExportDisabled }}" style="{{ atlasExportStyle }}" style-hover="filter:brightness(1.14)"><i class="fa-solid fa-download" aria-hidden="true"></i>{{ atlasExportLabel }}</button>
               </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;align-items:start">
 
@@ -674,20 +685,6 @@
             </sc-if>
             <sc-if value="{{ notLast }}" hint-placeholder-val="{{ false }}">
               <button onClick="{{ onStepNext }}" disabled="{{ nextDisabled }}" style="{{ nextStyle }}">Continue<i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
-            </sc-if>
-            <sc-if value="{{ fin4 }}" hint-placeholder-val="{{ false }}">
-                <button onClick="{{ onExportAtlas }}" disabled="{{ atlasExportDisabled }}" style="{{ atlasExportStyle }}" style-hover="filter:brightness(1.14)"><i class="fa-solid fa-download" aria-hidden="true"></i>{{ atlasExportLabel }}</button>
-            </sc-if>
-            <sc-if value="{{ fin2 }}" hint-placeholder-val="{{ false }}">
-              <button onClick="{{ onDownloadAll }}" disabled="{{ dlAllDisabled }}" style="{{ dlAllStyle }}" style-hover="filter:brightness(1.12)"><i class="fa-solid fa-download" aria-hidden="true"></i>Download everything (.zip)</button>
-            </sc-if>
-            <sc-if value="{{ fin3 }}" hint-placeholder-val="{{ false }}">
-                <button onClick="{{ onResizeClear }}" disabled="{{ noResizeFiles }}" style="{{ clearStyle }}"><i class="fa-solid fa-trash" aria-hidden="true"></i>Clear all</button>
-                <button onClick="{{ onUndoAll }}" disabled="{{ undoAllDisabled }}" style="{{ undoAllStyle }}"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i>Undo all</button>
-                <button onClick="{{ onReduceAll }}" disabled="{{ noResizeFiles }}" style="{{ reduceAllStyle }}">{{ reduceAllLabel }}</button>
-            </sc-if>
-            <sc-if value="{{ fin1 }}" hint-placeholder-val="{{ false }}">
-                    <button onClick="{{ onApply }}" disabled="{{ applyDisabled }}" style="{{ applyStyle }}">{{ applyLabel }}</button>
             </sc-if>
           </div>
         </div>
@@ -2555,7 +2552,7 @@ class Component extends DCLogic {
   }
 
   btn(kind, disabled) {
-    const big = kind === "primary";
+    const big = false;
     const base = "appearance:none;font-family:Inter,sans-serif;font-size:12px;font-weight:600;height:" + (big ? 40 : 32) + "px;padding:0 " + (big ? 20 : 16) + "px;transition:all .15s;white-space:nowrap;";
     if (disabled) return base + "border:1px solid #C6C6C6;background:transparent;color:#A8A8A8;cursor:not-allowed";
     if (kind === "primary") return base + "border:1px solid #161616;background:#161616;color:#FFFFFF;cursor:pointer";

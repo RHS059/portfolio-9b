@@ -43,9 +43,13 @@ const projects: Project[] = [
     role: "Product Designer & Design Engineer",
     business: "Independent project: Game-development tools",
     outcome: "Cut a 14-set texture workflow from ~45 minutes to ~90 seconds, in one browser tool.",
-    href: "/enfusion_field_kit_beta",
+    href: "/projects/enfusion-field-kit",
     hero: "/enfusion-field-kit.webp",
-    rest: [],
+    rest: [
+      { src: "/enfusion-field-kit-textures.webp", alt: "Enfusion Field Kit step for assigning five texture images to each part of a model" },
+      { src: "/enfusion-field-kit-pack.webp", alt: "Enfusion Field Kit texture pack step showing the five source maps for a material" },
+      { src: "/enfusion-field-kit-resize.webp", alt: "Enfusion Field Kit resize step with a target size per texture file" },
+    ],
   },
 ]
 

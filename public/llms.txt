@@ -9,7 +9,8 @@ Writing: https://www.reidhslaughter.com/writing
 ## Selected work
 - Fleet Fuel Integration: https://www.reidhslaughter.com/projects/fleet-fuel-integration
 - WorldCat Find: https://www.reidhslaughter.com/projects/library-holding-app
-- Enfusion Field Kit: https://www.reidhslaughter.com/enfusion_field_kit_beta
+- Enfusion Field Kit case study: https://www.reidhslaughter.com/projects/enfusion-field-kit
+- Enfusion Field Kit app: https://www.reidhslaughter.com/enfusion_field_kit_beta
 
 ## Profiles
 - GitHub: https://github.com/RHS059
