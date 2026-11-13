@@ -11,6 +11,7 @@ const sections = [
   { id: "how-i-knew-what-to-do", title: "How I Knew What to Do" },
   { id: "system-architecture", title: "System Architecture" },
   { id: "planning-collaboration", title: "Planning & Collaboration" },
+  { id: "prototype", title: "2026 Prototype" },
   { id: "results", title: "Results" },
   { id: "retrospective", title: "Retrospective" },
 ]
@@ -24,7 +25,7 @@ const projectData = {
     alt: "2026 Fleet Management prototype overview showing fleet status and operational metrics",
   },
   prototypeHref: "/apps/fleet-management",
-  role: "UX Designer",
+  role: "Product Designer",
   timeline: "2019 – 2022",
   team: "UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager",
   responsibilities: "User research, systems design, workflow architecture, integration logic, prototyping, and cross-functional collaboration",
@@ -38,11 +39,14 @@ const sectionContent = [
     title: "Impact",
     content: [
       {
+        type: "stat" as const,
+        content: { value: "90%", label: "faster resolution of fuel data issues", from: "Weeks", to: "Hours" },
+      },
+      {
         type: "list" as const,
         content: [
-          "Improved time to resolve data issues by 90% (weeks to hours)",
-          "Immediate notification of data issues via email",
-          "Data issues (when they occur), are detected immediately",
+          "Data issues are detected the moment they occur",
+          "Customers are notified by email immediately",
           "Users avoid costly data cleanup",
         ],
       },
@@ -196,6 +200,31 @@ const sectionContent = [
     ],
   },
   {
+    id: "prototype",
+    title: "2026 Prototype",
+    content: [
+      {
+        type: "paragraph" as const,
+        content:
+          "The original screens shipped in 2021. To show how I would design the same model today, I rebuilt it as a working prototype. Every imported transaction is checked against the vehicle's record, and anything suspicious is flagged in line with a plain-language reason.",
+      },
+      {
+        type: "image" as const,
+        content: "/fleet-management-fuel-logs.webp",
+        caption: "Fuel log: flagged imports say what is wrong (over tank capacity, two fills in 40 minutes, purchase 42 miles from the vehicle)",
+      },
+      {
+        type: "image" as const,
+        content: "/fleet-management-fuel-cost.webp",
+        caption: "Fuel & cost: flagged transactions are grouped for review next to the spend they affect",
+      },
+      {
+        type: "button" as const,
+        content: { text: "Open the live prototype", url: "/apps/fleet-management" },
+      },
+    ],
+  },
+  {
     id: "results",
     title: "Results",
     content: [
@@ -204,16 +233,6 @@ const sectionContent = [
         content:
           "Roughly 35% of our customers have at least one fuel integration, with half using the advanced version (as of July 2022). The improved module now groups records by vendor, month, and fuel type. Errors can be resolved directly within the system.",
       },
-      {
-        type: "list" as const,
-        content: [
-          "Improved time to resolve data issues by 90% (weeks to hours)",
-          "Immediate notification of data issues via email",
-          "Data issues are detected immediately when they occur",
-          "Users avoid costly data cleanup",
-        ],
-      },
-
     ],
   },
   {
@@ -232,7 +251,7 @@ const sectionContent = [
       {
         type: "paragraph" as const,
         content:
-          "But this shouldn't have taken 8 years. A sales rep originally designed the feature in 2011, bypassing design/dev. I redesigned it after joining in 2017, shipping in 2019.",
+          "But this shouldn't have taken 10 years. A sales rep originally designed the feature in 2011, bypassing design/dev. I redesigned it after joining in 2017, shipping in 2021.",
       },
       {
         type: "paragraph" as const,

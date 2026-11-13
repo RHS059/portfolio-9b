@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import PortfolioShell from "./portfolio-shell"
 import styles from "./portfolio-home.module.css"
 
-const CFG = { shot: 2600, fade: 1300, lead: 420, drift: true }
+const CFG = { shot: 2600, lead: 420, drift: true }
 const ROUTE_FADE_MS = 220
 
 type Project = {
@@ -24,13 +24,14 @@ const projects: Project[] = [
   {
     slug: "fleet-fuel",
     title: "Streamlining Fuel Management for Large Fleets",
-    date: "Apr 2024",
+    date: "2021",
     role: "Product Designer",
     business: "Collective Data: Enterprise fleet management",
     outcome: "90% faster resolution of fuel-integration data issues.",
     href: "/projects/fleet-fuel-integration",
     hero: "/fleet-management-overview.webp",
     rest: [
+      { src: "/fleet-management-fuel-logs.webp", alt: "Fleet Management prototype fuel log with flagged transactions explained in line" },
       { src: "/fleet-management-vehicles.webp", alt: "Collective Fleet vehicle management interface showing fleet asset records" },
       { src: "/fleet-management-live-map.webp", alt: "Collective Fleet live map interface showing fleet vehicles and asset locations" },
     ],
@@ -41,36 +42,21 @@ const projects: Project[] = [
     date: "Jan 2026",
     role: "Product Designer & Design Engineer",
     business: "Independent project: Game-development tools",
-    outcome: "Combines mesh, material, and texture workflows in one browser tool.",
+    outcome: "Cut a 14-set texture workflow from ~45 minutes to ~90 seconds, in one browser tool.",
     href: "/enfusion_field_kit_beta",
     hero: "/enfusion-field-kit.webp",
     rest: [],
   },
-  {
-    slug: "texture-wizard",
-    title: "Arma Reforger Texture Wizard",
-    date: "Sep 2025",
-    role: "Solo Designer & Builder",
-    business: "Independent project: Tools for Arma Reforger creators",
-    outcome: "Reduced a 14-set texture workflow from ~45 minutes to ~90 seconds.",
-    href: "/projects/arma-reforger-texture-wizard",
-    hero: "/arma-texture-wizard.png",
-    rest: [
-      { src: "/arma-drag-drop.png", alt: "Arma Reforger Texture Wizard bulk drag-and-drop texture upload workflow" },
-      { src: "/arma-auto-sort.png", alt: "Texture Wizard automatically grouping uploaded files into matching texture sets" },
-      { src: "/arma-manual-override.png", alt: "Texture Wizard manual override for assigning files that do not match naming conventions" },
-      { src: "/arma-alias-settings.png", alt: "Texture Wizard configurable filename alias settings for texture type detection" },
-      { src: "/arma-resize.png", alt: "Texture Wizard export resolution controls for resizing game textures" },
-      { src: "/arma-batch-export.png", alt: "Texture Wizard batch export interface for downloading converted texture sets" },
-    ],
-  },
 ]
 
 function Card({ p, onNavigate }: { p: Project; onNavigate: (href: string) => void }) {
-  const cardRef = useRef<HTMLElement>(null)
+  const mediaRef = useRef<HTMLDivElement>(null)
   const leadRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [idx, setIdx] = useState(0)
+  const [active, setActive] = useState(false)
   const shots = [{ src: p.hero as string, alt: `${p.title} project overview` }, ...p.rest]
+  const count = shots.length
 
   const clear = () => {
     if (leadRef.current) clearTimeout(leadRef.current)
@@ -79,57 +65,57 @@ function Card({ p, onNavigate }: { p: Project; onNavigate: (href: string) => voi
     tickRef.current = null
   }
 
-  useEffect(() => clear, [])
-
-  const onEnter = () => {
-    const card = cardRef.current
-    if (!card) return
-    const layers = Array.from(card.querySelectorAll<HTMLElement>(`.${styles.layer}`))
-    if (layers.length < 2) return
-    const drift = card.querySelector<HTMLElement>(`.${styles.drift}`)
-    const show = (n: number) => layers.forEach((l, k) => (l.style.opacity = k === n ? "1" : "0"))
-    layers.forEach((l) => (l.style.transitionDuration = CFG.fade + "ms"))
-    if (CFG.drift && drift) drift.style.transform = "scale(1.035)"
+  const start = () => {
+    if (count < 2) return
     clear()
+    setActive(true)
     leadRef.current = setTimeout(() => {
-      let i = 1
-      show(1)
-      tickRef.current = setInterval(() => {
-        i = (i + 1) % layers.length
-        show(i)
-      }, CFG.shot)
+      setIdx(1)
+      tickRef.current = setInterval(() => setIdx((i) => (i + 1) % count), CFG.shot)
     }, CFG.lead)
   }
 
-  const onLeave = () => {
-    const card = cardRef.current
-    if (!card) return
+  const stop = () => {
     clear()
-    const drift = card.querySelector<HTMLElement>(`.${styles.drift}`)
-    if (drift) drift.style.transform = "none"
-    const layers = Array.from(card.querySelectorAll<HTMLElement>(`.${styles.layer}`))
-    layers.forEach((l, k) => (l.style.opacity = k === 0 ? "1" : "0"))
+    setActive(false)
+    setIdx(0)
+  }
+
+  // Touch devices have no hover, so play the slideshow while the card is in view.
+  useEffect(() => {
+    const media = mediaRef.current
+    if (!media || count < 2 || !window.matchMedia("(hover: none)").matches) return clear
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return clear
+    const observer = new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop()), { threshold: 0.7 })
+    observer.observe(media)
+    return () => {
+      observer.disconnect()
+      clear()
+    }
+  }, [count])
+
+  const hover = (fn: () => void) => () => {
+    if (window.matchMedia("(hover: hover)").matches) fn()
   }
 
   const article = (
-    <article ref={cardRef} className={styles.card} data-slug={p.slug} onMouseEnter={onEnter} onMouseLeave={onLeave}>
-      <div className={styles.drift}>
-        {shots.map((s, i) => (
-          <div className={styles.layer} key={i} style={i === 0 ? { opacity: 1 } : undefined}>
-            <img className={styles.mat} src={s.src || "/placeholder.svg"} alt="" aria-hidden="true" loading={p.slug === "enfusion-field-kit" && i === 0 ? "eager" : "lazy"} decoding="async" />
-            <img className={styles.shot} src={s.src || "/placeholder.svg"} alt={s.alt} loading={p.slug === "enfusion-field-kit" && i === 0 ? "eager" : "lazy"} decoding="async" />
-          </div>
-        ))}
+    <article className={styles.card} data-slug={p.slug} onMouseEnter={hover(start)} onMouseLeave={hover(stop)}>
+      <div className={styles.media} ref={mediaRef}>
+        <div className={`${styles.drift} ${active && CFG.drift ? styles["drift-on"] : ""}`}>
+          {shots.map((s, i) => (
+            <div className={`${styles.layer} ${i === idx ? styles["layer-on"] : ""}`} key={i}>
+              <img className={styles.shot} src={s.src || "/placeholder.svg"} alt={s.alt} loading={i === 0 ? "eager" : "lazy"} decoding="async" />
+            </div>
+          ))}
+        </div>
+        {count > 1 && <span className={`${styles.count} ${active ? styles["count-on"] : ""}`} aria-hidden="true">{idx + 1} / {count}</span>}
       </div>
-      <div className={styles.scrim} />
-      <div className={styles.caption}>
-        <span className={styles.t}>{p.title}</span>
-        <span className={styles.d}>{p.date}</span>
-      </div>
-      <div className={styles["project-details"]}>
-        <p className={styles["project-business"]}>{p.business}</p>
-        <p className={styles["project-role"]}>{p.role}</p>
-        <p className={styles["project-outcome"]}>{p.outcome}</p>
+      <div className={styles.info}>
+        <div>
+          <h2 className={styles.t}>{p.title}{p.href && <span className={styles.arrow} aria-hidden="true">→</span>}</h2>
+          <p className={styles.sub}>{p.business}<br />{p.role} · {p.date}</p>
+        </div>
+        <p className={styles.outcome}>{p.outcome}</p>
       </div>
     </article>
   )

@@ -166,7 +166,18 @@ export default function ProjectSidebar({ sections }: ProjectSidebarProps) {
             position: static;
             height: auto;
             overflow: visible;
-            gap: 24px;
+            flex-direction: row;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--cs-sidebar-rule);
+          }
+          .cs-nav {
+            display: none;
+          }
+          .cs-cta {
+            width: auto;
+            padding: 9px 16px;
           }
         }
       `}</style>

@@ -21,7 +21,7 @@ export default function PortfolioShell({ children, leaving = false, reading = fa
               <p className={styles.role}>Product Designer &amp; Design Engineer</p>
               <ul className={styles.metrics}>
                 <li className={styles.metric}><span className={styles.num}>90%</span> faster support ticket resolution for API integration tickets</li>
-                <li className={styles.metric}><span className={styles.num}>80%</span> faster customer upgrades</li>
+                <li className={styles.metric}><span className={styles.num}>2 weeks</span> to upgrade a customer, down from 6+ months</li>
                 <li className={styles.metric}><span className={styles.num}>4.4★</span> app store rating, <span className={styles.num}>5k+</span> downloads</li>
               </ul>
               <nav className={styles.links} aria-label="Portfolio navigation">
@@ -32,22 +32,11 @@ export default function PortfolioShell({ children, leaving = false, reading = fa
             <div className={styles.bio}>
               <div className={styles.eyebrow}>Who am I?</div>
               <p>
-                I design and build the front-end interfaces people use to do their jobs. Most of that work has been fleet
-                and asset management for construction, utilities, and law enforcement.
+                I design and build the interfaces people use to do their jobs, mostly fleet and asset management for
+                construction, utilities, and law enforcement.
               </p>
-              <p className={styles.i}>A client once called me a UX architect by trade and a creative technologist by heart.</p>
               <p>Outside of work I build, texture, and animate in Blender.</p>
-              <nav aria-label="Areas of expertise">
-                <p>
-                  <strong>Areas:</strong>{" "}
-                  <a href="/about">Product Design</a>,{" "}
-                  <a href="/projects/fleet-fuel-integration">UX Design</a>,{" "}
-                  <a href="/enfusion_field_kit_beta">Design Engineering</a>,{" "}
-                  <a href="/writing">AI-assisted Development</a>,{" "}
-                  <a href="/projects/arma-reforger-texture-wizard">Prototyping</a>
-                </p>
-              </nav>
-              <p className={styles.strong}>I&apos;m looking for design engineering and product design roles.</p>
+              <p className={styles.strong}>Open to product design and design engineering roles.</p>
             </div>
             {sidebarContent}
           </aside>
