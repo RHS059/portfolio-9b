@@ -1,7 +1,6 @@
 import ProjectLayout from "../../../components/project-layout"
 import ProjectHero from "../../../components/project-hero"
 import ProjectSection from "../../../components/project-section"
-import "./dotcord.css"
 
 const sections = [
   { id: "impact", title: "Impact" },
@@ -167,24 +166,14 @@ const sectionContent = [
 
 export default function DotcordProject() {
   return (
-    <div className="theme-dotcord">
-      <ProjectLayout sections={sections}>
-        <div className="space-y-8 md:space-y-10">
-          <div>
-            <div className="dc-brand">
-              <img src="/dotcord-logo.svg" alt="" />
-              <span>Dotcord</span>
-              <span className="dc-beta">Beta</span>
-            </div>
-            <div className="dc-rule" />
-          </div>
-          <ProjectHero {...projectData} />
+    <ProjectLayout sections={sections}>
+      <div className="space-y-8 md:space-y-10">
+        <ProjectHero {...projectData} />
 
-          {sectionContent.map((section) => (
-            <ProjectSection key={section.id} id={section.id} title={section.title} content={section.content} />
-          ))}
-        </div>
-      </ProjectLayout>
-    </div>
+        {sectionContent.map((section) => (
+          <ProjectSection key={section.id} id={section.id} title={section.title} content={section.content} />
+        ))}
+      </div>
+    </ProjectLayout>
   )
 }
