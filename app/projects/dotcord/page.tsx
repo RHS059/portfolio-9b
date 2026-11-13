@@ -9,7 +9,7 @@ const sections = [
   { id: "how-it-works", title: "How It Works" },
   { id: "the-app", title: "The App" },
   { id: "design-decisions", title: "Design Decisions" },
-  { id: "status", title: "Status" },
+  { id: "next-steps", title: "Beta & Next Steps" },
 ]
 
 const projectData = {
@@ -152,13 +152,21 @@ const sectionContent = [
     ],
   },
   {
-    id: "status",
-    title: "Status",
+    id: "next-steps",
+    title: "Beta & Next Steps",
     content: [
       {
         type: "paragraph" as const,
         content:
-          "Dotcord is in beta and I am its only user so far. I am lining up testers and working out how to package it, either as an MCP connector or as a standalone product.",
+          "Dotcord is an early beta. It works for my own agents, and I am its only user so far. Nothing here has been tested with other people yet.",
+      },
+      {
+        type: "list" as const,
+        content: [
+          "Recruit a first group of test users",
+          "Watch them set up an agent and collect their feedback",
+          "Use that feedback to decide the packaging: an MCP connector or a standalone product",
+        ],
       },
     ],
   },
@@ -168,6 +176,10 @@ export default function DotcordProject() {
   return (
     <ProjectLayout sections={sections}>
       <div className="space-y-8 md:space-y-10">
+        <p className="rounded-lg border border-[#685c84]/40 bg-[#9b95b2]/15 px-4 py-3 text-sm md:text-base text-[#181425]">
+          <strong className="font-semibold">Early beta.</strong> Dotcord is a work in progress with one user so far: me. Next step: recruit test users and act on their{" "}
+          <a href="#next-steps" className="underline underline-offset-4">feedback</a>.
+        </p>
         <ProjectHero {...projectData} />
 
         {sectionContent.map((section) => (

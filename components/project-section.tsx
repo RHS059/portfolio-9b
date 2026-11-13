@@ -121,7 +121,7 @@ export default function ProjectSection({ id, title, content, imagesSideBySide = 
                 Zoom in
               </span>
             </button>
-            <figcaption className="text-sm text-[#181425] text-center italic">{imageContent.caption}</figcaption>
+            <figcaption className="text-sm text-[#181425] text-left italic">{imageContent.caption}</figcaption>
           </figure>
         )
 
@@ -133,7 +133,7 @@ export default function ProjectSection({ id, title, content, imagesSideBySide = 
               alt={block.caption || "Project image"}
               className="w-full h-auto rounded-lg shadow-md"
             />
-            {block.caption && <p className="text-sm text-gray-600 text-center italic">{block.caption}</p>}
+            {block.caption && <p className="text-sm text-gray-600 text-left italic">{block.caption}</p>}
           </div>
         )
 
