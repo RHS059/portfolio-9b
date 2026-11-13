@@ -25,6 +25,7 @@ const projectData = {
     alt: "2026 Fleet Management prototype overview showing fleet status and operational metrics",
   },
   prototypeHref: "/apps/fleet-management",
+  prototypeNote: "The original work shipped in 2021. This is my 2026 rebuild of the same product as a working prototype.",
   role: "Product Designer",
   timeline: "2019 – 2022",
   team: "UX Designer, 2× App Developer, 1× Support Agent, 1× Customer Success Manager",

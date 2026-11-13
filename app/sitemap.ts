@@ -10,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/writing`, changeFrequency: "weekly", priority: 0.8 },
     { url: `${base}/projects/fleet-fuel-integration`, changeFrequency: "yearly", priority: 0.9 },
     { url: `${base}/projects/library-holding-app`, changeFrequency: "yearly", priority: 0.8 },
+    { url: `${base}/projects/enfusion-field-kit`, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/enfusion_field_kit_beta`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/privacy`, changeFrequency: "yearly", priority: 0.3 },
     ...getPublishedArticles().map((article) => ({

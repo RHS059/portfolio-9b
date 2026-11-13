@@ -2,8 +2,8 @@
 const nextConfig = {
   async redirects() {
     return [
-      // The Texture Wizard's features now live in the Enfusion Field Kit.
-      { source: "/projects/arma-reforger-texture-wizard", destination: "/enfusion_field_kit_beta", permanent: true },
+      // The Texture Wizard's features now live in the Enfusion Field Kit; send its old URL to that case study.
+      { source: "/projects/arma-reforger-texture-wizard", destination: "/projects/enfusion-field-kit", permanent: true },
     ]
   },
   async rewrites() {

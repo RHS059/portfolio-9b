@@ -11,21 +11,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=JetBrains+Mono:wght@400;500;700&family=EB+Garamond:ital@1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 <style>
-  html, body { margin:0; padding:0; background:#171514; }
+  html, body { margin:0; padding:0; background:#E0E0E0; }
   * { box-sizing:border-box; }
-  a { color:#E8A055; text-decoration:none; }
-  a:hover { color:#DCD6CE; }
-  input, select, button, textarea { font-family:'JetBrains Mono',monospace; }
+  a { color:#161616; text-decoration:none; }
+  a:hover { color:#262626; }
+  input, select, button, textarea { font-family:Inter,sans-serif; }
   ::-webkit-scrollbar { width:10px; height:10px; }
-  ::-webkit-scrollbar-thumb { background:#4C4741; border:2px solid #171514; }
-  ::-webkit-scrollbar-thumb:hover { background:#BF6505; }
-  ::-webkit-scrollbar-track { background:#1A1817; }
+  ::-webkit-scrollbar-thumb { background:#C6C6C6; border:2px solid #E0E0E0; }
+  ::-webkit-scrollbar-thumb:hover { background:#161616; }
+  ::-webkit-scrollbar-track { background:#E0E0E0; }
   /* Rail tab icons. Each layer's resting transform is inline; these keyframes
      add to it via a CSS variable so hover motion never fights the offset. */
   .tabicon i { --tx:0px; --ty:0px; transform:translate(var(--tx),var(--ty)); }
@@ -54,329 +54,381 @@
   @keyframes tick { 0%,100% { opacity:.25; } 50% { opacity:1; } }
   @keyframes scanline { 0% { transform:translateY(0); } 100% { transform:translateY(120px); } }
   @keyframes hover { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
-  @keyframes slot1 { 0%,4% { border-color:#4C4741; background:transparent; transform:scale(1); } 8%,46% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 52% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1.16); } 58% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 64%,90% { border-color:#BF6505; background:rgba(191,101,5,.35); transform:scale(1); } 96%,100% { border-color:#4C4741; background:transparent; transform:scale(1); } }
-  @keyframes slot2 { 0%,10% { border-color:#4C4741; background:transparent; transform:scale(1); } 14%,46% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 52% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1.16); } 58% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 64%,90% { border-color:#BF6505; background:rgba(191,101,5,.35); transform:scale(1); } 96%,100% { border-color:#4C4741; background:transparent; transform:scale(1); } }
-  @keyframes slot3 { 0%,16% { border-color:#4C4741; background:transparent; transform:scale(1); } 20%,46% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 52% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1.16); } 58% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 64%,90% { border-color:#BF6505; background:rgba(191,101,5,.35); transform:scale(1); } 96%,100% { border-color:#4C4741; background:transparent; transform:scale(1); } }
-  @keyframes slot4 { 0%,22% { border-color:#4C4741; background:transparent; transform:scale(1); } 26%,46% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 52% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1.16); } 58% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 64%,90% { border-color:#BF6505; background:rgba(191,101,5,.35); transform:scale(1); } 96%,100% { border-color:#4C4741; background:transparent; transform:scale(1); } }
-  @keyframes slot5 { 0%,28% { border-color:#4C4741; background:transparent; transform:scale(1); } 32%,46% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 52% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1.16); } 58% { border-color:#F3F0EC; background:rgba(243,240,236,.12); transform:scale(1); } 64%,90% { border-color:#BF6505; background:rgba(191,101,5,.35); transform:scale(1); } 96%,100% { border-color:#4C4741; background:transparent; transform:scale(1); } }
+  @keyframes slot1 { 0%,4% { border-color:#C6C6C6; background:transparent; transform:scale(1); } 8%,46% { border-color:#161616; background:rgba(23,20,31,.06); transform:scale(1); } 52% { border-color:#161616; background:rgba(23,20,31,.06); transform:scale(1.16); } 58% { border-color:#161616; background:rgba(23,20,31,.06); transform:scale(1); } 64%,90% { border-color:#161616; background:rgba(91,63,214,.14); transform:scale(1); } 96%,100% { border-color:#C6C6C6; background:transparent; transform:scale(1); } }
+  @keyframes slot2 { 0%,10% { border-color:#C6C6C6; background:transparent; transform:scale(1); } 14%,46% { border-color:#161616; background:rgba(23,20,31,.06); transform:scale(1); } 52% { border-color:#161616; background:rgba(23,20,31,.06); transform:scale(1.16); } 58% { border-color:#161616; background:rgba(23,20,31,.06); transform:scale(1); } 64%,90% { border-color:#161616; background:rgba(91,63,214,.14); transform:scale(1); } 96%,100% { border-color:#C6C6C6; background:transparent; transform:scale(1); } }
+  @keyframes slot3 { 0%,16% { border-color:#C6C6C6; background:transparent; transform:scale(1); } 20%,46% { border-color:#161616; background:rgba(23,20,31,.06); transform:scale(1); } 52% { border-color:#161616; background:rgba(23,20,31,.06); transform:scale(1.16); } 58% { border-color:#161616; background:rgba(23,20,31,.06); transform:scale(1); } 64%,90% { border-color:#161616; background:rgba(91,63,214,.14); transform:scale(1); } 96%,100% { border-color:#C6C6C6; background:transparent; transform:scale(1); } }
+  @keyframes slot4 { 0%,22% { border-color:#C6C6C6; background:transparent; transform:scale(1); } 26%,46% { border-color:#161616; background:rgba(23,20,31,.06); transform:scale(1); } 52% { border-color:#161616; background:rgba(23,20,31,.06); transform:scale(1.16); } 58% { border-color:#161616; background:rgba(23,20,31,.06); transform:scale(1); } 64%,90% { border-color:#161616; background:rgba(91,63,214,.14); transform:scale(1); } 96%,100% { border-color:#C6C6C6; background:transparent; transform:scale(1); } }
+  @keyframes slot5 { 0%,28% { border-color:#C6C6C6; background:transparent; transform:scale(1); } 32%,46% { border-color:#161616; background:rgba(23,20,31,.06); transform:scale(1); } 52% { border-color:#161616; background:rgba(23,20,31,.06); transform:scale(1.16); } 58% { border-color:#161616; background:rgba(23,20,31,.06); transform:scale(1); } 64%,90% { border-color:#161616; background:rgba(91,63,214,.14); transform:scale(1); } 96%,100% { border-color:#C6C6C6; background:transparent; transform:scale(1); } }
   @keyframes blueFill { 0%,58% { opacity:0; } 64%,90% { opacity:1; } 96%,100% { opacity:0; } }
   @keyframes shineWipe { 0%,72% { transform:translateX(-120%); opacity:0; } 75% { opacity:1; } 88% { transform:translateX(330%); opacity:1; } 90%,100% { transform:translateX(330%); opacity:0; } }
-  @keyframes redwash { from { background:rgba(21,19,15,0); backdrop-filter:blur(0px); } to { background:rgba(120,20,6,.94); backdrop-filter:blur(3px); } }
+  @keyframes redwash { from { background:rgba(255,255,255,0); backdrop-filter:blur(0px); } to { background:rgba(120,20,6,.94); backdrop-filter:blur(3px); } }
   @keyframes warnIn { 0% { opacity:0; transform:translateY(14px); } 100% { opacity:1; transform:translateY(0); } }
   @keyframes hazard { 0% { background-position:0 0; } 100% { background-position:56px 0; } }
+  body { font-family:Inter,system-ui,sans-serif; -webkit-font-smoothing:antialiased; letter-spacing:-0.01em; }
+  button, select, input { font-family:Inter,system-ui,sans-serif; letter-spacing:-0.01em; }
+  button { border-radius:999px; }
+  .efk-card button { display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+  select, input { border-radius:0; background-color:#FFFFFF !important; color:#161616 !important; border-color:#8D8D8D !important; }
+  pre, .efk-mono { font-family:'JetBrains Mono',monospace !important; }
+  .efk-shell { max-width:1248px; margin:0 auto; padding:32px 32px 64px; }
+  .efk-head { display:flex; align-items:center; justify-content:space-between; gap:16px 32px; flex-wrap:wrap; padding:0 0 32px; }
+  .efk-brand { display:flex; align-items:center; gap:16px; min-width:0; }
+  .efk-mark { flex:none; width:48px; height:48px; display:grid; place-items:center; background:#161616; color:#FF5A1F; font-size:20px; }
+  .efk-title { margin:0; font-size:24px; font-weight:600; letter-spacing:-0.03em; line-height:28px; color:#161616; }
+  .efk-ver { font-size:12px; line-height:16px; font-weight:500; color:#525252; border:1px solid #A8A8A8; padding:0 4px; }
+  .efk-tagline { margin:4px 0 0; font-size:16px; line-height:24px; color:#525252; }
+  .efk-seg { position:relative; display:flex; background:#C6C6C6; border-radius:999px; padding:4px; width:max-content; }
+  .efk-main { display:flex; flex-direction:column; }
+  .efk-rail { width:auto !important; display:grid !important; grid-template-columns:repeat(4,minmax(0,1fr)); border:1px solid #C6C6C6; border-bottom:none; background:#EAEAEA; }
+  .efk-rail .tab { border-radius:0; }
+  .efk-rail .tab:nth-child(4) { border-right:none !important; }
+  .efk-name { background-color:transparent !important; border-color:transparent !important; }
+  .efk-name:focus { border-bottom-color:#161616 !important; }
+  .efk-rail-spacer, .efk-rail-toggle { display:none !important; }
+  .efk-sub { font-size:12px; line-height:16px; font-weight:400; color:#525252; }
+  .efk-card { background:#FFFFFF; border:1px solid #C6C6C6; padding:32px; position:relative; min-height:480px; display:flex; flex-direction:column; }
+  .efk-cardhead { display:flex; flex-direction:column; gap:24px; margin-bottom:32px; }
+  .efk-h2 { margin:0; font-size:32px; font-weight:600; letter-spacing:-0.03em; line-height:40px; color:#161616; }
+  .efk-stepper { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .efk-stepper li { display:flex; }
+  .efk-stepbtn { appearance:none; flex:1; border:none; border-radius:0; border-bottom:4px solid #E0E0E0; background:transparent; padding:12px 0; justify-content:flex-start !important; gap:12px !important; font-size:16px; line-height:24px; font-weight:500; color:#A8A8A8; text-align:left; cursor:not-allowed; transition:color .15s,border-color .15s; }
+  .efk-stepbtn .efk-n { font-size:12px; line-height:16px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .efk-stepbtn.is-avail { color:#525252; cursor:pointer; border-bottom-color:#A8A8A8; }
+  .efk-stepbtn.is-avail:hover { color:#161616; }
+  .efk-stepbtn.is-now { color:#161616; font-weight:600; border-bottom-color:#FF5A1F; }
+  .efk-stepbtn.is-now .efk-n { color:#FF5A1F; }
+  .efk-views { flex:1; }
+  .efk-view { display:flex; flex-direction:column; gap:16px; }
+  .v0 .h0, .v1 .h1, .v2 .h2 { display:none !important; }
+  .efk-tools { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+  .efk-tools:empty { display:none; }
+  .efk-bar { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-top:32px; padding-top:16px; border-top:1px solid #C6C6C6; min-height:56px; }
+  .efk-status { font-size:16px; line-height:24px; font-weight:600; color:#161616; }
+  .efk-bar-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto; }
+  button:focus-visible, .tab:focus-visible { outline:2px solid #FF5A1F; outline-offset:2px; }
+  @media (max-width: 760px) {
+    .efk-shell { padding:16px 12px 48px; }
+    .efk-head { padding-bottom:16px; }
+    .efk-rail { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .efk-rail .tab { min-height:56px !important; padding:8px 12px !important; border-bottom:1px solid #C6C6C6 !important; }
+    .efk-rail .efk-sub { display:none; }
+    .efk-card { padding:16px; }
+    .efk-h2 { font-size:24px; line-height:32px; }
+    .efk-stepbtn { font-size:12px; line-height:16px; gap:8px !important; }
+    .efk-tools { justify-content:flex-start; }
+    .efk-toasts { top:auto !important; bottom:16px !important; left:12px; right:12px !important; max-width:none !important; }
+  }
 </style>
 </helmet>
-<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="#171514"/><g transform="translate(60 60)"><rect width="80" height="80" fill="none" stroke="#C8A24A" stroke-width="4"/><rect x="0" y="0" width="40" height="40" fill="#C8A24A"/><rect x="40" y="40" width="40" height="40" fill="#6E655C"/></g></svg></template>
-<div style="min-height:100vh;background:#171514;color:#DCD6CE;font-family:Archivo,'Helvetica Neue',sans-serif;position:relative;padding-top:32px">
-  <div style="position:absolute;inset:0;pointer-events:none;opacity:.1;background-image:linear-gradient(#6E655C 1px,transparent 1px),linear-gradient(90deg,#6E655C 1px,transparent 1px);background-size:118px 118px;background-position:calc(max(0px,(100% - 1240px) / 2) + 30px) 58px"></div>
-
-
-  <div style="position:relative;max-width:1240px;margin:0 auto;padding:26px 30px 90px;background:rgba(178,168,156,.10);background-blend-mode:multiply">
-
-    <div style="display:flex;justify-content:space-between;align-items:center;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.22em;color:#827A72;text-transform:uppercase;padding-bottom:10px">
-      <div>V{{ version }}</div>
-      <div></div>
-      <div>© 2026</div>
-    </div>
-
-    <div style="border:1px solid #38342F;position:relative">
-      <div style="position:absolute;top:-1px;left:-1px;width:9px;height:9px;border-top:1px solid #BF6505;border-left:1px solid #BF6505"></div>
-      <div style="position:absolute;top:-1px;right:-1px;width:9px;height:9px;border-top:1px solid #BF6505;border-right:1px solid #BF6505"></div>
-      <div style="position:absolute;bottom:-1px;left:-1px;width:9px;height:9px;border-bottom:1px solid #BF6505;border-left:1px solid #BF6505"></div>
-      <div style="position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-bottom:1px solid #BF6505;border-right:1px solid #BF6505"></div>
-
-      <div style="display:grid;grid-template-columns:1fr;gap:24px;padding:26px 28px 22px;border-bottom:1px solid #38342F;align-items:end">
-        <div style="display:flex;flex-direction:column;gap:9px;min-width:0">
-          <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
-            <h1 style="margin:0;font-size:46px;font-weight:900;letter-spacing:-0.035em;line-height:.92;color:#F3F0EC;text-transform:none">Enfusion Field Kit</h1>
-            <div style="font-family:Archivo,sans-serif;font-variation-settings:'wdth' 125,'wght' 900;font-size:23px;letter-spacing:.02em;color:#BF6505">{{ version }}</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-            <div style="position:relative;display:flex;border:1px solid #4C4741;width:max-content;overflow:hidden">
-              <div style="{{ modePillStyle }}"></div>
-              <button onClick="{{ onProductionMode }}" style="{{ prodBtnStyle }}">Production</button>
-              <button onClick="{{ onDemoMode }}" style="{{ demoBtnStyle }}">Demo</button>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="#E0E0E0"/><g transform="translate(60 60)"><rect width="80" height="80" fill="none" stroke="#C8A24A" stroke-width="4"/><rect x="0" y="0" width="40" height="40" fill="#C8A24A"/><rect x="40" y="40" width="40" height="40" fill="#A8A8A8"/></g></svg></template>
+<div style="min-height:100vh;background:#E0E0E0;color:#262626;font-family:Inter,'Helvetica Neue',sans-serif;position:relative;padding-top:32px">
+  <div class="efk-shell">
+    <div style="position:relative">
+      <header class="efk-head">
+        <div class="efk-brand">
+          <div class="efk-mark" aria-hidden="true"><i class="fa-solid fa-cube"></i></div>
+          <div style="min-width:0">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <h1 class="efk-title">Enfusion Field Kit</h1>
+              <span class="efk-ver">v{{ version }}</span>
             </div>
+            <p class="efk-tagline">Get 3D models and textures ready for Arma Reforger.</p>
           </div>
         </div>
-      </div>
+        <div class="efk-mode">
+          <div class="efk-seg">
+            <div style="{{ modePillStyle }}"></div>
+            <button onClick="{{ onProductionMode }}" style="{{ prodBtnStyle }}">My files</button>
+            <button onClick="{{ onDemoMode }}" style="{{ demoBtnStyle }}">Sample model</button>
+          </div>
+        </div>
+      </header>
 
       <div style="{{ activityWrapStyle }}">
         <div style="{{ activityDotStyle }}"></div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#DCD6CE;white-space:nowrap">{{ activityLabel }}</div>
-        <div style="flex:1;min-width:120px;height:4px;background:#2D2926;overflow:hidden">
+        <div style="font-family:Inter,sans-serif;font-size:12px;color:#262626;white-space:nowrap">{{ activityLabel }}</div>
+        <div style="flex:1;min-width:120px;height:4px;background:#E0E0E0;overflow:hidden">
           <div style="{{ activityBarStyle }}"></div>
         </div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;color:#ABA49B;white-space:nowrap">{{ activityCount }}</div>
-        <div style="font-family:Archivo,sans-serif;font-variation-settings:'wdth' 125,'wght' 800;font-size:14px;color:#E8A055;min-width:52px;text-align:right">{{ activityPercent }}</div>
+        <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252;white-space:nowrap">{{ activityCount }}</div>
+        <div style="font-family:Inter,sans-serif;font-weight:700;font-size:16px;color:#161616;min-width:52px;text-align:right">{{ activityPercent }}</div>
       </div>
 
-      <div style="display:flex;align-items:stretch">
+      <div class="efk-main">
 
-      <div style="{{ railStyle }}">
+      <div class="efk-rail" style="{{ railStyle }}">
         <sc-for list="{{ modules }}" as="m" hint-placeholder-count="4">
-          <button class="tab" onClick="{{ m.onSelect }}" style="{{ m.tabStyle }}" style-hover="color:#F3F0EC">
+          <button class="tab" onClick="{{ m.onSelect }}" style="{{ m.tabStyle }}">
             <span class="tabicon" style="{{ m.codeStyle }}">
               <i class="{{ m.icon1 }}" style="{{ m.icon1Style }}"></i>
               <i class="{{ m.icon2 }}" style="{{ m.icon2Style }}"></i>
               <i class="{{ m.icon3 }}" style="{{ m.icon3Style }}"></i>
             </span>
-            <sc-if value="{{ railOpen }}" hint-placeholder-val="{{ true }}">
-              <span style="display:flex;flex-direction:column;gap:3px;min-width:0;text-align:left">
-                <span style="font-size:14.5px;font-weight:800;letter-spacing:-0.01em;white-space:nowrap">{{ m.title }}</span>
-                <span style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.1em;opacity:.6;text-transform:uppercase">{{ m.sub }}</span>
+            <sc-if value="{{ railOn }}" hint-placeholder-val="{{ true }}">
+              <span style="display:flex;flex-direction:column;gap:4px;min-width:0;text-align:left">
+                <span style="font-size:16px;line-height:24px;font-weight:600;white-space:nowrap">{{ m.title }}</span>
+                <span class="efk-sub">{{ m.sub }}</span>
               </span>
             </sc-if>
           </button>
         </sc-for>
-        <div style="flex:1;min-height:24px"></div>
-        <button onClick="{{ onToggleRail }}" style="{{ railToggleStyle }}" style-hover="color:#E8A055;border-color:#4C4741">{{ railToggleLabel }}</button>
+        <div class="efk-rail-spacer" style="flex:1;min-height:24px"></div>
+        <button class="efk-rail-toggle" onClick="{{ onToggleRail }}" style="{{ railToggleStyle }}" style-hover="color:#161616;border-color:#C6C6C6">{{ railToggleLabel }}</button>
       </div>
 
-      <div style="flex:1;min-width:0;border-left:1px solid #38342F;padding:24px 28px 30px;position:relative;min-height:420px">
+      <div class="efk-content efk-card">
 
+        <div class="efk-cardhead">
+          <ol class="efk-stepper">
+            <sc-for list="{{ briefSteps }}" as="st" hint-placeholder-count="3">
+              <li><button class="{{ st.cls }}" onClick="{{ st.onClick }}" disabled="{{ st.disabled }}"><span class="efk-n">{{ st.n }}</span><span>{{ st.label }}</span></button></li>
+            </sc-for>
+          </ol>
+        </div>
+        <div class="{{ viewCls }}">
         <sc-if value="{{ isMod1 }}" hint-placeholder-val="{{ true }}">
-          <div style="display:flex;flex-direction:column;gap:18px;animation:rise .3s ease both">
-            <div style="display:flex;justify-content:flex-end;align-items:center;gap:20px;flex-wrap:wrap;min-height:37px">
-              <div style="display:flex;gap:8px">
+          <div style="display:flex;flex-direction:column;gap:20px;animation:rise .3s ease both">
+            <div class="h1 h2 efk-view">
+              <div class="efk-tools">
                 <sc-if value="{{ hasFolder }}" hint-placeholder-val="{{ false }}">
-                  <button onClick="{{ onPick }}" style="appearance:none;border:1px solid #4C4741;background:transparent;color:#DCD6CE;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;padding:9px 14px;cursor:pointer;transition:all .15s" style-hover="border-color:#E8A055;color:#E8A055">Change folder</button>
+                  <button onClick="{{ onPick }}" style="{{ utilBtn }}"><i class="fa-solid fa-folder-open" aria-hidden="true"></i>Change folder</button>
                 </sc-if>
                 <sc-if value="{{ canRescan }}" hint-placeholder-val="{{ false }}">
-                  <button onClick="{{ onRescan }}" style="appearance:none;border:1px solid #4C4741;background:transparent;color:#DCD6CE;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;padding:9px 14px;cursor:pointer;transition:all .15s" style-hover="border-color:#E8A055;color:#E8A055">Re-scan</button>
+                  <button onClick="{{ onRescan }}" style="{{ utilBtn }}"><i class="fa-solid fa-rotate" aria-hidden="true"></i>Re-scan</button>
                 </sc-if>
               </div>
-            </div>
-
             <sc-if value="{{ isIdle }}" hint-placeholder-val="{{ true }}">
-              <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;flex-direction:column;gap:16px">
                 <div onClick="{{ onPick }}" onDragOver="{{ onDragOver }}" onDragLeave="{{ onDragLeave }}" onDrop="{{ onDrop }}" style="{{ dropStyle }}">
-                                    <div style="position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,#BF6505,transparent);animation:scanline 3.2s linear infinite;opacity:.5;pointer-events:none"></div>
+                                    <div style="position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,#161616,transparent);animation:scanline 3.2s linear infinite;opacity:.5;pointer-events:none"></div>
                   <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:16px;pointer-events:none">
                     <div style="position:relative;width:64px;height:52px;animation:hover 3.4s ease-in-out infinite">
-                      <div style="position:absolute;inset:0;border:1.5px solid #BF6505;border-top-width:9px"></div>
-                      <div style="position:absolute;left:14px;top:20px;width:36px;height:1px;background:#BF6505;animation:tick 1.8s ease-in-out infinite"></div>
-                      <div style="position:absolute;left:14px;top:28px;width:22px;height:1px;background:#BF6505;animation:tick 1.8s ease-in-out .4s infinite"></div>
+                      <div style="position:absolute;inset:0;border:1.5px solid #161616;border-top-width:9px"></div>
+                      <div style="position:absolute;left:14px;top:20px;width:36px;height:1px;background:#161616;animation:tick 1.8s ease-in-out infinite"></div>
+                      <div style="position:absolute;left:14px;top:28px;width:22px;height:1px;background:#161616;animation:tick 1.8s ease-in-out .4s infinite"></div>
                     </div>
                     <div style="display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center">
-                      <div style="font-size:16px;font-weight:800;letter-spacing:-0.01em;color:#F3F0EC">Drop Folder</div>
-                      <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.24em;color:#ABA49B;text-transform:uppercase">or</div>
-                      <div style="font-size:16px;font-weight:800;letter-spacing:-0.01em;color:#E8A055">Choose a Folder</div>
+                      <div style="font-size:16px;font-weight:600;letter-spacing:-0.01em;color:#161616">Drop your mod folder</div>
+                      <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252">or</div>
+                      <div style="font-size:16px;font-weight:600;letter-spacing:-0.01em;color:#161616">Choose a folder</div>
                     </div>
                   </div>
                 </div>
                 <sc-if value="{{ errorMsg }}" hint-placeholder-val="{{ false }}">
-                  <div style="border:1px solid #BF0625;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#BF0625">{{ errorMsg }}</div>
+                  <div style="border:1px solid #DA1E28;padding:12px 16px;font-family:Inter,sans-serif;font-size:12px;color:#DA1E28">{{ errorMsg }}</div>
                 </sc-if>
               </div>
             </sc-if>
 
             <sc-if value="{{ isScanning }}" hint-placeholder-val="{{ false }}">
-              <div style="border:1px solid #38342F;padding:56px 28px;display:flex;flex-direction:column;align-items:center;gap:20px;animation:rise .3s ease both">
-                <div style="width:46px;height:46px;border:1.5px solid #38342F;border-top-color:#E8A055;animation:spin .8s linear infinite"></div>
-                <div style="font-size:18px;font-weight:800;letter-spacing:-0.01em;color:#F3F0EC">{{ scanPhaseLabel }}</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;color:#ABA49B;text-transform:uppercase">{{ scanDetail }}</div>
-                <div style="width:min(420px,100%);height:2px;background:#2D2926;overflow:hidden"><div style="width:30%;height:100%;background:#BF6505;animation:sweep 1.1s ease-in-out infinite"></div></div>
+              <div style="border:1px solid #C6C6C6;padding:56px 28px;display:flex;flex-direction:column;align-items:center;gap:20px;animation:rise .3s ease both">
+                <div style="width:46px;height:46px;border:1.5px solid #C6C6C6;border-top-color:#161616;animation:spin .8s linear infinite"></div>
+                <div style="font-size:20px;font-weight:600;letter-spacing:-0.01em;color:#161616">{{ scanPhaseLabel }}</div>
+                <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252">{{ scanDetail }}</div>
+                <div style="width:min(420px,100%);height:2px;background:#E0E0E0;overflow:hidden"><div style="width:30%;height:100%;background:#161616;animation:sweep 1.1s ease-in-out infinite"></div></div>
               </div>
             </sc-if>
 
             <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
-              <div style="border:1px solid #BF6505;position:relative;padding:66px 28px;display:flex;flex-direction:column;align-items:center;gap:22px;animation:rise .35s ease both;overflow:hidden">
-                <div style="position:absolute;top:16px;left:16px;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">TASK, 04</div>
+              <div style="border:1px solid #161616;position:relative;padding:68px 28px;display:flex;flex-direction:column;align-items:center;gap:24px;animation:rise .35s ease both;overflow:hidden">
+                <div style="position:absolute;top:16px;left:16px;font-family:Inter,sans-serif;font-size:12px;color:#525252"></div>
                 <div style="position:relative;width:132px;height:132px;display:grid;place-items:center">
-                  <div style="position:absolute;width:130px;height:130px;border:1px solid #0644BF;opacity:.5;animation:ring 2.6s ease-out infinite"></div>
-                  <div style="position:absolute;width:130px;height:130px;border:1px solid #0644BF;opacity:.35;animation:ring 2.6s ease-out .85s infinite"></div>
-                  <div style="position:absolute;width:130px;height:130px;border:1px solid #0644BF;opacity:.2;animation:ring 2.6s ease-out 1.7s infinite"></div>
-                  <div style="width:78px;height:78px;background:#0644BF;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;display:grid;place-items:center;animation:pop .5s cubic-bezier(.2,1.3,.4,1) both">
-                    <svg width="40" height="40" viewBox="0 0 42 42" fill="none"><path d="M11 21.6 L18 28.4 L31 14.2" stroke="#E6EDFF" stroke-width="3.6" stroke-linecap="square" stroke-dasharray="46" stroke-dashoffset="46" style="animation:draw .5s cubic-bezier(.65,0,.35,1) .3s both"></path></svg>
+                  <div style="position:absolute;width:130px;height:130px;border:1px solid #198038;opacity:.5;animation:ring 2.6s ease-out infinite"></div>
+                  <div style="position:absolute;width:130px;height:130px;border:1px solid #198038;opacity:.35;animation:ring 2.6s ease-out .85s infinite"></div>
+                  <div style="position:absolute;width:130px;height:130px;border:1px solid #198038;opacity:.2;animation:ring 2.6s ease-out 1.7s infinite"></div>
+                  <div style="width:78px;height:78px;background:#198038;display:grid;place-items:center;animation:pop .5s cubic-bezier(.2,1.3,.4,1) both">
+                    <svg width="40" height="40" viewBox="0 0 42 42" fill="none"><path d="M11 21.6 L18 28.4 L31 14.2" stroke="#FFFFFF" stroke-width="3.6" stroke-linecap="square" stroke-dasharray="46" stroke-dashoffset="46" style="animation:draw .5s cubic-bezier(.65,0,.35,1) .3s both"></path></svg>
                   </div>
                 </div>
                 <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
-                  <div style="background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.24em;padding:5px 11px;text-transform:uppercase">CLEAR</div>
-                  <div style="font-size:30px;font-weight:900;letter-spacing:-0.03em;color:#F3F0EC">Nothing left to patch</div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;line-height:1.8;color:#ABA49B;max-width:470px;text-transform:uppercase">{{ emptyDetail }}</div>
+                  <div style="background:#161616;color:#FFFFFF;font-family:Inter,sans-serif;font-size:12px;padding:4px 12px;">All clear</div>
+                  <div style="font-size:32px;font-weight:700;letter-spacing:-0.03em;color:#161616">Nothing left to patch</div>
+                  <div style="font-family:Inter,sans-serif;font-size:12px;line-height:1.8;color:#525252;max-width:470px">{{ emptyDetail }}</div>
                 </div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-                  <button onClick="{{ onRescan }}" style-hover="filter:brightness(1.14)" style="appearance:none;border:none;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:11px 18px;cursor:pointer;transition:filter .15s" style-hover="filter:brightness(1.15)">Scan again</button>
-                  <button onClick="{{ onPick }}" style="appearance:none;border:1px solid #4C4741;background:transparent;color:#DCD6CE;font-size:11px;letter-spacing:.16em;text-transform:uppercase;padding:11px 18px;cursor:pointer;transition:all .15s" style-hover="border-color:#DCD6CE">Pick another folder</button>
+                  <button onClick="{{ onRescan }}" style="{{ primaryBtn }}"><i class="fa-solid fa-rotate" aria-hidden="true"></i>Scan again</button>
+                  <button onClick="{{ onPick }}" style="{{ utilBtn }}"><i class="fa-solid fa-folder-open" aria-hidden="true"></i>Pick another folder</button>
                 </div>
               </div>
             </sc-if>
-
+            </div>
             <sc-if value="{{ showResults }}" hint-placeholder-val="{{ false }}">
-              <div style="display:flex;flex-direction:column;gap:14px;animation:rise .3s ease both">
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));border:1px solid #38342F">
-                  <div style="padding:14px 16px;border-right:1px solid #38342F;display:flex;flex-direction:column;gap:6px;min-width:0">
-                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">FOLDER</div>
-                    <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#F3F0EC;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ dirName }}</div>
+              <div style="display:flex;flex-direction:column;gap:16px;animation:rise .3s ease both">
+            <div class="h0 h1 efk-view">
+              <div class="efk-tools ">
+                    <button onClick="{{ onApply }}" disabled="{{ applyDisabled }}" style="{{ applyStyle }}">{{ applyLabel }}</button>
+              </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));border:1px solid #C6C6C6">
+                  <div style="padding:16px 16px;border-right:1px solid #C6C6C6;display:flex;flex-direction:column;gap:8px;min-width:0">
+                    <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252">Folder</div>
+                    <div style="font-family:Inter,sans-serif;font-size:12px;color:#161616;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ dirName }}</div>
                   </div>
-                  <div style="padding:14px 16px;border-right:1px solid #38342F;display:flex;flex-direction:column;gap:6px">
-                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">EMAT SCANNED</div>
-                    <div style="font-family:Archivo,sans-serif;font-variation-settings:'wdth' 125,'wght' 800;font-size:22px;color:#F3F0EC">{{ ematCount }}</div>
+                  <div style="padding:16px 16px;border-right:1px solid #C6C6C6;display:flex;flex-direction:column;gap:8px">
+                    <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252">Materials scanned</div>
+                    <div style="font-family:Inter,sans-serif;font-weight:700;font-size:20px;color:#161616">{{ ematCount }}</div>
                   </div>
-                  <div style="padding:14px 16px;border-right:1px solid #38342F;display:flex;flex-direction:column;gap:6px;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;">
-                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#E6EDFF;opacity:.7">{{ readyLabel }}</div>
-                    <div style="font-family:Archivo,sans-serif;font-variation-settings:'wdth' 125,'wght' 800;font-size:22px;color:#E6EDFF">{{ readyCount }}</div>
+                  <div style="padding:16px 16px;border-right:1px solid #C6C6C6;display:flex;flex-direction:column;gap:8px;background:#161616;">
+                    <div style="font-family:Inter,sans-serif;font-size:12px;color:#FFFFFF;opacity:.7">{{ readyLabel }}</div>
+                    <div style="font-family:Inter,sans-serif;font-weight:700;font-size:20px;color:#FFFFFF">{{ readyCount }}</div>
                   </div>
-                  <div style="padding:14px 16px;display:flex;flex-direction:column;gap:6px">
-                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">SKIPPED, ALREADY OK</div>
-                    <div style="font-family:Archivo,sans-serif;font-variation-settings:'wdth' 125,'wght' 800;font-size:22px;color:#ABA49B">{{ skipSummary }}</div>
+                  <div style="padding:16px 16px;display:flex;flex-direction:column;gap:8px">
+                    <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252">Skipped, already fine</div>
+                    <div style="font-family:Inter,sans-serif;font-weight:700;font-size:20px;color:#525252">{{ skipSummary }}</div>
                   </div>
                 </div>
-
-                <div style="border:1px solid #38342F">
-                  <div style="display:flex;align-items:center;gap:14px;padding:11px 14px;border-bottom:1px solid #38342F;flex-wrap:wrap">
+                  <sc-if value="{{ doneMsg }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding:12px 16px;background:#198038;color:#FFFFFF;font-family:Inter,sans-serif;font-size:12px;">{{ doneMsg }}</div>
+                  </sc-if>
+            </div>
+            <div class="h0 h2 efk-view">
+                <div style="border:1px solid #C6C6C6">
+                  <div style="display:flex;align-items:center;gap:16px;padding:12px 16px;border-bottom:1px solid #C6C6C6;flex-wrap:wrap">
                     <div onClick="{{ onToggleAll }}" style="{{ allBoxStyle }}">{{ allBoxMark }}</div>
-                    <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;color:#ABA49B;text-transform:uppercase">{{ selectionLabel }}</div>
+                    <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252">{{ selectionLabel }}</div>
                     <div style="flex:1"></div>
                     <div onClick="{{ onToggleBackup }}" style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none">
                       <div style="{{ backupBoxStyle }}">{{ backupBoxMark }}</div>
-                      <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;color:#ABA49B;text-transform:uppercase">Write .bak</div>
+                      <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252">Keep a backup (.bak)</div>
                     </div>
-                    <button onClick="{{ onApply }}" disabled="{{ applyDisabled }}" style="{{ applyStyle }}">{{ applyLabel }}</button>
                   </div>
                   <div style="max-height:min(50vh,540px);overflow-y:auto">
                     <sc-for list="{{ rows }}" as="row" hint-placeholder-count="5">
-                      <div style="border-bottom:1px solid #2D2926">
-                        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;transition:background .15s" style-hover="background:#211E1C">
+                      <div style="border-bottom:1px solid #E0E0E0">
+                        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;transition:background .15s" style-hover="background:#F4F4F4">
                           <div onClick="{{ row.onToggle }}" style="{{ row.boxStyle }}">{{ row.boxMark }}</div>
-                          <div onClick="{{ row.onExpand }}" style="flex:1;min-width:0;cursor:pointer;display:flex;flex-direction:column;gap:3px">
-                            <div style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#F3F0EC;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ row.name }}</div>
-                            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:#ABA49B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ row.dir }}</div>
+                          <div onClick="{{ row.onExpand }}" style="flex:1;min-width:0;cursor:pointer;display:flex;flex-direction:column;gap:4px">
+                            <div style="font-family:Inter,sans-serif;font-size:12px;color:#161616;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ row.name }}</div>
+                            <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ row.dir }}</div>
                           </div>
                           <div style="{{ row.badgeStyle }}">{{ row.badge }}</div>
                         </div>
                         <sc-if value="{{ row.expanded }}" hint-placeholder-val="{{ false }}">
-                          <div style="padding:0 14px 14px 48px;display:flex;flex-direction:column;gap:9px;animation:rise .2s ease both">
-                            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:#ABA49B;text-transform:uppercase">{{ row.note }}</div>
-                            <pre style="margin:0;padding:13px 15px;background:#141312;border:1px solid #2D2926;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:#E8A055;overflow-x:auto">{{ row.preview }}</pre>
+                          <div style="padding:0 16px 16px 48px;display:flex;flex-direction:column;gap:8px;animation:rise .2s ease both">
+                            <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252">{{ row.note }}</div>
+                            <pre style="margin:0;padding:12px 16px;background:#F4F4F4;border:1px solid #E0E0E0;font-family:Inter,sans-serif;font-size:12px;line-height:1.7;color:#161616;overflow-x:auto">{{ row.preview }}</pre>
                           </div>
                         </sc-if>
                       </div>
                     </sc-for>
                   </div>
-                  <sc-if value="{{ doneMsg }}" hint-placeholder-val="{{ false }}">
-                    <div style="padding:12px 14px;background:#0644BF;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#E6EDFF;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase">{{ doneMsg }}</div>
-                  </sc-if>
                 </div>
+            </div>
               </div>
             </sc-if>
           </div>
         </sc-if>
 
         <sc-if value="{{ isMod2 }}" hint-placeholder-val="{{ false }}">
-          <div style="display:flex;flex-direction:column;gap:18px;animation:rise .3s ease both">
-            <div style="display:flex;justify-content:flex-end;align-items:flex-start;gap:20px;flex-wrap:wrap">
-              <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button onClick="{{ onToggleSettings }}" style="{{ settingsBtnStyle }}" style-hover="border-color:#E8A055;color:#E8A055">Settings</button>
-                <button onClick="{{ onDownloadAll }}" disabled="{{ dlAllDisabled }}" style="{{ dlAllStyle }}" style-hover="filter:brightness(1.14)">Download all, ZIP</button>
-                <button onClick="{{ onAddSet }}" style-hover="filter:brightness(1.14)" style="appearance:none;border:none;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:10px 16px;cursor:pointer;transition:filter .15s" style-hover="filter:brightness(1.15)">+ Add set</button>
+          <div style="display:flex;flex-direction:column;gap:20px;animation:rise .3s ease both">
+            <div class="h1 h2 efk-view">
+              <div class="efk-tools">
+                <button onClick="{{ onToggleSettings }}" style="{{ settingsBtnStyle }}"><i class="fa-solid fa-gear" aria-hidden="true"></i>Settings</button>
+                <button onClick="{{ onAddSet }}" style="{{ utilBtn }}"><i class="fa-solid fa-plus" aria-hidden="true"></i>Add set</button>
               </div>
-            </div>
-
             <sc-if value="{{ settingsOpen }}" hint-placeholder-val="{{ false }}">
-              <div style="border:1px solid #38342F;padding:20px;display:flex;flex-direction:column;gap:22px;animation:rise .22s ease both">
-                <div style="display:flex;flex-direction:column;gap:10px">
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.24em;color:#E8A055;text-transform:uppercase">DEFAULT EXPORT SETTINGS</div>
-                  <div style="display:flex;gap:26px;flex-wrap:wrap">
-                    <label style="display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;color:#ABA49B;text-transform:uppercase">Resolution
-                      <select value="{{ defaultRes }}" onChange="{{ onDefaultRes }}" style="background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px">
+              <div style="border:1px solid #C6C6C6;padding:20px;display:flex;flex-direction:column;gap:24px;animation:rise .22s ease both">
+                <div style="display:flex;flex-direction:column;gap:12px">
+                  <div style="font-family:Inter,sans-serif;font-size:12px;color:#161616">Default export settings</div>
+                  <div style="display:flex;gap:28px;flex-wrap:wrap">
+                    <label style="display:flex;align-items:center;gap:12px;font-family:Inter,sans-serif;font-size:12px;color:#525252">Resolution
+                      <select value="{{ defaultRes }}" onChange="{{ onDefaultRes }}" style="background:#F4F4F4;border:1px solid #C6C6C6;color:#262626;font-size:12px;padding:8px 8px">
                         <option value="512">512 × 512</option><option value="1024">1024 × 1024</option><option value="2048">2048 × 2048</option><option value="4096">4096 × 4096</option>
                       </select>
                     </label>
-                    <label style="display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;color:#ABA49B;text-transform:uppercase">Format
-                      <select value="{{ defaultFmt }}" onChange="{{ onDefaultFmt }}" style="background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px">
+                    <label style="display:flex;align-items:center;gap:12px;font-family:Inter,sans-serif;font-size:12px;color:#525252">Format
+                      <select value="{{ defaultFmt }}" onChange="{{ onDefaultFmt }}" style="background:#F4F4F4;border:1px solid #C6C6C6;color:#262626;font-size:12px;padding:8px 8px">
                         <option value="tga">TGA</option><option value="png">PNG</option>
                       </select>
                     </label>
                   </div>
                 </div>
-                <div style="display:flex;flex-direction:column;gap:10px">
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.24em;color:#E8A055;text-transform:uppercase">FILENAME ALIASES</div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#ABA49B;text-transform:uppercase;line-height:1.7">FILENAMES CONTAINING AN ALIAS ARE SORTED INTO THAT SLOT; THE ALIAS IS STRIPPED TO NAME THE SET. LONGEST MATCH WINS. SEPARATE MULTIPLE ALIASES WITH COMMAS.</div>
-                  <div style="display:flex;flex-direction:column;gap:6px;max-width:560px">
+                <div style="display:flex;flex-direction:column;gap:12px">
+                  <div style="font-family:Inter,sans-serif;font-size:12px;color:#161616">Filename aliases</div>
+                  <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252;line-height:1.7">Files containing an alias go to that slot. Separate aliases with commas.</div>
+                  <div style="display:flex;flex-direction:column;gap:8px;max-width:560px">
                     <sc-for list="{{ aliases }}" as="a" hint-placeholder-count="5">
-                      <div style="display:flex;gap:6px;align-items:center">
-                        <select value="{{ a.type }}" onChange="{{ a.onType }}" style="background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px;width:170px">
+                      <div style="display:flex;gap:8px;align-items:center">
+                        <select value="{{ a.type }}" onChange="{{ a.onType }}" style="background:#F4F4F4;border:1px solid #C6C6C6;color:#262626;font-size:12px;padding:8px 8px;width:170px">
                           <option value="normal">Normal map</option><option value="ao">Ambient occlusion</option><option value="metallic">Metallic</option><option value="basecolor">Base color</option><option value="roughness">Roughness</option>
                         </select>
-                        <input value="{{ a.alias }}" onChange="{{ a.onAlias }}" style="flex:1;background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px" />
-                        <button onClick="{{ a.onDelete }}" style="appearance:none;border:1px solid #4C4741;background:transparent;color:#ABA49B;font-size:11px;padding:6px 10px;cursor:pointer;transition:all .15s" style-hover="border-color:#BF0625;color:#BF0625">✕</button>
+                        <input value="{{ a.alias }}" onChange="{{ a.onAlias }}" style="flex:1;background:#F4F4F4;border:1px solid #C6C6C6;color:#262626;font-size:12px;padding:8px 8px" />
+                        <button onClick="{{ a.onDelete }}" style="appearance:none;border:1px solid #C6C6C6;background:transparent;color:#525252;font-size:12px;padding:8px 12px;cursor:pointer;transition:all .15s" style-hover="border-color:#DA1E28;color:#DA1E28">✕</button>
                       </div>
                     </sc-for>
-                    <div style="display:flex;gap:6px;align-items:center;padding-top:10px;border-top:1px solid #38342F">
-                      <select value="{{ newAliasType }}" onChange="{{ onNewAliasType }}" style="background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px;width:170px">
+                    <div style="display:flex;gap:8px;align-items:center;padding-top:12px;border-top:1px solid #C6C6C6">
+                      <select value="{{ newAliasType }}" onChange="{{ onNewAliasType }}" style="background:#F4F4F4;border:1px solid #C6C6C6;color:#262626;font-size:12px;padding:8px 8px;width:170px">
                         <option value="normal">Normal map</option><option value="ao">Ambient occlusion</option><option value="metallic">Metallic</option><option value="basecolor">Base color</option><option value="roughness">Roughness</option>
                       </select>
-                      <input value="{{ newAliasPattern }}" onChange="{{ onNewAliasPattern }}" placeholder="_nrm, _rough, _albedo" style="flex:1;background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px" />
-                      <button onClick="{{ onAddAlias }}" style="appearance:none;border:1px solid #BF6505;background:transparent;color:#E8A055;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 12px;cursor:pointer">Add</button>
+                      <input value="{{ newAliasPattern }}" onChange="{{ onNewAliasPattern }}" placeholder="_nrm, _rough, _albedo" style="flex:1;background:#F4F4F4;border:1px solid #C6C6C6;color:#262626;font-size:12px;padding:8px 8px" />
+                      <button onClick="{{ onAddAlias }}" style="appearance:none;border:1px solid #161616;background:transparent;color:#161616;font-size:12px;padding:8px 12px;cursor:pointer">Add</button>
                     </div>
                   </div>
                 </div>
               </div>
             </sc-if>
-
-            <sc-if value="{{ noSets }}" hint-placeholder-val="{{ true }}">
               <div onDragOver="{{ onSetsDragOver }}" onDragLeave="{{ onSetsDragLeave }}" onDrop="{{ onSetsDrop }}" onClick="{{ onPickTextures }}" style="{{ emptyDropStyle }}">
-                                <div style="position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,#BF6505,transparent);animation:scanline 3.2s linear infinite;opacity:.5;pointer-events:none"></div>
+                                <div style="position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,#161616,transparent);animation:scanline 3.2s linear infinite;opacity:.5;pointer-events:none"></div>
                 <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:20px;text-align:center;pointer-events:none">
                   <div style="position:relative;display:flex;gap:8px;overflow:visible">
-                    <div style="width:52px;height:68px;border:1px solid #4C4741;position:relative;overflow:hidden;animation:slot1 5.6s cubic-bezier(.4,0,.2,1) infinite"><div style="position:absolute;inset:0;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;animation:blueFill 5.6s cubic-bezier(.4,0,.2,1) infinite"></div><div style="position:absolute;top:0;bottom:0;left:0px;width:292px;pointer-events:none"><div style="position:absolute;top:0;bottom:0;left:0;width:100px;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 10%,rgba(255,255,255,.95) 50%,transparent 90%);animation:shineWipe 5.6s cubic-bezier(.35,0,.25,1) infinite"></div></div></div>
-                    <div style="width:52px;height:68px;border:1px solid #4C4741;position:relative;overflow:hidden;animation:slot2 5.6s cubic-bezier(.4,0,.2,1) infinite"><div style="position:absolute;inset:0;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;animation:blueFill 5.6s cubic-bezier(.4,0,.2,1) infinite"></div><div style="position:absolute;top:0;bottom:0;left:-60px;width:292px;pointer-events:none"><div style="position:absolute;top:0;bottom:0;left:0;width:100px;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 10%,rgba(255,255,255,.95) 50%,transparent 90%);animation:shineWipe 5.6s cubic-bezier(.35,0,.25,1) infinite"></div></div></div>
-                    <div style="width:52px;height:68px;border:1px solid #4C4741;position:relative;overflow:hidden;animation:slot3 5.6s cubic-bezier(.4,0,.2,1) infinite"><div style="position:absolute;inset:0;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;animation:blueFill 5.6s cubic-bezier(.4,0,.2,1) infinite"></div><div style="position:absolute;top:0;bottom:0;left:-120px;width:292px;pointer-events:none"><div style="position:absolute;top:0;bottom:0;left:0;width:100px;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 10%,rgba(255,255,255,.95) 50%,transparent 90%);animation:shineWipe 5.6s cubic-bezier(.35,0,.25,1) infinite"></div></div></div>
-                    <div style="width:52px;height:68px;border:1px solid #4C4741;position:relative;overflow:hidden;animation:slot4 5.6s cubic-bezier(.4,0,.2,1) infinite"><div style="position:absolute;inset:0;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;animation:blueFill 5.6s cubic-bezier(.4,0,.2,1) infinite"></div><div style="position:absolute;top:0;bottom:0;left:-180px;width:292px;pointer-events:none"><div style="position:absolute;top:0;bottom:0;left:0;width:100px;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 10%,rgba(255,255,255,.95) 50%,transparent 90%);animation:shineWipe 5.6s cubic-bezier(.35,0,.25,1) infinite"></div></div></div>
-                    <div style="width:52px;height:68px;border:1px solid #4C4741;position:relative;overflow:hidden;animation:slot5 5.6s cubic-bezier(.4,0,.2,1) infinite"><div style="position:absolute;inset:0;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;animation:blueFill 5.6s cubic-bezier(.4,0,.2,1) infinite"></div><div style="position:absolute;top:0;bottom:0;left:-240px;width:292px;pointer-events:none"><div style="position:absolute;top:0;bottom:0;left:0;width:100px;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 10%,rgba(255,255,255,.95) 50%,transparent 90%);animation:shineWipe 5.6s cubic-bezier(.35,0,.25,1) infinite"></div></div></div>
+                    <div style="width:52px;height:68px;border:1px solid #C6C6C6;position:relative;overflow:hidden;animation:slot1 5.6s cubic-bezier(.4,0,.2,1) infinite"><div style="position:absolute;inset:0;background:#161616;animation:blueFill 5.6s cubic-bezier(.4,0,.2,1) infinite"></div><div style="position:absolute;top:0;bottom:0;left:0px;width:292px;pointer-events:none"><div style="position:absolute;top:0;bottom:0;left:0;width:100px;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 10%,rgba(255,255,255,.95) 50%,transparent 90%);animation:shineWipe 5.6s cubic-bezier(.35,0,.25,1) infinite"></div></div></div>
+                    <div style="width:52px;height:68px;border:1px solid #C6C6C6;position:relative;overflow:hidden;animation:slot2 5.6s cubic-bezier(.4,0,.2,1) infinite"><div style="position:absolute;inset:0;background:#161616;animation:blueFill 5.6s cubic-bezier(.4,0,.2,1) infinite"></div><div style="position:absolute;top:0;bottom:0;left:-60px;width:292px;pointer-events:none"><div style="position:absolute;top:0;bottom:0;left:0;width:100px;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 10%,rgba(255,255,255,.95) 50%,transparent 90%);animation:shineWipe 5.6s cubic-bezier(.35,0,.25,1) infinite"></div></div></div>
+                    <div style="width:52px;height:68px;border:1px solid #C6C6C6;position:relative;overflow:hidden;animation:slot3 5.6s cubic-bezier(.4,0,.2,1) infinite"><div style="position:absolute;inset:0;background:#161616;animation:blueFill 5.6s cubic-bezier(.4,0,.2,1) infinite"></div><div style="position:absolute;top:0;bottom:0;left:-120px;width:292px;pointer-events:none"><div style="position:absolute;top:0;bottom:0;left:0;width:100px;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 10%,rgba(255,255,255,.95) 50%,transparent 90%);animation:shineWipe 5.6s cubic-bezier(.35,0,.25,1) infinite"></div></div></div>
+                    <div style="width:52px;height:68px;border:1px solid #C6C6C6;position:relative;overflow:hidden;animation:slot4 5.6s cubic-bezier(.4,0,.2,1) infinite"><div style="position:absolute;inset:0;background:#161616;animation:blueFill 5.6s cubic-bezier(.4,0,.2,1) infinite"></div><div style="position:absolute;top:0;bottom:0;left:-180px;width:292px;pointer-events:none"><div style="position:absolute;top:0;bottom:0;left:0;width:100px;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 10%,rgba(255,255,255,.95) 50%,transparent 90%);animation:shineWipe 5.6s cubic-bezier(.35,0,.25,1) infinite"></div></div></div>
+                    <div style="width:52px;height:68px;border:1px solid #C6C6C6;position:relative;overflow:hidden;animation:slot5 5.6s cubic-bezier(.4,0,.2,1) infinite"><div style="position:absolute;inset:0;background:#161616;animation:blueFill 5.6s cubic-bezier(.4,0,.2,1) infinite"></div><div style="position:absolute;top:0;bottom:0;left:-240px;width:292px;pointer-events:none"><div style="position:absolute;top:0;bottom:0;left:0;width:100px;mix-blend-mode:screen;background:linear-gradient(105deg,transparent 10%,rgba(255,255,255,.95) 50%,transparent 90%);animation:shineWipe 5.6s cubic-bezier(.35,0,.25,1) infinite"></div></div></div>
                   </div>
                   <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
-                    <div style="font-size:16px;font-weight:800;letter-spacing:-0.01em;color:#E8A055">Drop texture files here</div>
+                    <div style="font-size:16px;font-weight:600;letter-spacing:-0.01em;color:#161616">Drop texture files here</div>
                   </div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;color:#ABA49B;text-transform:uppercase">TGA, PNG, JPG, WEBP, AUTO SORTED</div>
+                  <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252">TGA, PNG, JPG or WEBP</div>
                 </div>
               </div>
-            </sc-if>
-
+            </div>
+            <div class="h0 efk-view">
+              <div class="efk-tools h0 h1">
+              <button onClick="{{ onDownloadAll }}" disabled="{{ dlAllDisabled }}" style="{{ dlAllStyle }}" style-hover="filter:brightness(1.12)"><i class="fa-solid fa-download" aria-hidden="true"></i>Download everything (.zip)</button>
+              </div>
             <sc-if value="{{ hasSets }}" hint-placeholder-val="{{ false }}">
               <div onDragOver="{{ onSetsDragOver }}" onDragLeave="{{ onSetsDragLeave }}" onDrop="{{ onSetsDrop }}" style="{{ setsAreaStyle }}">
                 <sc-if value="{{ texDragOver }}" hint-placeholder-val="{{ false }}">
-                  <div style="position:absolute;inset:0;z-index:2;display:grid;place-items:center;background:rgba(21,19,15,.72);pointer-events:none">
-                    <div style="font-size:17px;font-weight:800;color:#F3F0EC">Drop texture files here</div>
+                  <div style="position:absolute;inset:0;z-index:2;display:grid;place-items:center;background:rgba(255,255,255,.85);pointer-events:none">
+                    <div style="font-size:16px;font-weight:600;color:#161616">Drop texture files here</div>
                   </div>
                 </sc-if>
                 <sc-for list="{{ sets }}" as="set" hint-placeholder-count="1">
-              <div style="border:1px solid #38342F;display:flex;flex-direction:column;animation:rise .3s ease both">
-                <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #38342F;flex-wrap:wrap">
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">{{ set.serial }}</div>
-                  <input value="{{ set.name }}" onChange="{{ set.onName }}" style="flex:1;min-width:150px;background:transparent;border:1px solid transparent;color:#F3F0EC;font-family:Archivo,sans-serif;font-size:17px;font-weight:800;letter-spacing:-0.015em;padding:4px 6px" style-hover="border-color:#4C4741" style-focus="border-color:#E8A055;outline:none" />
-                  <select value="{{ set.res }}" onChange="{{ set.onRes }}" style="background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px">
+              <div style="border:1px solid #C6C6C6;display:flex;flex-direction:column;animation:rise .3s ease both">
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #C6C6C6;flex-wrap:wrap">
+                  <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252">{{ set.serial }}</div>
+                  <input value="{{ set.name }}" onChange="{{ set.onName }}" style="flex:1;min-width:150px;background:transparent;border:1px solid transparent;color:#161616;font-family:Inter,sans-serif;font-size:16px;font-weight:600;letter-spacing:-0.015em;padding:4px 8px" style-hover="border-color:#C6C6C6" style-focus="border-color:#161616;outline:none" />
+                  <select value="{{ set.res }}" onChange="{{ set.onRes }}" style="background:#F4F4F4;border:1px solid #C6C6C6;color:#262626;font-size:12px;padding:8px 8px">
                     <option value="512">512 × 512</option><option value="1024">1024 × 1024</option><option value="2048">2048 × 2048</option><option value="4096">4096 × 4096</option>
                   </select>
-                  <select value="{{ set.fmt }}" onChange="{{ set.onFmt }}" style="background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-size:11px;padding:6px 8px">
+                  <select value="{{ set.fmt }}" onChange="{{ set.onFmt }}" style="background:#F4F4F4;border:1px solid #C6C6C6;color:#262626;font-size:12px;padding:8px 8px">
                     <option value="tga">TGA</option><option value="png">PNG</option>
                   </select>
-                  <button onClick="{{ set.onRemove }}" style="appearance:none;border:1px solid #4C4741;background:transparent;color:#ABA49B;font-size:11px;padding:6px 10px;cursor:pointer;transition:all .15s" style-hover="border-color:#BF0625;color:#BF0625">✕</button>
+                  <button onClick="{{ set.onRemove }}" style="appearance:none;border:1px solid #C6C6C6;background:transparent;color:#525252;font-size:12px;padding:8px 12px;cursor:pointer;transition:all .15s" style-hover="border-color:#DA1E28;color:#DA1E28">✕</button>
                 </div>
 
-                <div style="display:flex;gap:8px;padding:12px 14px;border-bottom:1px solid #2D2926;flex-wrap:wrap;align-items:center">
-                  <button onClick="{{ set.onExportAll }}" disabled="{{ set.exportDisabled }}" style="{{ set.exportStyle }}" style-hover="filter:brightness(1.14)">Export BCR + NMO</button>
-                  <button onClick="{{ set.onExportCrm }}" disabled="{{ set.crmDisabled }}" style="{{ set.crmStyle }}" style-hover="filter:brightness(1.14)">Camo CRM map</button>
+                <div style="display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid #E0E0E0;flex-wrap:wrap;align-items:center">
+                  <button class="h1" onClick="{{ set.onExportAll }}" disabled="{{ set.exportDisabled }}" style="{{ set.exportStyle }}" style-hover="filter:brightness(1.14)"><i class="fa-solid fa-download" aria-hidden="true"></i>Export game-ready files</button>
+                  <button class="h1" onClick="{{ set.onExportCrm }}" disabled="{{ set.crmDisabled }}" style="{{ set.crmStyle }}" style-hover="filter:brightness(1.14)"><i class="fa-solid fa-download" aria-hidden="true"></i>Export camo map</button>
                   <div style="flex:1"></div>
                   <div style="{{ set.statusStyle }}">{{ set.statusText }}</div>
                 </div>
 
-                <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding:14px">
+                <div class="h2" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding:16px">
                   <sc-for list="{{ set.slots }}" as="slot" hint-placeholder-count="5">
-                    <div style="display:flex;flex-direction:column;gap:5px">
-                      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:20px">
-                        <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.16em;color:#DCD6CE;text-transform:uppercase">{{ slot.label }}</div>
+                    <div style="display:flex;flex-direction:column;gap:4px">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:20px">
+                        <div style="font-family:Inter,sans-serif;font-size:12px;color:#262626">{{ slot.label }}</div>
                         <sc-if value="{{ slot.filled }}" hint-placeholder-val="{{ false }}">
-                          <button onClick="{{ slot.onRemove }}" style="appearance:none;border:none;background:transparent;color:#ABA49B;font-size:11px;cursor:pointer;padding:0 2px;transition:color .15s" style-hover="color:#BF0625">✕</button>
+                          <button onClick="{{ slot.onRemove }}" style="appearance:none;border:none;background:transparent;color:#525252;font-size:12px;cursor:pointer;padding:0 4px;transition:color .15s" style-hover="color:#DA1E28">✕</button>
                         </sc-if>
                       </div>
                       <div onClick="{{ slot.onPick }}" onDragOver="{{ slot.onDragOver }}" onDragLeave="{{ slot.onDragLeave }}" onDrop="{{ slot.onDrop }}" style="{{ slot.zoneStyle }}">
                         <sc-if value="{{ slot.emptyState }}" hint-placeholder-val="{{ true }}">
-                          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none">
-                            <div style="width:18px;height:18px;border:1px solid #4C4741"></div>
-                            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;color:#ABA49B;text-transform:uppercase">Drop / click</div>
+                          <div style="display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none">
+                            <div style="width:18px;height:18px;border:1px solid #C6C6C6"></div>
+                            <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252">Drop / click</div>
                           </div>
                         </sc-if>
                         <sc-if value="{{ slot.filled }}" hint-placeholder-val="{{ false }}">
@@ -387,55 +439,36 @@
                   </sc-for>
                 </div>
 
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));border-top:1px solid #2D2926">
-                  <div style="padding:14px;border-right:1px solid #2D2926;display:flex;flex-direction:column;gap:10px">
-                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">CAMO CRM PREVIEW</div>
+                <div class="h1" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));border-top:1px solid #E0E0E0">
+                  <div style="padding:16px;border-right:1px solid #E0E0E0;display:flex;flex-direction:column;gap:12px">
+                    <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252">Camo map preview</div>
                     <sc-if value="{{ set.crmPreview }}" hint-placeholder-val="{{ false }}">
                       <div style="{{ set.crmPreviewStyle }}">{{ set.crmThumb }}</div>
                     </sc-if>
                     <sc-if value="{{ set.crmMissing }}" hint-placeholder-val="{{ true }}">
-                      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:#ABA49B;text-transform:uppercase;line-height:1.7">LOAD AO, ROUGHNESS, METALLIC TO GENERATE A LIVE PREVIEW.</div>
+                      <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252;line-height:1.7">Needs AO, roughness and metallic.</div>
                     </sc-if>
-                  </div>
-                  <div style="padding:14px;display:flex;flex-direction:column;gap:9px">
-                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">OUTPUT FILES</div>
-                    <div style="display:flex;flex-direction:column;gap:5px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#ABA49B;letter-spacing:.04em">
-                      <div style="display:flex;gap:6px"><span>BCRMAP</span><span style="flex:1;border-bottom:1px dotted #4C4741;transform:translateY(-4px)"></span><span style="color:#DCD6CE">{{ set.bcrName }}</span></div>
-                      <div style="display:flex;gap:6px"><span>NMOMAP</span><span style="flex:1;border-bottom:1px dotted #4C4741;transform:translateY(-4px)"></span><span style="color:#DCD6CE">{{ set.nmoName }}</span></div>
-                    </div>
                   </div>
                 </div>
               </div>
                 </sc-for>
               </div>
             </sc-if>
+            </div>
           </div>
         </sc-if>
 
         <sc-if value="{{ isMod3 }}" hint-placeholder-val="{{ false }}">
-          <div style="display:flex;flex-direction:column;gap:18px;animation:rise .3s ease both">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap">
-              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-                <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.24em;color:#ABA49B">SET ALL →</div>
-                <sc-for list="{{ bulkSizes }}" as="b" hint-placeholder-count="4">
-                  <button onClick="{{ b.onClick }}" disabled="{{ b.disabled }}" style="{{ b.style }}">{{ b.label }}</button>
-                </sc-for>
-              </div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button onClick="{{ onResizeClear }}" disabled="{{ noResizeFiles }}" style="{{ clearStyle }}">Clear all</button>
-                <button onClick="{{ onUndoAll }}" disabled="{{ undoAllDisabled }}" style="{{ undoAllStyle }}">↩ Undo all</button>
-                <button onClick="{{ onReduceAll }}" disabled="{{ noResizeFiles }}" style="{{ reduceAllStyle }}">{{ reduceAllLabel }}</button>
-              </div>
-            </div>
-
+          <div style="display:flex;flex-direction:column;gap:20px;animation:rise .3s ease both">
+            <div class="h1 h2 efk-view">
             <sc-if value="{{ hasResizeFiles }}" hint-placeholder-val="{{ false }}">
               <div onClick="{{ onPickTgas }}" onDragOver="{{ onTgaDragOver }}" onDragLeave="{{ onTgaDragLeave }}" onDrop="{{ onTgaDrop }}" style="{{ tgaDropStyle }}">
                 <div style="display:flex;align-items:center;gap:16px;pointer-events:none;flex-wrap:wrap;justify-content:center">
-                  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:3px;width:26px;height:26px">
-                    <div style="border:1px solid #BF6505"></div><div style="border:1px solid #BF6505;opacity:.6"></div>
-                    <div style="border:1px solid #BF6505;opacity:.6"></div><div style="border:1px solid #BF6505;opacity:.3"></div>
+                  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px;width:26px;height:26px">
+                    <div style="border:1px solid #161616"></div><div style="border:1px solid #161616;opacity:.6"></div>
+                    <div style="border:1px solid #161616;opacity:.6"></div><div style="border:1px solid #161616;opacity:.3"></div>
                   </div>
-                  <div style="font-size:17px;font-weight:800;color:#F3F0EC">Drop .tga or .png files</div>
+                  <div style="font-size:16px;font-weight:600;color:#161616">Drop .tga or .png files</div>
                 </div>
               </div>
             </sc-if>
@@ -446,95 +479,155 @@
 
             <sc-if value="{{ noResizeFiles }}" hint-placeholder-val="{{ true }}">
               <div onClick="{{ onPickTgas }}" onDragOver="{{ onTgaDragOver }}" onDragLeave="{{ onTgaDragLeave }}" onDrop="{{ onTgaDrop }}" style="{{ tgaEmptyDropStyle }}">
-                                <div style="position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,#BF6505,transparent);animation:scanline 3.2s linear infinite;opacity:.5;pointer-events:none"></div>
+                                <div style="position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,#161616,transparent);animation:scanline 3.2s linear infinite;opacity:.5;pointer-events:none"></div>
                 <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:20px;text-align:center;pointer-events:none">
                   <div style="position:relative;width:96px;height:96px;display:grid;place-items:center">
-                    <div style="position:absolute;width:94px;height:94px;border:1px solid #0644BF;opacity:.4;animation:ring 2.8s ease-out infinite"></div>
-                    <div style="width:52px;height:52px;border:1.5px solid #0644BF;display:grid;place-items:center;animation:hover 3.4s ease-in-out infinite">
-                      <div style="width:22px;height:22px;border:1.5px solid #BF6505;animation:tick 1.8s ease-in-out infinite"></div>
+                    <div style="position:absolute;width:94px;height:94px;border:1px solid #198038;opacity:.4;animation:ring 2.8s ease-out infinite"></div>
+                    <div style="width:52px;height:52px;border:1.5px solid #198038;display:grid;place-items:center;animation:hover 3.4s ease-in-out infinite">
+                      <div style="width:22px;height:22px;border:1.5px solid #161616;animation:tick 1.8s ease-in-out infinite"></div>
                     </div>
                   </div>
                   <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
-                    <div style="font-size:16px;font-weight:800;letter-spacing:-0.01em;color:#F3F0EC">Queue is empty</div>
-                    <div style="font-size:16px;font-weight:800;letter-spacing:-0.01em;color:#E8A055">Drop .tga or .png files</div>
+                    <div style="font-size:16px;font-weight:600;letter-spacing:-0.01em;color:#161616">No files yet</div>
+                    <div style="font-size:16px;font-weight:600;letter-spacing:-0.01em;color:#161616">Drop .tga or .png files</div>
                   </div>
                 </div>
               </div>
             </sc-if>
-
+            </div>
+            <div class="h0 h2 efk-view">
             <sc-if value="{{ hasResizeFiles }}" hint-placeholder-val="{{ false }}">
-              <div style="border:1px solid #38342F">
+              <div class="efk-tools">
+                <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252">Set all to</div>
+                <sc-for list="{{ bulkSizes }}" as="b" hint-placeholder-count="4">
+                  <button onClick="{{ b.onClick }}" disabled="{{ b.disabled }}" style="{{ b.style }}">{{ b.label }}</button>
+                </sc-for>
+              </div>
+            </sc-if>
+            </div>
+            <div class="h0 efk-view">
+              <div class="efk-tools h0 h1">
+                <button onClick="{{ onResizeClear }}" disabled="{{ noResizeFiles }}" style="{{ clearStyle }}"><i class="fa-solid fa-trash" aria-hidden="true"></i>Clear all</button>
+                <button onClick="{{ onUndoAll }}" disabled="{{ undoAllDisabled }}" style="{{ undoAllStyle }}"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i>Undo all</button>
+                <button onClick="{{ onReduceAll }}" disabled="{{ noResizeFiles }}" style="{{ reduceAllStyle }}">{{ reduceAllLabel }}</button>
+              </div>
+            <sc-if value="{{ hasResizeFiles }}" hint-placeholder-val="{{ false }}">
+              <div style="border:1px solid #C6C6C6">
                 <sc-for list="{{ resizeRows }}" as="row" hint-placeholder-count="3">
                   <div style="{{ row.rowStyle }}">
-                    <div style="flex:1;min-width:170px;display:flex;flex-direction:column;gap:3px">
-                      <div style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#F3F0EC;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ row.name }}</div>
-                      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:#ABA49B">{{ row.dims }}</div>
+                    <div style="flex:1;min-width:170px;display:flex;flex-direction:column;gap:4px">
+                      <div style="font-family:Inter,sans-serif;font-size:12px;color:#161616;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ row.name }}</div>
+                      <div style="font-family:Inter,sans-serif;font-size:12px;color:#525252">{{ row.dims }}</div>
                     </div>
-                    <div style="display:flex;gap:4px">
+                    <div class="h2" style="display:flex;gap:4px">
                       <sc-for list="{{ row.sizes }}" as="s" hint-placeholder-count="4">
                         <button onClick="{{ s.onClick }}" style="{{ s.style }}">{{ s.label }}</button>
                       </sc-for>
                     </div>
-                    <button onClick="{{ row.onReduce }}" disabled="{{ row.reduceDisabled }}" style="{{ row.reduceStyle }}" style-hover="filter:brightness(1.14)">{{ row.reduceLabel }}</button>
-                    <button onClick="{{ row.onUndo }}" disabled="{{ row.undoDisabled }}" style="{{ row.undoStyle }}" style-hover="filter:brightness(1.14)">↩ Undo</button>
-                    <button onClick="{{ row.onRemove }}" style="appearance:none;border:none;background:transparent;color:#ABA49B;font-size:12px;cursor:pointer;padding:0 2px;transition:color .15s" style-hover="color:#BF0625">✕</button>
+                    <button class="h1" onClick="{{ row.onReduce }}" disabled="{{ row.reduceDisabled }}" style="{{ row.reduceStyle }}" style-hover="filter:brightness(1.14)">{{ row.reduceLabel }}</button>
+                    <button class="h1" onClick="{{ row.onUndo }}" disabled="{{ row.undoDisabled }}" style="{{ row.undoStyle }}" style-hover="filter:brightness(1.14)"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i>Undo</button>
+                    <button onClick="{{ row.onRemove }}" style="appearance:none;border:none;background:transparent;color:#525252;font-size:12px;cursor:pointer;padding:0 4px;transition:color .15s" style-hover="color:#DA1E28">✕</button>
                   </div>
                 </sc-for>
               </div>
             </sc-if>
+            </div>
           </div>
         </sc-if>
 
         <sc-if value="{{ isMod4 }}" hint-placeholder-val="{{ false }}">
           <div onDragOver="{{ onAtlasAreaDragOver }}" onDragLeave="{{ onAtlasAreaDragLeave }}" onDrop="{{ onAtlasAreaDrop }}" style="{{ atlasAreaStyle }}">
             <sc-if value="{{ atlasAreaDrag }}" hint-placeholder-val="{{ false }}">
-              <div style="position:absolute;inset:0;z-index:6;display:grid;place-items:center;background:rgba(23,21,20,.82);pointer-events:none">
-                <div style="font-size:19px;font-weight:800;color:#F3F0EC">Drop texture files here</div>
+              <div style="position:absolute;inset:0;z-index:6;display:grid;place-items:center;background:rgba(255,255,255,.9);pointer-events:none">
+                <div style="font-size:20px;font-weight:600;color:#161616">Drop texture files here</div>
               </div>
             </sc-if>
 
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:37px">
-              <button onClick="{{ onPickFbx }}" style="{{ fbxLoadStyle }}" style-hover="filter:brightness(1.14)">{{ fbxLoadLabel }}</button>
-              <sc-if value="{{ hasFbx }}" hint-placeholder-val="{{ false }}">
-                <button onClick="{{ onUnloadMesh }}" style="{{ utilBtn }}" style-hover="border-color:#BF0625;color:#BF0625">✕ Unload mesh</button>
-                <button onClick="{{ onAutoPack }}" style="{{ utilBtn }}" style-hover="border-color:#E8A055;color:#E8A055">⟲ Auto-pack</button>
-                <button onClick="{{ onSmallestFit }}" style="{{ utilBtn }}" style-hover="border-color:#E8A055;color:#E8A055">⤡ Smallest fit</button>
-                <div style="flex:1;min-width:8px"></div>
-                <button onClick="{{ onExportAtlas }}" disabled="{{ atlasExportDisabled }}" style="{{ atlasExportStyle }}" style-hover="filter:brightness(1.14)">{{ atlasExportLabel }}</button>
-              </sc-if>
-            </div>
-
-            <sc-if value="{{ noFbx }}" hint-placeholder-val="{{ true }}">
+            <div class="h1 h2 efk-view">
+              <div class="efk-tools">
+              <button onClick="{{ onPickFbx }}" style="{{ fbxLoadStyle }}" style-hover="filter:brightness(1.14)"><i class="fa-solid fa-arrow-up-from-bracket" aria-hidden="true"></i>{{ fbxLoadLabel }}</button>
+            <sc-if value="{{ hasFbx }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ onUnloadMesh }}" style="{{ utilBtn }}" style-hover="border-color:#DA1E28;color:#DA1E28"><i class="fa-solid fa-trash" aria-hidden="true"></i>Remove model</button>
+            </sc-if>
+              </div>
               <div onClick="{{ onPickFbx }}" style="{{ fbxDropStyle }}">
-                <div style="display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:54px 30px">
-                  <div style="width:54px;height:54px;border:1px solid #4C4741;display:grid;place-items:center;font-size:19px;color:#E8A055;animation:hover 3s ease-in-out infinite">◫</div>
-                  <div style="font-size:23px;font-weight:800;letter-spacing:-0.02em;color:#F3F0EC">Drop a binary .fbx here</div>
-                  <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;color:#827A72;text-transform:uppercase;max-width:520px;line-height:1.7">Materials are read from the mesh, then you assign each one a texture set. Output is a combined BCR / NMO pair plus the mesh with rewritten UVs.</div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;padding:56px 32px">
+                  <div style="width:54px;height:54px;border:1px solid #C6C6C6;display:grid;place-items:center;font-size:20px;color:#161616;animation:hover 3s ease-in-out infinite">◫</div>
+                  <div style="font-size:24px;font-weight:600;letter-spacing:-0.02em;color:#161616">Drop a 3D model (.fbx) here</div>
                   <sc-if value="{{ hasHeld }}" hint-placeholder-val="{{ false }}">
-                    <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid #38342F;background:#1A1817">
-                      <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.14em;color:#E8A055;text-transform:uppercase">{{ heldLabel }}</div>
-                      <button onClick="{{ onDiscardHeld }}" style="{{ utilBtn }}" style-hover="border-color:#BF0625;color:#BF0625">Discard</button>
+                    <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;border:1px solid #C6C6C6;background:#E0E0E0">
+                      <div style="font-family:Inter,sans-serif;font-size:12px;color:#161616">{{ heldLabel }}</div>
+                      <button onClick="{{ onDiscardHeld }}" style="{{ utilBtn }}" style-hover="border-color:#DA1E28;color:#DA1E28">Discard</button>
                     </div>
                   </sc-if>
                 </div>
               </div>
-            </sc-if>
-
+            </div>
             <sc-if value="{{ hasFbx }}" hint-placeholder-val="{{ false }}">
-              <div style="display:flex;flex-direction:column;gap:22px">
+              <div style="display:flex;flex-direction:column;gap:24px">
+            <div class="h0 h2 efk-view">
+                <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+                    <div style="font-family:Inter,sans-serif;font-size:12px;color:#6F6F6F">{{ partsLabel }}</div>
+                    <div style="display:flex;gap:8px">
+                      <button onClick="{{ onClearAllTextures }}" style="{{ utilBtn }}" style-hover="border-color:#161616;color:#161616"><i class="fa-solid fa-eraser" aria-hidden="true"></i>Clear textures</button>
+                      <button onClick="{{ onResetAtlas }}" style="{{ utilBtn }}" style-hover="border-color:#DA1E28;color:#DA1E28"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i>Reset</button>
+                    </div>
+                  </div>
+                  <div style="{{ matListStyle }}">
+                  <sc-for list="{{ atlasMats }}" as="m" hint-placeholder-count="2">
+                    <div style="{{ m.cardStyle }}">
+                      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                        <div style="{{ m.chipStyle }}"><i class="fa-solid fa-chess-board" aria-hidden="true"></i></div>
+                        <div style="flex:1;min-width:120px;display:flex;flex-direction:column;gap:4px">
+                          <input class="efk-name" value="{{ m.name }}" onChange="{{ m.onRename }}" style="appearance:none;background:transparent;border:none;border-bottom:1px solid transparent;color:#161616;font-family:Inter,sans-serif;font-size:16px;font-weight:600;letter-spacing:-0.01em;padding:0px 0;outline:none;min-width:0;width:100%;background-color:transparent !important;" style-focus="border-bottom-color:#161616" />
+                        </div>
+                        <div style="display:flex;gap:4px">
+                          <sc-for list="{{ m.sizes }}" as="z" hint-placeholder-count="4">
+                            <button onClick="{{ z.onClick }}" style="{{ z.style }}">{{ z.label }}</button>
+                          </sc-for>
+                        </div>
+                        <button onClick="{{ m.onRotate }}" style="{{ m.rotStyle }}" style-hover="border-color:#161616;color:#161616"><i class="fa-solid fa-rotate" aria-hidden="true"></i>{{ m.rotLabel }}</button>
+                        <button onClick="{{ m.onClear }}" style="{{ m.clearStyle }}" style-hover="border-color:#DA1E28;color:#DA1E28">✕</button>
+                      </div>
+                      <div style="display:grid;grid-template-columns:repeat(5,minmax(0,96px));gap:8px">
+                        <sc-for list="{{ m.slots }}" as="slot" hint-placeholder-count="5">
+                          <div onClick="{{ slot.onPick }}" style="{{ slot.zoneStyle }}">
+                            <sc-if value="{{ slot.filled }}" hint-placeholder-val="{{ false }}">
+                              {{ slot.thumb }}
+                            </sc-if>
+                            <sc-if value="{{ slot.emptyState }}" hint-placeholder-val="{{ true }}">
+                              <span style="font-family:Inter,sans-serif;font-size:12px;color:#6F6F6F;text-align:center;padding:4px;pointer-events:none">{{ slot.short }}</span>
+                            </sc-if>
+                            <sc-if value="{{ slot.filled }}" hint-placeholder-val="{{ false }}">
+                              <button onClick="{{ slot.onRemove }}" style="position:absolute;top:0;right:0;z-index:3;appearance:none;border:none;background:rgba(255,255,255,.9);color:#525252;font-size:12px;line-height:1;padding:4px 4px;cursor:pointer;transition:color .15s" style-hover="color:#DA1E28">✕</button>
+                            </sc-if>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </sc-for>
+                  </div>
+                </div>
+            </div>
+            <div class="h0 h1 efk-view">
+              <div class="efk-tools">
+                <button onClick="{{ onAutoPack }}" style="{{ utilBtn }}" style-hover="border-color:#161616;color:#161616"><i class="fa-solid fa-table-cells" aria-hidden="true"></i>Auto-arrange</button>
+                <button onClick="{{ onSmallestFit }}" style="{{ utilBtn }}" style-hover="border-color:#161616;color:#161616"><i class="fa-solid fa-compress" aria-hidden="true"></i>Smallest sheet</button>
+                <button onClick="{{ onExportAtlas }}" disabled="{{ atlasExportDisabled }}" style="{{ atlasExportStyle }}" style-hover="filter:brightness(1.14)"><i class="fa-solid fa-download" aria-hidden="true"></i>{{ atlasExportLabel }}</button>
+              </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;align-items:start">
 
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:22px;align-items:start">
-
-                  <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
-                    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-                      <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.26em;color:#827A72;text-transform:uppercase">Atlas layout</div>
-                      <div style="display:flex;gap:5px;align-items:center">
+                  <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+                      <div style="font-family:Inter,sans-serif;font-size:12px;color:#6F6F6F">Sheet size</div>
+                      <div style="display:flex;gap:4px;align-items:center">
                         <select value="{{ atlasW }}" onChange="{{ onAtlasW }}" style="{{ atlasSelStyle }}">
                           <sc-for list="{{ atlasSizeOpts }}" as="o" hint-placeholder-count="4">
                             <option value="{{ o.value }}">{{ o.label }}</option>
                           </sc-for>
                         </select>
-                        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#827A72">×</span>
+                        <span style="font-family:Inter,sans-serif;font-size:12px;color:#6F6F6F">×</span>
                         <select value="{{ atlasH }}" onChange="{{ onAtlasH }}" style="{{ atlasSelStyle }}">
                           <sc-for list="{{ atlasSizeOpts }}" as="o" hint-placeholder-count="4">
                             <option value="{{ o.value }}">{{ o.label }}</option>
@@ -551,93 +644,60 @@
                         </div>
                       </sc-for>
                     </div>
-                    <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;color:#827A72;text-transform:uppercase">
+                    <div style="display:flex;justify-content:space-between;font-family:Inter,sans-serif;font-size:12px;color:#6F6F6F">
                       <span>{{ atlasDims }}</span>
                       <span>{{ atlasFill }}</span>
                     </div>
                   </div>
 
-                  <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
-                    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-                      <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.26em;color:#827A72;text-transform:uppercase">Mesh check</div>
+                  <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+                      <div style="font-family:Inter,sans-serif;font-size:12px;color:#6F6F6F">3D preview</div>
                       <div style="display:flex;gap:4px">
                         <sc-for list="{{ previewModes }}" as="p" hint-placeholder-count="2">
                           <button onClick="{{ p.onClick }}" style="{{ p.style }}">{{ p.label }}</button>
                         </sc-for>
                       </div>
                     </div>
-                    <div ref="{{ viewportRef }}" style="width:100%;height:280px;border:1px solid #38342F;background:radial-gradient(120% 100% at 50% 118%,#3D9B05 0%,#16330A 38%,#1B1917 76%,#141312 100%);position:relative;overflow:hidden;cursor:grab;touch-action:none"></div>
+                    <div ref="{{ viewportRef }}" style="width:100%;height:340px;border:1px solid #C6C6C6;background:radial-gradient(120% 100% at 50% 110%,#3D3D3D 0%,#262626 45%,#161616 100%);position:relative;overflow:hidden;cursor:grab;touch-action:none"></div>
                     <div style="display:flex;align-items:center;gap:12px">
-                      <div ref="{{ lightRef }}" onPointerDown="{{ onLightDown }}" onPointerMove="{{ onLightMove }}" onPointerUp="{{ onLightUp }}" style="width:44px;height:44px;flex:none;border:1px solid #4C4741;border-radius:50%;position:relative;cursor:grab;touch-action:none;background:radial-gradient(circle at 50% 50%,#211E1C,#141312)">
+                      <div ref="{{ lightRef }}" onPointerDown="{{ onLightDown }}" onPointerMove="{{ onLightMove }}" onPointerUp="{{ onLightUp }}" style="width:44px;height:44px;flex:none;border:1px solid #C6C6C6;border-radius:50%;position:relative;cursor:grab;touch-action:none;background:radial-gradient(circle at 50% 50%,#F4F4F4,#F4F4F4)">
                         <div style="{{ lightDotStyle }}"></div>
                       </div>
-                      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;color:#827A72;text-transform:uppercase;line-height:1.7">Drag the disc to move the light<br />Drag the viewport to orbit</div>
+                      <div style="font-family:Inter,sans-serif;font-size:12px;color:#6F6F6F;line-height:1.7">Drag the disc to move the light<br />Drag the viewport to orbit</div>
                     </div>
                   </div>
 
                 </div>
-
-                <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
-                  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-                    <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.26em;color:#827A72;text-transform:uppercase">Detected materials</div>
-                    <div style="display:flex;gap:6px">
-                      <button onClick="{{ onClearAllTextures }}" style="{{ utilBtn }}" style-hover="border-color:#E8A055;color:#E8A055">Clear textures</button>
-                      <button onClick="{{ onResetAtlas }}" style="{{ utilBtn }}" style-hover="border-color:#BF0625;color:#BF0625">Reset</button>
-                    </div>
-                  </div>
-                  <div style="{{ matListStyle }}">
-                  <sc-for list="{{ atlasMats }}" as="m" hint-placeholder-count="2">
-                    <div style="{{ m.cardStyle }}">
-                      <div style="display:flex;align-items:center;gap:11px;flex-wrap:wrap">
-                        <div style="{{ m.chipStyle }}"></div>
-                        <div style="flex:1;min-width:120px;display:flex;flex-direction:column;gap:2px">
-                          <input value="{{ m.name }}" onChange="{{ m.onRename }}" style="appearance:none;background:transparent;border:none;border-bottom:1px solid transparent;color:#F3F0EC;font-family:Archivo,sans-serif;font-size:15px;font-weight:800;letter-spacing:-0.01em;padding:1px 0;outline:none;min-width:0;width:100%" style-focus="border-bottom-color:#BF6505" />
-                          <div style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.16em;color:#827A72;text-transform:uppercase">{{ m.meta }}</div>
-                        </div>
-                        <div style="display:flex;gap:4px">
-                          <sc-for list="{{ m.sizes }}" as="z" hint-placeholder-count="4">
-                            <button onClick="{{ z.onClick }}" style="{{ z.style }}">{{ z.label }}</button>
-                          </sc-for>
-                        </div>
-                        <button onClick="{{ m.onRotate }}" style="{{ m.rotStyle }}" style-hover="border-color:#E8A055;color:#E8A055">{{ m.rotLabel }}</button>
-                        <button onClick="{{ m.onClear }}" style="{{ m.clearStyle }}" style-hover="border-color:#BF0625;color:#BF0625">✕</button>
-                      </div>
-                      <div style="display:grid;grid-template-columns:repeat(5,minmax(0,96px));gap:6px">
-                        <sc-for list="{{ m.slots }}" as="slot" hint-placeholder-count="5">
-                          <div onClick="{{ slot.onPick }}" style="{{ slot.zoneStyle }}">
-                            <sc-if value="{{ slot.filled }}" hint-placeholder-val="{{ false }}">
-                              {{ slot.thumb }}
-                            </sc-if>
-                            <sc-if value="{{ slot.emptyState }}" hint-placeholder-val="{{ true }}">
-                              <span style="font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.14em;color:#827A72;text-align:center;padding:3px;pointer-events:none">{{ slot.short }}</span>
-                            </sc-if>
-                            <sc-if value="{{ slot.filled }}" hint-placeholder-val="{{ false }}">
-                              <button onClick="{{ slot.onRemove }}" style="position:absolute;top:0;right:0;z-index:3;appearance:none;border:none;background:rgba(20,19,18,.82);color:#ABA49B;font-size:9px;line-height:1;padding:3px 4px;cursor:pointer;transition:color .15s" style-hover="color:#BF0625">✕</button>
-                            </sc-if>
-                          </div>
-                        </sc-for>
-                      </div>
-                    </div>
-                  </sc-for>
-                  </div>
-                </div>
+            </div>
               </div>
             </sc-if>
 
           </div>
         </sc-if>
+        </div>
+
+        <div class="efk-bar">
+          <div class="efk-status">{{ barTitle }}</div>
+          <div class="efk-bar-actions">
+            <sc-if value="{{ canBack }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ onStepBack }}" style="{{ utilBtn }}"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i>Back</button>
+            </sc-if>
+            <sc-if value="{{ notLast }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ onStepNext }}" disabled="{{ nextDisabled }}" style="{{ nextStyle }}">Continue<i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+            </sc-if>
+          </div>
+        </div>
 
       </div>
       </div>
 
-      <div style="display:flex;justify-content:flex-start;gap:20px;padding:12px 28px;border-top:1px solid #38342F;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;color:#ABA49B;text-transform:uppercase;flex-wrap:wrap">
-        <div>{{ footerStatus }}</div>
       </div>
     </div>
   </div>
 
 
-  <div style="position:fixed;right:20px;bottom:20px;z-index:80;display:flex;flex-direction:column;gap:8px;max-width:360px">
+  <div class="efk-toasts" style="position:fixed;right:20px;top:20px;z-index:80;display:flex;flex-direction:column;gap:8px;max-width:360px">
     <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="0">
       <div style="{{ t.style }}">{{ t.message }}</div>
     </sc-for>
@@ -1030,7 +1090,7 @@ class Component extends DCLogic {
     phase: "idle", dirName: "", unsupported: false, errorMsg: "",
     scanPhase: "", scanned: 0, metas: 0, ematCount: 0,
     rows: [], skipped: 0, ignored: 0, expanded: null, backup: true,
-    dragOver: false, doneMsg: "", applying: false,
+    dragOver: false, doneMsg: "", applying: false, viewStep: {},
     // module 2
     sets: [], nextSetId: 1, settingsOpen: false, texDragOver: false,
     settings: { defaultResolution: 2048, defaultExportFormat: "tga", textureAliases: DEFAULT_ALIASES.map(a => Object.assign({}, a)) },
@@ -2196,7 +2256,7 @@ class Component extends DCLogic {
     const mesh = new THREE.Mesh(geo, this.state.previewMode === "zones" ? zoneMat : texMat);
     const c = geo.boundingSphere.center, r = geo.boundingSphere.radius || 1;
     mesh.position.set(-c.x, -c.y, -c.z);
-    const outline = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x2c5c07, side: THREE.BackSide }));
+    const outline = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.BackSide }));
     outline.position.copy(mesh.position).multiplyScalar(1.022);
     outline.scale.setScalar(1.022);
     const axisFix = new THREE.Group();
@@ -2206,10 +2266,10 @@ class Component extends DCLogic {
     const group = new THREE.Group();
     group.add(axisFix);
     scene.add(group);
-    const key = new THREE.DirectionalLight(0xfff0dc, 2.4);
+    const key = new THREE.DirectionalLight(0xffffff, 2.4);
     scene.add(key);
-    scene.add(new THREE.AmbientLight(0x6b4a26, 1.1));
-    scene.add(new THREE.HemisphereLight(0xffe9cf, 0x16330a, .6));
+    scene.add(new THREE.AmbientLight(0x8c8c8c, 1.1));
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x262626, .6));
 
     const st = { rx: -0.3, ry: 0.65, dist: r * 3.1, radius: r, idleAt: performance.now() };
     const v = { renderer, scene, cam, group, mesh, zoneMat, texMat, st, el, alive: true };
@@ -2330,12 +2390,12 @@ class Component extends DCLogic {
       noFbx: !s.fbxInfo, hasFbx: !!s.fbxInfo,
       fbxSummary: s.fbxInfo
         ? s.fbxName + ", " + s.atlasMats.length + (s.atlasMats.length === 1 ? " material" : " materials") + ", " + s.fbxInfo.meshes.length + (s.fbxInfo.meshes.length === 1 ? " mesh" : " meshes")
-        : "No mesh loaded",
-      fbxLoadStyle: this.btn("primary", false),
-      fbxLoadLabel: s.fbxInfo ? "↥ Swap .FBX" : "↥ Load .FBX",
+        : "No model loaded yet",
+      fbxLoadStyle: this.btn("ghost", false),
+      fbxLoadLabel: s.fbxInfo ? "Swap model" : "Load a model (.fbx)",
       ghostBtn: this.btn("ghost", false),
-      matListStyle: "display:flex;flex-direction:column;gap:12px;max-height:462px;overflow-y:auto;overflow-x:hidden;padding-right:8px",
-      utilBtn: "appearance:none;border:1px solid #4C4741;background:transparent;color:#ABA49B;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;padding:6px 9px;cursor:pointer;transition:all .15s",
+      matListStyle: "display:flex;flex-direction:column;gap:12px;",
+      utilBtn: this.btn("ghost", false), primaryBtn: this.btn("primary", false),
       onUnloadMesh: () => this.unloadMesh(),
       hasHeld: !s.fbxInfo && !!(this._texPool && this._texPool.length),
       heldLabel: (this._texPool ? this._texPool.length : 0) + ((this._texPool && this._texPool.length === 1) ? " texture set held for the next mesh" : " texture sets held for the next mesh"),
@@ -2343,8 +2403,8 @@ class Component extends DCLogic {
       onClearAllTextures: () => this.clearAllTextures(),
       onResetAtlas: () => this.resetAtlas(),
       atlasAreaDrag: s.atlasAreaDrag,
-      atlasAreaStyle: "position:relative;display:flex;flex-direction:column;gap:18px;animation:rise .3s ease both;padding:2px;transition:all .18s;" +
-        (s.atlasAreaDrag ? "outline:1px dashed #BF6505;outline-offset:8px;background:rgba(191,101,5,.07)" : ""),
+      atlasAreaStyle: "position:relative;display:flex;flex-direction:column;gap:20px;animation:rise .3s ease both;transition:all .18s;" +
+        (s.atlasAreaDrag ? "outline:1px dashed #161616;outline-offset:8px;background:rgba(255,90,31,.07)" : ""),
       onAtlasAreaDragOver: (e) => { e.preventDefault(); if (!s.atlasAreaDrag) this.setState({ atlasAreaDrag: true }); },
       onAtlasAreaDragLeave: (e) => { if (e.currentTarget.contains(e.relatedTarget)) return; this.setState({ atlasAreaDrag: false }); },
       onAtlasAreaDrop: (e) => {
@@ -2354,9 +2414,9 @@ class Component extends DCLogic {
       },
       atlasExportDisabled: !ready || s.atlasBusy,
       atlasExportStyle: this.btn("primary", !ready || s.atlasBusy),
-      atlasExportLabel: s.atlasBusy ? "⟳ Working" : ready ? "⬇ Export BCR, NMO, FBX" : "⬇ Fill every slot to export",
-      fbxDropStyle: "cursor:pointer;transition:all .16s;background-blend-mode:multiply;" +
-        (s.fbxDragOver ? "border:1px solid #BF6505;background:rgba(191,101,5,.28)" : "border:1px dashed #4C4741;background:rgba(178,168,156,.10)"),
+      atlasExportLabel: s.atlasBusy ? "⟳ Working" : ready ? "Export combined files" : s.fbxInfo ? "Fill every slot to export" : "Load a model to export",
+      fbxDropStyle: "cursor:pointer;transition:all .16s;;" +
+        (s.fbxDragOver ? "border:1px solid #161616;background:rgba(255,90,31,.10)" : "border:1px dashed #C6C6C6;background:rgba(23,20,31,.025)"),
       onPickFbx: () => this.pickFbx(),
       onFbxDragOver: (e) => { e.preventDefault(); if (!s.fbxDragOver) this.setState({ fbxDragOver: true }); },
       onFbxDragLeave: () => this.setState({ fbxDragOver: false }),
@@ -2368,56 +2428,56 @@ class Component extends DCLogic {
       },
       onAutoPack: () => { const fit = this.packInto(s.atlasMats, W, H); if (fit) { this.setState({ atlasMats: fit }); this.queuePreview(); this.toast("Tiles re-packed"); } else this.smallestFit(); },
       onSmallestFit: () => this.smallestFit(),
-      onExportAtlas: () => this.exportAtlas(),
+      onExportAtlas: () => { if (!this.state.demo) this.exportAtlas(); },
       atlasSizeOpts: ATLAS_SIZES.map(v => ({ value: v, label: String(v) })),
-      atlasSelStyle: "appearance:none;background:#211E1C;border:1px solid #4C4741;color:#DCD6CE;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;padding:5px 7px;cursor:pointer",
+      atlasSelStyle: "appearance:none;background:#F4F4F4;border:1px solid #C6C6C6;color:#262626;font-family:Inter,sans-serif;font-size:12px;padding:4px 8px;cursor:pointer",
       atlasW: W, atlasH: H,
       onAtlasW: (e) => this.repack(null, Number(e.target.value), H),
       onAtlasH: (e) => this.repack(null, W, Number(e.target.value)),
       atlasRef: this.atlasRef,
-      atlasBoxStyle: "position:relative;width:100%;aspect-ratio:" + W + " / " + H + ";border:1px solid #4C4741;background:#141312;overflow:hidden;touch-action:none",
-      atlasGridStyle: "position:absolute;inset:0;pointer-events:none;opacity:.5;background-image:linear-gradient(#38342F 1px,transparent 1px),linear-gradient(90deg,#38342F 1px,transparent 1px);background-size:" + (GRID / W * 100) + "% " + (GRID / H * 100) + "%",
+      atlasBoxStyle: "position:relative;width:100%;aspect-ratio:" + W + " / " + H + ";border:1px solid #C6C6C6;background:#F4F4F4;overflow:hidden;touch-action:none",
+      atlasGridStyle: "position:absolute;inset:0;pointer-events:none;opacity:.5;background-image:linear-gradient(#C6C6C6 1px,transparent 1px),linear-gradient(90deg,#C6C6C6 1px,transparent 1px);background-size:" + (GRID / W * 100) + "% " + (GRID / H * 100) + "%",
       atlasDims: W + " × " + H + ", " + GRID + " grid",
       atlasFill: Math.round(used / (W * H) * 100) + "% used",
       atlasTiles: s.atlasMats.map(m => ({
         label: m.tile + (m.rot ? " ↻" : ""),
-        thumb: thumbEl(m.textures.basecolor, { position: "absolute", inset: 0, opacity: .72 }),
+        thumb: thumbEl(m.textures.basecolor, { position: "absolute", inset: 0 }),
         style: "position:absolute;left:" + (m.x / W * 100) + "%;top:" + (m.y / H * 100) + "%;width:" + (m.tile / W * 100) + "%;height:" + (m.tile / H * 100) + "%;" +
           "border:2px solid " + m.color + ";box-sizing:border-box;overflow:hidden;cursor:grab;touch-action:none;display:grid;place-items:center;" +
-          "background-color:rgba(18,13,7,.6);transition:opacity .12s;" + (s.tileDrag === m.id ? "z-index:5;opacity:.85" : "z-index:2"),
-        labelStyle: "position:relative;z-index:2;font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.12em;color:" + m.color + ";background:rgba(20,19,18,.82);padding:2px 5px;pointer-events:none;text-align:center;max-width:96%;overflow:hidden;white-space:nowrap",
+          "background-color:#262626;transition:opacity .12s;" + (s.tileDrag === m.id ? "z-index:5;opacity:.85" : "z-index:2"),
+        labelStyle: "position:relative;z-index:2;font-family:Inter,sans-serif;font-size:12px;color:" + m.color + ";background:rgba(255,255,255,.9);padding:4px 4px;pointer-events:none;text-align:center;max-width:96%;overflow:hidden;white-space:nowrap",
         onDown: (e) => this.tileDown(m.id, e)
       })),
       onTileMove: (e) => this.tileMove(e),
       onTileUp: () => this.tileUp(),
-      previewModes: [["zones", "Zones"], ["textured", "Textured"]].map(([v, label]) => ({
+      previewModes: [["zones", "By part"], ["textured", "Textured"]].map(([v, label]) => ({
         label,
-        style: "appearance:none;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;padding:5px 9px;cursor:pointer;transition:all .15s;" +
-          (s.previewMode === v ? "border:1px solid #BF6505;background:#BF6505;color:#2A1601" : "border:1px solid #4C4741;background:transparent;color:#ABA49B"),
+        style: "appearance:none;font-family:Inter,sans-serif;font-size:12px;padding:4px 8px;cursor:pointer;transition:all .15s;" +
+          (s.previewMode === v ? "border:1px solid #161616;background:#161616;color:#FFFFFF" : "border:1px solid #C6C6C6;background:transparent;color:#525252"),
         onClick: () => this.setPreviewMode(v)
       })),
       viewportRef: this.viewportRef,
       lightRef: this.lightRef,
-      lightDotStyle: "position:absolute;width:9px;height:9px;background:#E8A055;border-radius:50%;pointer-events:none;box-shadow:0 0 9px #BF6505;left:" + (s.lightX * 100) + "%;top:" + (s.lightY * 100) + "%;transform:translate(-50%,-50%)",
+      lightDotStyle: "position:absolute;width:9px;height:9px;background:#161616;border-radius:50%;pointer-events:none;left:" + (s.lightX * 100) + "%;top:" + (s.lightY * 100) + "%;transform:translate(-50%,-50%)",
       onLightDown: (e) => { this._lightDown = true; if (e.currentTarget.setPointerCapture) e.currentTarget.setPointerCapture(e.pointerId); this.lightDrag(e); },
       onLightMove: (e) => { if (this._lightDown) this.lightDrag(e); },
       onLightUp: () => { this._lightDown = false; },
       atlasMats: s.atlasMats.map(m => ({
         name: m.name,
         meta: m.polys + (m.polys === 1 ? " polygon" : " polygons") + ", " + m.tile + " px tile, " + Object.keys(m.textures).length + "/5 maps",
-        cardStyle: "display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid #38342F;background:#1A1817",
-        chipStyle: "width:12px;height:34px;flex:none;background:" + m.color,
+        cardStyle: "display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid #C6C6C6;background:#F4F4F4",
+        chipStyle: "width:32px;height:32px;flex:none;display:grid;place-items:center;color:#FFFFFF;font-size:16px;background:" + m.color,
         onRename: (e) => this.patchMat(m.id, { name: e.target.value }),
         onRotate: () => { this.patchMat(m.id, { rot: m.rot ? 0 : 90 }); this.queuePreview(); },
-        rotLabel: m.rot ? "↻ 90°" : "↻ 0°",
+        rotLabel: m.rot ? "90°" : "0°",
         onClear: () => this.clearMatTextures(m.id),
-        clearStyle: "appearance:none;font-family:'JetBrains Mono',monospace;font-size:9px;padding:5px 7px;cursor:pointer;transition:all .15s;border:1px solid #4C4741;background:transparent;color:#ABA49B",
-        rotStyle: "appearance:none;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;padding:5px 8px;cursor:pointer;transition:all .15s;" +
-          (m.rot ? "border:1px solid #BF6505;background:transparent;color:#E8A055" : "border:1px solid #4C4741;background:transparent;color:#ABA49B"),
+        clearStyle: "appearance:none;font-family:Inter,sans-serif;font-size:12px;padding:4px 8px;cursor:pointer;transition:all .15s;border:1px solid #C6C6C6;background:transparent;color:#525252",
+        rotStyle: "appearance:none;font-family:Inter,sans-serif;font-size:12px;padding:4px 8px;cursor:pointer;transition:all .15s;" +
+          (m.rot ? "border:1px solid #161616;background:transparent;color:#161616" : "border:1px solid #C6C6C6;background:transparent;color:#525252"),
         sizes: ATLAS_SIZES.map(v => ({
           label: v === 4096 ? "4K" : v === 2048 ? "2K" : v === 1024 ? "1K" : "512",
-          style: "appearance:none;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;padding:5px 7px;cursor:pointer;transition:all .15s;" +
-            (m.tile === v ? "border:1px solid #BF6505;background:#BF6505;color:#2A1601" : "border:1px solid #4C4741;background:transparent;color:#ABA49B"),
+          style: "appearance:none;font-family:Inter,sans-serif;font-size:12px;padding:4px 8px;cursor:pointer;transition:all .15s;" +
+            (m.tile === v ? "border:1px solid #161616;background:#161616;color:#FFFFFF" : "border:1px solid #C6C6C6;background:transparent;color:#525252"),
           onClick: () => this.setTile(m.id, v)
         })),
         slots: TYPES.map(type => {
@@ -2425,7 +2485,7 @@ class Component extends DCLogic {
           return {
             short: shortLabel[type], thumb: thumbEl(img), filled: !!img, emptyState: !img,
             zoneStyle: "position:relative;aspect-ratio:1;display:grid;place-items:center;cursor:pointer;overflow:hidden;transition:all .16s;" +
-              (img ? "border:1px solid " + m.color + ";background-color:#141312" : "border:1px dashed #4C4741;background-color:#211E1C"),
+              (img ? "border:1px solid #C6C6C6;background-color:#F4F4F4" : "border:1px dashed #A8A8A8;background-color:#F4F4F4"),
             onPick: () => this.openAtlasPicker(m.id, type),
             onRemove: (e) => {
               e.stopPropagation();
@@ -2443,30 +2503,73 @@ class Component extends DCLogic {
   /* ================= view helpers ================= */
 
   box(checked, disabled) {
-    return "width:16px;height:16px;flex:none;display:grid;place-items:center;font-size:10px;line-height:1;font-family:'JetBrains Mono',monospace;transition:all .15s;" +
-      (disabled ? "cursor:default;opacity:.3;border:1px solid #4C4741;background:transparent;color:transparent"
-        : checked ? "cursor:pointer;border:1px solid #BF6505;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601"
-                  : "cursor:pointer;border:1px solid #4C4741;background:transparent;color:transparent");
+    return "width:16px;height:16px;flex:none;display:grid;place-items:center;font-size:12px;line-height:1;font-family:Inter,sans-serif;transition:all .15s;" +
+      (disabled ? "cursor:default;opacity:.3;border:1px solid #C6C6C6;background:transparent;color:transparent"
+        : checked ? "cursor:pointer;border:1px solid #161616;background:#161616;color:#FFFFFF"
+                  : "cursor:pointer;border:1px solid #C6C6C6;background:transparent;color:transparent");
+  }
+
+  /* Header and stepper for the active task. Each task has three steps; only
+     the current one is shown, and earlier ones stay reachable. */
+  briefView() {
+    const s = this.state;
+    const mats = s.atlasMats || [], sets = s.sets || [], files = s.tgaFiles || [];
+    const TYPES5 = ["normal", "ao", "metallic", "basecolor", "roughness"];
+    const full = t => t && TYPES5.every(k => t[k]);
+    const matsDone = mats.filter(m => full(m.textures)).length, setsDone = sets.filter(x => full(x.textures)).length;
+    const resized = files.filter(f => f.status === "done").length;
+    const tasks = {
+      4: { title: "Atlas combine", steps: ["Load model", "Add textures", "Arrange"],
+           max: !s.fbxInfo ? 0 : (mats.length && matsDone === mats.length) ? 2 : 1, start: null,
+           status: !s.fbxInfo ? "" : matsDone === mats.length ? "Ready to export" : matsDone + " of " + mats.length + " parts complete" },
+      2: { title: "Texture pack", steps: ["Add files", "Check maps", "Export"],
+           max: sets.length ? 2 : 0, start: !sets.length ? 0 : setsDone === sets.length ? 2 : 1,
+           status: !sets.length ? "" : setsDone + " of " + sets.length + " ready" },
+      3: { title: "Resize", steps: ["Add files", "Pick sizes", "Resize"],
+           max: files.length ? 2 : 0, start: files.length ? 1 : 0,
+           status: resized ? resized + " of " + files.length + " resized" : "" },
+      1: { title: "Material patch", steps: ["Choose folder", "Review", "Apply"],
+           max: s.phase === "results" ? 2 : 0, start: s.phase === "results" ? 1 : 0, status: "" }
+    };
+    const t = tasks[s.module] || tasks[4];
+    const picked = (s.viewStep || {})[s.module];
+    const view = Math.max(0, Math.min(picked == null ? (t.start == null ? t.max : t.start) : picked, t.max));
+    const go = i => this.setState({ viewStep: Object.assign({}, s.viewStep, { [s.module]: i }) });
+    return {
+      briefTitle: t.title,
+      briefSteps: t.steps.map((label, i) => ({
+        label, n: "0" + (i + 1), disabled: i > t.max, onClick: () => go(i),
+        cls: "efk-stepbtn" + (i === view ? " is-now" : i <= t.max ? " is-avail" : "")
+      })),
+      viewCls: "efk-views v" + view,
+      barTitle: view === 2 ? t.status : "",
+      canBack: view > 0, onStepBack: () => go(view - 1),
+      notLast: view < 2, onStepNext: () => go(view + 1), nextDisabled: view >= t.max,
+      nextStyle: this.btn("primary", view >= t.max),
+      fin1: view === 2 && s.module === 1, fin2: view === 2 && s.module === 2, fin3: view === 2 && s.module === 3, fin4: view === 2 && s.module === 4,
+      partsLabel: mats.length + (mats.length === 1 ? " part" : " parts"),
+    };
   }
 
   btn(kind, disabled) {
-    const base = "appearance:none;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:9px 14px;transition:all .15s;white-space:nowrap;";
-    if (disabled) return base + "border:1px solid #38342F;background:transparent;color:#4C4741;cursor:not-allowed";
-    if (kind === "primary") return base + "border:none;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601;font-weight:700;cursor:pointer";
-    if (kind === "hazard") return base + "border:1px solid #BF0625;background:transparent;color:#BF0625;cursor:pointer";
-    return base + "border:1px solid #4C4741;background:transparent;color:#DCD6CE;cursor:pointer";
+    const big = false;
+    const base = "appearance:none;font-family:Inter,sans-serif;font-size:12px;font-weight:600;height:" + (big ? 40 : 32) + "px;padding:0 " + (big ? 20 : 16) + "px;transition:all .15s;white-space:nowrap;";
+    if (disabled) return base + "border:1px solid #C6C6C6;background:transparent;color:#A8A8A8;cursor:not-allowed";
+    if (kind === "primary") return base + "border:1px solid #161616;background:#161616;color:#FFFFFF;cursor:pointer";
+    if (kind === "hazard") return base + "border:1px solid #DA1E28;background:transparent;color:#DA1E28;cursor:pointer";
+    return base + "border:1px solid #8D8D8D;background:transparent;color:#161616;cursor:pointer";
   }
 
   badge(status) {
     const map = {
-      ready: ["needs patch", "#2A1601", "#BF6505", "#BF6505"],
-      working: ["writing…", "#DCD6CE", "transparent", "#ABA49B"],
-      updated: ["patched", "#E8A055", "transparent", "#BF6505"],
-      missing: ["maps missing", "#ABA49B", "transparent", "#4C4741"],
-      error: ["error", "#BF0625", "transparent", "#BF0625"]
+      ready: ["needs patch", "#FFFFFF", "#161616", "#161616"],
+      working: ["writing…", "#262626", "transparent", "#525252"],
+      updated: ["patched", "#161616", "transparent", "#161616"],
+      missing: ["maps missing", "#525252", "transparent", "#C6C6C6"],
+      error: ["error", "#DA1E28", "transparent", "#DA1E28"]
     };
     const b = map[status] || map.error;
-    return "font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;padding:5px 9px;white-space:nowrap;color:" +
+    return "font-family:Inter,sans-serif;font-size:12px;padding:4px 8px;white-space:nowrap;color:" +
       b[1] + ";background:" + b[2] + ";border:1px solid " + b[3];
   }
 
@@ -2483,13 +2586,13 @@ class Component extends DCLogic {
       /* Each tab icon is up to three stacked Font Awesome layers: a faint plate,
          the subject glyph, and an optional accent. Layers are absolutely centered
          in a fixed 34px box so the rail keeps its rhythm open or collapsed. */
-      { id: 4, code: "01", title: "Atlas combine", sub: "merge, rewrite UVs",
+      { id: 4, code: "01", title: "Atlas combine", sub: "Merge textures into one sheet",
         l: [["fa-solid fa-square", 34, .16, "0,0"], ["fa-solid fa-table-cells-large", 17, 1, "-3,-3"], ["fa-solid fa-object-group", 13, .95, "9,9"]] },
-      { id: 2, code: "02", title: "Texture pack", sub: "PBR → BCR, NMO, CRM",
+      { id: 2, code: "02", title: "Texture pack", sub: "Convert to game-ready files",
         l: [["fa-solid fa-square", 34, .16, "0,0"], ["fa-solid fa-layer-group", 18, 1, "0,-2"], ["fa-solid fa-arrow-down-long", 9, .85, "11,8"]] },
-      { id: 3, code: "03", title: "Resize", sub: "in-place resample",
+      { id: 3, code: "03", title: "Resize", sub: "Make textures smaller",
         l: [["fa-solid fa-square", 34, .16, "0,0"], ["fa-solid fa-image", 17, 1, "-3,-3"], ["fa-solid fa-down-left-and-up-right-to-center", 12, .95, "9,9"]] },
-      { id: 1, code: "04", title: "Material patch", sub: "empty .emat → camo",
+      { id: 1, code: "04", title: "Material patch", sub: "Fix empty material files",
         l: [["fa-solid fa-square", 34, .16, "0,0"], ["fa-solid fa-fill-drip", 18, 1, "-2,-1"], ["fa-solid fa-droplet", 8, .85, "9,8"]] }
     ].map(m => {
       const layer = i => {
@@ -2507,9 +2610,9 @@ class Component extends DCLogic {
       icon3: c.cls, icon3Style: c.style,
       onSelect: () => this.setState({ module: m.id }),
       codeStyle: "position:relative;flex:none;width:40px;height:38px;display:grid;place-items:center;opacity:.95",
-      tabStyle: "appearance:none;width:100%;display:flex;flex-direction:row;gap:11px;align-items:center;text-align:left;padding:" + (open ? "16px 18px" : "16px 8px") +
-        ";min-height:64px;cursor:pointer;transition:all .18s;border:none;border-bottom:1px solid #38342F;font-family:Archivo,sans-serif;" +
-        (s.module === m.id ? "background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601" : "background:transparent;color:#ABA49B")
+      tabStyle: "appearance:none;width:100%;display:flex;flex-direction:row;gap:12px;align-items:center;text-align:left;padding:12px 16px" +
+        ";min-height:72px;cursor:pointer;transition:background .15s;border:none;border-right:1px solid #C6C6C6;font-family:Inter,sans-serif;color:#161616;" +
+        (s.module === m.id ? "background:#FFFFFF;border-top:4px solid #FF5A1F" : "background:transparent;border-top:4px solid transparent")
       };
     });
 
@@ -2526,13 +2629,13 @@ class Component extends DCLogic {
         bcrName: sanitize(set.name) + "_bcr." + set.exportFormat,
         nmoName: sanitize(set.name) + "_nmo." + set.exportFormat,
         crmThumb: thumbEl(s.previews[set.id] || ""),
-        crmPreviewStyle: "width:100%;max-width:170px;aspect-ratio:1;border:1px solid #38342F;object-fit:cover;display:block;background-color:#141312",
+        crmPreviewStyle: "width:100%;max-width:170px;aspect-ratio:1;border:1px solid #C6C6C6;object-fit:cover;display:block;background-color:#F4F4F4",
         crmMissing: !canCRM,
-        statusText: complete ? "STATUS: COMPLETE" : filled + " / 5 MAPS LOADED",
-        statusStyle: "font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;padding:5px 9px;text-transform:uppercase;" +
-          (complete ? "background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601" : "border:1px solid #4C4741;color:#ABA49B"),
+        statusText: complete ? "✓ All 5 maps loaded" : filled + " of 5 maps loaded",
+        statusStyle: "font-family:Inter,sans-serif;font-size:12px;padding:4px 8px;" +
+          (complete ? "border:1px solid #161616;color:#161616" : "border:1px solid #C6C6C6;color:#525252"),
         exportDisabled, crmDisabled,
-        exportStyle: this.btn("primary", exportDisabled),
+        exportStyle: this.btn("ghost", exportDisabled),
         crmStyle: this.btn("ghost", crmDisabled),
         onName: (e) => this.patchSet(set.id, { name: e.target.value }),
         onRes: (e) => this.patchSet(set.id, { resolution: Number(e.target.value) }),
@@ -2546,8 +2649,8 @@ class Component extends DCLogic {
           return {
             label: TYPE_LABELS[type], hint: CHANNEL_HINTS[type], thumb: thumbEl(img), filled: !!img, emptyState: !img,
             zoneStyle: "aspect-ratio:1;display:grid;place-items:center;cursor:pointer;overflow:hidden;transition:all .16s;" +
-              (over ? "border:1px solid #BF6505;background-color:rgba(191,101,5,.12)"
-                : img ? "border:1px solid #4C4741;background-color:#141312" : "border:1px dashed #4C4741;background-color:#211E1C"),
+              (over ? "border:1px solid #161616;background-color:rgba(255,90,31,.12)"
+                : img ? "border:1px solid #C6C6C6;background-color:#F4F4F4" : "border:1px dashed #C6C6C6;background-color:#F4F4F4"),
             onPick: () => this.openTexturePicker(set.id, type),
             onDragOver: (e) => { e.preventDefault(); e.stopPropagation(); if (!over) this.setState({ slotDrag: set.id + ":" + type }); },
             onDragLeave: () => this.setState({ slotDrag: null }),
@@ -2566,17 +2669,17 @@ class Component extends DCLogic {
     const tgaRows = s.tgaFiles.map(f => ({
       name: f.name,
       dims: f.width + "×" + f.height + ", " + (f.bytesPerPixel === 4 ? "RGBA" : "RGB") + (f.targetSize !== f.width ? " → " + f.targetSize + "×" + f.targetSize : ""),
-      rowStyle: "display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid #2D2926;flex-wrap:wrap;transition:background .15s;" +
-        (f.status === "error" ? "background:rgba(250,61,30,.07)" : f.status === "done" ? "background:rgba(178,168,156,.05)" : ""),
-      sizes: [["4K", 4096], ["2K", 2048], ["1K", 1024], ["NATIVE", f.nativeWidth]].map(([label, size]) => ({
+      rowStyle: "display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #E0E0E0;flex-wrap:wrap;transition:background .15s;" +
+        (f.status === "error" ? "background:rgba(250,61,30,.07)" : f.status === "done" ? "background:rgba(23,20,31,.02)" : ""),
+      sizes: [["4K", 4096], ["2K", 2048], ["1K", 1024], ["Original", f.nativeWidth]].filter(([label, size]) => label !== "Original" || ![4096, 2048, 1024].includes(size)).map(([label, size]) => ({
         label,
-        style: "appearance:none;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.1em;padding:5px 9px;cursor:pointer;transition:all .15s;" +
-          (f.targetSize === size ? "border:1px solid #BF6505;background:#BF6505;background-image:url('grain.png');background-blend-mode:screen;background-size:260px 260px;color:#2A1601" : "border:1px solid #4C4741;background:transparent;color:#ABA49B"),
+        style: "appearance:none;font-family:Inter,sans-serif;font-size:12px;padding:4px 8px;cursor:pointer;transition:all .15s;" +
+          (f.targetSize === size ? "border:1px solid #161616;background:#161616;color:#FFFFFF" : "border:1px solid #C6C6C6;background:transparent;color:#525252"),
         onClick: () => this.patchTga(f.id, { targetSize: size })
       })),
-      reduceLabel: f.status === "working" ? "⟳ Working" : f.status === "done" ? "✓ Reduced" : f.status === "error" ? "✗ Error" : "⚡ Reduce",
+      reduceLabel: f.status === "working" ? "⟳ Working" : f.status === "done" ? "✓ Reduced" : f.status === "error" ? "✗ Error" : "Resize",
       reduceDisabled: f.status === "working" || s.reducingAll,
-      reduceStyle: this.btn(f.status === "done" ? "ghost" : "primary", f.status === "working" || s.reducingAll),
+      reduceStyle: this.btn("ghost", f.status === "working" || s.reducingAll),
       undoDisabled: !f.modified || f.status === "working",
       undoStyle: this.btn("hazard", !f.modified || f.status === "working"),
       onReduce: () => this.reduceEntry(f.id),
@@ -2591,24 +2694,24 @@ class Component extends DCLogic {
       version: APP_VERSION,
       /* Stays mounted so it can transition out; parked below the viewport when
          idle rather than unmounted, which would kill the exit animation. */
-      activityWrapStyle: "position:fixed;left:28px;bottom:22px;z-index:60;width:min(560px,calc(100vw - 56px));" +
-        "display:flex;align-items:center;gap:14px;padding:12px 20px;border:1px solid #4C4741;background:#211E1C;" +
-        "box-shadow:0 14px 34px rgba(0,0,0,.5);transition:transform .34s cubic-bezier(.2,.9,.3,1.2),opacity .22s ease;" +
-        (s.activity ? "transform:translateY(0);opacity:1" : "transform:translateY(calc(100% + 30px));opacity:0;pointer-events:none"),
+      activityWrapStyle: "position:fixed;left:0;right:0;margin:0 auto;top:16px;z-index:60;width:min(560px,calc(100vw - 32px));box-sizing:border-box;" +
+        "display:flex;align-items:center;gap:16px;padding:12px 20px;border:1px solid #C6C6C6;background:#FFFFFF;" +
+        "transition:transform .34s cubic-bezier(.2,.9,.3,1.2),opacity .22s ease;" +
+        (s.activity ? "transform:translateY(0);opacity:1" : "transform:translateY(calc(-100% - 30px));opacity:0;pointer-events:none"),
       activityLabel: s.activity ? s.activity.label : "",
       activityCount: s.activity && s.activity.total > 1 ? s.activity.done + "/" + s.activity.total : "",
       activityPercent: s.activity ? (s.activity.total ? Math.round((s.activity.done / s.activity.total) * 100) + "%" : "…") : "0%",
-      activityBarStyle: "height:100%;background:#BF6505;transition:width .25s ease;" +
+      activityBarStyle: "height:100%;background:#161616;transition:width .25s ease;" +
         (s.activity
           ? (s.activity.total ? "width:" + Math.round((s.activity.done / s.activity.total) * 100) + "%"
                               : "width:34%;animation:sweep 1.1s ease-in-out infinite")
           : "width:0%"),
-      activityDotStyle: "width:8px;height:8px;flex:none;background:" + (s.activity ? "#BF6505" : "#4C4741") +
+      activityDotStyle: "width:8px;height:8px;flex:none;background:" + (s.activity ? "#161616" : "#C6C6C6") +
         (s.activity ? ";animation:tick 1.1s ease-in-out infinite" : ""),
       modules,
-      railOpen: open,
-      railStyle: "display:flex;flex-direction:column;flex:none;transition:width .22s ease;width:" + (open ? "212px" : "62px"),
-      railToggleStyle: "appearance:none;background:transparent;border:none;border-top:1px solid #38342F;color:#827A72;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;padding:13px 10px;cursor:pointer;transition:all .15s;text-align:" + (open ? "left" : "center"),
+      railOpen: open, railOn: true,
+      railStyle: "display:flex;flex-direction:column;flex:none;transition:width .22s ease;width:" + (open ? "248px" : "64px"),
+      railToggleStyle: "appearance:none;background:transparent;border:none;border-top:1px solid #C6C6C6;color:#6F6F6F;font-family:Inter,sans-serif;font-size:12px;padding:12px 12px;cursor:pointer;transition:all .15s;text-align:" + (open ? "left" : "center"),
       railToggleLabel: open ? "‹ Collapse" : "›",
       onToggleRail: () => this.setState({ railOpen: !s.railOpen }),
       demo: s.demo,
@@ -2616,22 +2719,20 @@ class Component extends DCLogic {
       onDemoMode: () => this.enterDemo(),
       /* The lit half is a single sliding pill rather than a background swap on
          each button, so the state change reads as one movement. */
-      modePillStyle: "position:absolute;top:0;bottom:0;left:0;width:50%;background:#BF6505;background-image:url('grain.png');" +
-        "background-blend-mode:screen;background-size:260px 260px;pointer-events:none;" +
-        "transition:transform .32s cubic-bezier(.5,1.6,.4,1);transform:translateX(" + (s.demo ? "100%" : "0") + ")",
-      prodBtnStyle: "position:relative;appearance:none;border:none;background:transparent;width:118px;padding:8px 0;cursor:pointer;" +
-        "font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;transition:color .22s ease .06s;" +
-        "color:" + (s.demo ? "#ABA49B" : "#2A1601"),
-      demoBtnStyle: "position:relative;appearance:none;border:none;background:transparent;width:118px;padding:8px 0;cursor:pointer;" +
-        "font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;transition:color .22s ease .06s;" +
-        "color:" + (s.demo ? "#2A1601" : "#ABA49B"),
+      modePillStyle: "position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);background:#161616;border-radius:999px;pointer-events:none;" +
+        "transition:transform .24s cubic-bezier(.4,1.2,.4,1);transform:translateX(" + (s.demo ? "100%" : "0") + ")",
+      prodBtnStyle: "position:relative;appearance:none;border:none;background:transparent;width:128px;height:32px;padding:0;cursor:pointer;" +
+        "font-size:12px;font-weight:600;transition:color .2s;color:" + (s.demo ? "#161616" : "#FFFFFF"),
+      demoBtnStyle: "position:relative;appearance:none;border:none;background:transparent;width:128px;height:32px;padding:0;cursor:pointer;" +
+        "font-size:12px;font-weight:600;transition:color .2s;color:" + (s.demo ? "#FFFFFF" : "#161616"),
       isMod1: s.module === 1, isMod2: s.module === 2, isMod3: s.module === 3, isMod4: s.module === 4,
       footerStatus: s.module === 4 ? "TASK 01, ATLAS COMBINE" : s.module === 2 ? "TASK 02, CHANNEL PACK" : s.module === 3 ? "TASK 03, RESAMPLE" : "TASK 04, MATERIAL PATCH",
+      ...this.briefView(),
       ...this.mod4View(),
       toasts: s.toasts.map(t => ({
         message: t.message,
-        style: "border:1px solid " + (t.kind === "error" ? "#BF0625" : t.kind === "success" ? "#BF6505" : "#4C4741") +
-          ";border-left-width:4px;background:#211E1C;padding:10px 13px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.06em;color:#DCD6CE;animation:rise .2s ease both"
+        style: "border:1px solid " + (t.kind === "error" ? "#DA1E28" : t.kind === "success" ? "#161616" : "#C6C6C6") +
+          ";border-left-width:4px;background:#FFFFFF;padding:12px 16px;font-size:12px;color:#262626;animation:rise .2s ease both"
       })),
 
       // module 1
@@ -2639,14 +2740,14 @@ class Component extends DCLogic {
       hasFolder: s.phase !== "idle", canRescan: s.phase === "results" && !s.applying,
       unsupported: s.unsupported, errorMsg: s.errorMsg,
       dirName: s.dirName || "-", ematCount: String(s.ematCount),
-      readyLabel: patched && !ready.length ? "PATCHED" : "NEED PATCHING",
+      readyLabel: patched && !ready.length ? "Patched" : "Need patching",
       readyCount: String(ready.length || patched),
       skipSummary: s.skipped + ", " + s.ignored,
       scanPhaseLabel: s.scanPhase,
       scanDetail: s.scanPhase === "Reading materials" ? s.scanned + " of " + s.ematCount + " materials read" : s.scanned + " files seen, " + s.metas + " descriptors indexed",
       emptyDetail: s.ematCount
-        ? "CHECKED " + s.ematCount + " MATERIAL" + (s.ematCount === 1 ? "" : "S") + " IN " + s.dirName + " - EVERY ONE ALREADY CARRIES A REAL DEFINITION."
-        : "NO .EMAT FILES UNDER " + s.dirName + ". POINT THE UNIT AT THE FOLDER THAT HOLDS YOUR MATERIALS.",
+        ? "Checked " + s.ematCount + " material" + (s.ematCount === 1 ? "" : "s") + " in " + s.dirName + ". Every one is already filled in."
+        : "No material (.emat) files found in " + s.dirName + ". Choose the folder that holds your materials.",
       rows: s.rows.map(r => {
         const selectable = r.status === "ready" && !s.applying;
         return {
@@ -2676,19 +2777,19 @@ class Component extends DCLogic {
       onDragLeave: () => this.setState({ dragOver: false }),
       onDrop: (e) => this.onFolderDrop(e),
       dropStyle: "padding:64px 28px;display:grid;place-items:center;cursor:pointer;position:relative;overflow:hidden;transition:all .2s;" +
-        (s.dragOver ? "border:1px solid #BF6505;background:rgba(191,101,5,.28);background-blend-mode:multiply" : "border:1px dashed #4C4741;background:rgba(178,168,156,.10);background-blend-mode:multiply"),
+        (s.dragOver ? "border:1px solid #161616;background:rgba(255,90,31,.10);" : "border:1px dashed #C6C6C6;background:rgba(23,20,31,.025);"),
 
       // module 2
       sets: setViews, noSets: s.sets.length === 0, hasSets: s.sets.length > 0,
       texDragOver: s.texDragOver,
-      setsAreaStyle: "position:relative;display:flex;flex-direction:column;gap:16px;padding:2px;transition:all .18s;" +
-        (s.texDragOver ? "outline:1px dashed #BF6505;outline-offset:6px;background:rgba(191,101,5,.07)" : ""),
+      setsAreaStyle: "position:relative;display:flex;flex-direction:column;gap:16px;transition:all .18s;" +
+        (s.texDragOver ? "outline:1px dashed #161616;outline-offset:6px;background:rgba(255,90,31,.07)" : ""),
       emptyDropStyle: "padding:64px 24px;display:grid;place-items:center;cursor:pointer;position:relative;overflow:hidden;transition:all .2s;" +
-        (s.texDragOver ? "border:1px solid #BF6505;background:rgba(191,101,5,.28);background-blend-mode:multiply" : "border:1px dashed #4C4741;background:rgba(178,168,156,.10);background-blend-mode:multiply"),
+        (s.texDragOver ? "border:1px solid #161616;background:rgba(255,90,31,.10);" : "border:1px dashed #C6C6C6;background:rgba(23,20,31,.025);"),
       settingsOpen: s.settingsOpen,
       settingsBtnStyle: this.btn(s.settingsOpen ? "primary" : "ghost", false),
       dlAllDisabled: !!s.busy.zip || s.sets.length === 0,
-      dlAllStyle: this.btn("ghost", !!s.busy.zip || s.sets.length === 0),
+      dlAllStyle: this.btn("primary", !!s.busy.zip || s.sets.length === 0),
       onToggleSettings: () => this.setState(st => ({ settingsOpen: !st.settingsOpen })),
       onDownloadAll: () => this.downloadAll(),
       onAddSet: () => { const set = this.newSet(); this.setState(st => ({ sets: st.sets.concat([set]) })); },
@@ -2696,8 +2797,8 @@ class Component extends DCLogic {
       onSetsDragOver: (e) => { e.preventDefault(); if (!s.texDragOver) this.setState({ texDragOver: true }); },
       onSetsDragLeave: () => this.setState({ texDragOver: false }),
       onSetsDrop: (e) => { e.preventDefault(); this.setState({ texDragOver: false }); if (e.dataTransfer.files && e.dataTransfer.files.length) this.ingestTextureFiles(e.dataTransfer.files); },
-      texDropStyle: "padding:26px;display:grid;place-items:center;cursor:pointer;transition:all .2s;" +
-        (s.texDragOver ? "border:1px solid #BF6505;background:rgba(191,101,5,.28);background-blend-mode:multiply" : "border:1px dashed #4C4741;background:rgba(178,168,156,.10);background-blend-mode:multiply"),
+      texDropStyle: "padding:28px;display:grid;place-items:center;cursor:pointer;transition:all .2s;" +
+        (s.texDragOver ? "border:1px solid #161616;background:rgba(255,90,31,.10);" : "border:1px dashed #C6C6C6;background:rgba(23,20,31,.025);"),
       defaultRes: String(s.settings.defaultResolution), defaultFmt: s.settings.defaultExportFormat,
       onDefaultRes: (e) => this.saveSettings(Object.assign({}, s.settings, { defaultResolution: Number(e.target.value) })),
       onDefaultFmt: (e) => this.saveSettings(Object.assign({}, s.settings, { defaultExportFormat: e.target.value })),
@@ -2725,30 +2826,30 @@ class Component extends DCLogic {
 
       // module 3
       resizeRows: tgaRows, noResizeFiles, hasResizeFiles: !noResizeFiles,
-      bulkSizes: [["4K", 4096], ["2K", 2048], ["1K", 1024], ["NATIVE", "native"]].map(([label, size]) => ({
+      bulkSizes: [["4K", 4096], ["2K", 2048], ["1K", 1024], ["Original", "native"]].map(([label, size]) => ({
         label, disabled: noResizeFiles,
-        style: "appearance:none;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;padding:7px 12px;transition:all .15s;" +
-          (noResizeFiles ? "border:1px solid #38342F;background:transparent;color:#4C4741;cursor:not-allowed" : "border:1px solid #4C4741;background:transparent;color:#DCD6CE;cursor:pointer"),
+        style: "appearance:none;font-family:Inter,sans-serif;font-size:12px;padding:8px 12px;transition:all .15s;" +
+          (noResizeFiles ? "border:1px solid #C6C6C6;background:transparent;color:#C6C6C6;cursor:not-allowed" : "border:1px solid #C6C6C6;background:transparent;color:#262626;cursor:pointer"),
         onClick: () => this.setState(st => ({ tgaFiles: st.tgaFiles.map(f => Object.assign({}, f, { targetSize: size === "native" ? f.nativeWidth : size })) }))
       })),
       resizeStatus: s.resizeStatus,
-      resizeStatusStyle: "padding:11px 14px;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;" +
-        (s.resizeError ? "border:1px solid #BF0625;color:#BF0625" : "border:1px solid #BF6505;color:#E8A055"),
+      resizeStatusStyle: "padding:12px 16px;font-family:Inter,sans-serif;font-size:12px;" +
+        (s.resizeError ? "border:1px solid #DA1E28;color:#DA1E28" : "border:1px solid #161616;color:#161616"),
       onPickTgas: () => this.openTgaPicker(),
       onTgaDragOver: (e) => { e.preventDefault(); if (!s.tgaDragOver) this.setState({ tgaDragOver: true }); },
       onTgaDragLeave: () => this.setState({ tgaDragOver: false }),
       onTgaDrop: (e) => this.onTgaDrop(e),
-      tgaDropStyle: "padding:26px;display:grid;place-items:center;cursor:pointer;transition:all .2s;" +
-        (s.tgaDragOver ? "border:1px solid #BF6505;background:rgba(191,101,5,.28);background-blend-mode:multiply" : "border:1px dashed #4C4741;background:rgba(178,168,156,.10);background-blend-mode:multiply"),
+      tgaDropStyle: "padding:28px;display:grid;place-items:center;cursor:pointer;transition:all .2s;" +
+        (s.tgaDragOver ? "border:1px solid #161616;background:rgba(255,90,31,.10);" : "border:1px dashed #C6C6C6;background:rgba(23,20,31,.025);"),
       tgaEmptyDropStyle: "padding:64px 24px;display:grid;place-items:center;cursor:pointer;position:relative;overflow:hidden;transition:all .2s;" +
-        (s.tgaDragOver ? "border:1px solid #BF6505;background:rgba(191,101,5,.28);background-blend-mode:multiply" : "border:1px dashed #4C4741;background:rgba(178,168,156,.10);background-blend-mode:multiply"),
+        (s.tgaDragOver ? "border:1px solid #161616;background:rgba(255,90,31,.10);" : "border:1px dashed #C6C6C6;background:rgba(23,20,31,.025);"),
       onResizeClear: () => this.setState({ tgaFiles: [], resizeStatus: "" }),
       clearStyle: this.btn("ghost", noResizeFiles),
       onUndoAll: () => this.undoAll(),
       undoAllDisabled: !anyModified,
       undoAllStyle: this.btn("hazard", !anyModified),
       onReduceAll: () => this.reduceAll(),
-      reduceAllLabel: s.reducingAll ? "⟳ Reducing…" : "⚡ Reduce all",
+      reduceAllLabel: s.reducingAll ? "⟳ Resizing…" : "Resize all",
       reduceAllStyle: this.btn("primary", noResizeFiles || s.reducingAll)
     };
   }
