@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async redirects() {
+    return [
+      // The Texture Wizard's features now live in the Enfusion Field Kit.
+      { source: "/projects/arma-reforger-texture-wizard", destination: "/enfusion_field_kit_beta", permanent: true },
+    ]
+  },
   async rewrites() {
     return [
       { source: "/enfusion_field_kit_beta", destination: "/enfusion-field-kit-beta/index.html?demo=1" },

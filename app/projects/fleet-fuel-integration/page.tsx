@@ -206,7 +206,7 @@ const sectionContent = [
       {
         type: "paragraph" as const,
         content:
-          "The original screens shipped between 2019 and 2022. To show how I would design the same model today, I rebuilt it as a working prototype. Every imported transaction is checked against the vehicle's record, and anything suspicious is flagged in line with a plain-language reason.",
+          "The original screens shipped in 2021. To show how I would design the same model today, I rebuilt it as a working prototype. Every imported transaction is checked against the vehicle's record, and anything suspicious is flagged in line with a plain-language reason.",
       },
       {
         type: "image" as const,
@@ -251,7 +251,7 @@ const sectionContent = [
       {
         type: "paragraph" as const,
         content:
-          "But this shouldn't have taken 8 years. A sales rep originally designed the feature in 2011, bypassing design/dev. I redesigned it after joining in 2017, shipping in 2019.",
+          "But this shouldn't have taken 10 years. A sales rep originally designed the feature in 2011, bypassing design/dev. I redesigned it after joining in 2017, shipping in 2021.",
       },
       {
         type: "paragraph" as const,

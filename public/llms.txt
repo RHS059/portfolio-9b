@@ -8,7 +8,6 @@ Writing: https://www.reidhslaughter.com/writing
 
 ## Selected work
 - Fleet Fuel Integration: https://www.reidhslaughter.com/projects/fleet-fuel-integration
-- Arma Reforger Texture Wizard: https://www.reidhslaughter.com/projects/arma-reforger-texture-wizard
 - WorldCat Find: https://www.reidhslaughter.com/projects/library-holding-app
 - Enfusion Field Kit: https://www.reidhslaughter.com/enfusion_field_kit_beta
 

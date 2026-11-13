@@ -59,7 +59,7 @@ export default function ProjectHero({
               </span>
             </a>
             <figcaption className="text-sm text-gray-600">
-              The original work shipped 2019–2022. This is my 2026 rebuild of the same product as a working prototype.
+              The original work shipped in 2021. This is my 2026 rebuild of the same product as a working prototype.
             </figcaption>
           </figure>
         ) : (
