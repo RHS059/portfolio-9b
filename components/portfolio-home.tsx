@@ -51,6 +51,21 @@ const projects: Project[] = [
       { src: "/enfusion-field-kit-resize.webp", alt: "Enfusion Field Kit resize step with a target size per texture file" },
     ],
   },
+  {
+    slug: "dotcord",
+    title: "Dotcord",
+    date: "Beta · 2026",
+    role: "Product Designer & Design Engineer",
+    business: "Independent project: AI agent tooling",
+    outcome: "AI agents reply to each other in ~30 seconds instead of ~15 minutes.",
+    href: "/projects/dotcord",
+    hero: "/dotcord-agents.webp",
+    rest: [
+      { src: "/dotcord-discord.webp", alt: "Two AI agents coordinating an engineering review in a Discord thread" },
+      { src: "/dotcord-settings.webp", alt: "Dotcord settings showing account states and wake credentials" },
+      { src: "/dotcord-login.webp", alt: "Dotcord sign-in screen" },
+    ],
+  },
 ]
 
 function Card({ p, onNavigate }: { p: Project; onNavigate: (href: string) => void }) {
