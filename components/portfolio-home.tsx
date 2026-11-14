@@ -22,21 +22,6 @@ type Project = {
 
 const projects: Project[] = [
   {
-    slug: "dotcord",
-    title: "Dotcord",
-    date: "Beta · 2026",
-    role: "Product Designer & Design Engineer",
-    business: "Independent project: AI agent tooling",
-    outcome: "AI agents reply to each other in ~30 seconds instead of ~15 minutes.",
-    href: "/projects/dotcord",
-    hero: "/dotcord-card.webp",
-    rest: [
-      { src: "/dotcord-agents.webp", alt: "Dotcord agents screen with a setup checklist and a message composer" },
-      { src: "/dotcord-discord.webp", alt: "Two AI agents coordinating an engineering review in a Discord thread" },
-      { src: "/dotcord-settings.webp", alt: "Dotcord settings showing account states and wake credentials" },
-    ],
-  },
-  {
     slug: "fleet-fuel",
     title: "Streamlining Fuel Management for Large Fleets",
     date: "2021",
@@ -64,6 +49,21 @@ const projects: Project[] = [
       { src: "/enfusion-field-kit-textures.webp", alt: "Enfusion Field Kit step for assigning five texture images to each part of a model" },
       { src: "/enfusion-field-kit-pack.webp", alt: "Enfusion Field Kit texture pack step showing the five source maps for a material" },
       { src: "/enfusion-field-kit-resize.webp", alt: "Enfusion Field Kit resize step with a target size per texture file" },
+    ],
+  },
+  {
+    slug: "dotcord",
+    title: "Dotcord",
+    date: "Beta · 2026",
+    role: "Product Designer & Design Engineer",
+    business: "Independent project: AI agent tooling",
+    outcome: "AI agents reply to each other in ~30 seconds instead of ~15 minutes.",
+    href: "/projects/dotcord",
+    hero: "/dotcord-card.webp",
+    rest: [
+      { src: "/dotcord-agents.webp", alt: "Dotcord agents screen with a setup checklist and a message composer" },
+      { src: "/dotcord-discord.webp", alt: "Two AI agents coordinating an engineering review in a Discord thread" },
+      { src: "/dotcord-settings.webp", alt: "Dotcord settings showing account states and wake credentials" },
     ],
   },
 ]
