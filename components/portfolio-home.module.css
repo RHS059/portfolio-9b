@@ -77,6 +77,8 @@
 .card-link:hover .t, .card-link:focus-visible .t { color: var(--accent); }
 .card-link:hover .arrow, .card-link:focus-visible .arrow { opacity: 1; transform: none; }
 .sub { margin-top: 6px !important; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+.chip { padding: 3px 10px; border: 1px solid var(--sidebar-rule); border-radius: 999px; font-size: 11.5px; font-weight: 500; line-height: 1.5; color: var(--body); white-space: nowrap; }
 .outcome { font-size: clamp(14px, 1.05vw, 16px); line-height: 1.45; color: var(--body); }
 @media (hover: none) { .count { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .drift, .layer, .arrow { transition: none; } .drift-on { transform: none; } }
