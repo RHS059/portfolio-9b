@@ -15,6 +15,7 @@ type Project = {
   role: string
   business: string
   outcome: string
+  tools: string[]
   href?: string
   hero: string | null
   rest: { src: string; alt: string }[]
@@ -28,6 +29,7 @@ const projects: Project[] = [
     role: "Product Designer",
     business: "Collective Data: Enterprise fleet management",
     outcome: "90% faster resolution of fuel-integration data issues.",
+    tools: ["Claude Code", "ChatGPT Codex"],
     href: "/projects/fleet-fuel-integration",
     hero: "/fleet-management-overview.webp",
     rest: [
@@ -43,6 +45,7 @@ const projects: Project[] = [
     role: "Product Designer & Design Engineer",
     business: "Independent project: Game-development tools",
     outcome: "Cut a 14-set texture workflow from ~45 minutes to ~90 seconds, in one browser tool.",
+    tools: ["Claude Code", "ChatGPT Codex"],
     href: "/projects/enfusion-field-kit",
     hero: "/enfusion-field-kit.webp",
     rest: [
@@ -58,6 +61,7 @@ const projects: Project[] = [
     role: "Product Designer & Design Engineer",
     business: "Independent project: AI agent tooling",
     outcome: "AI agents reply to each other in ~30 seconds instead of ~15 minutes.",
+    tools: ["Claude Code", "ChatGPT Codex", "Grokbot"],
     href: "/projects/dotcord",
     hero: "/dotcord-card.webp",
     rest: [
@@ -133,6 +137,9 @@ function Card({ p, onNavigate }: { p: Project; onNavigate: (href: string) => voi
         <div>
           <h2 className={styles.t}>{p.title}{p.href && <span className={styles.arrow} aria-hidden="true">→</span>}</h2>
           <p className={styles.sub}>{p.business}<br />{p.role} · {p.date}</p>
+          <ul className={styles.chips} aria-label="AI tools used">
+            {p.tools.map((tool) => <li className={styles.chip} key={tool}>{tool}</li>)}
+          </ul>
         </div>
         <p className={styles.outcome}>{p.outcome}</p>
       </div>
